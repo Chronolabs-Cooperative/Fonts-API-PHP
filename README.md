@@ -1,7 +1,7 @@
 # Chronolabs Cooperative
 # Fonting Repository Services API  - http://fonts.labs.coop -
 
-# INSTALLATION MANUAL
+# BASIC INSTALLATION MANUAL
 ## by. Simon Antony Roberts (Sydney)
 ## simon@staff.labs.coop
 
