@@ -14,12 +14,16 @@ Download the API archive of PHP files from: https://sourceforge.net/p/chronolabs
 # Setting up the environment
 You will first have to set up the environment running the following script at root on Ubuntu or Debian Server it will install all the system environment variables you require to do an installation:-
 
-   $ sudo apt-get install p7zip-rar p7zip-full unace unrar zip unzip sharutils rar sharutils unrar uudeview mpack arj cabextract file-roller lmza fontforge tasksel ntpdate nano lzma bzip2
+    
+    $ sudo apt-get install p7zip-rar p7zip-full unace unrar zip unzip sharutils rar sharutils unrar uudeview mpack arj cabextract file-roller lmza fontforge tasksel ntpdate nano lzma bzip2
+    
 
 Now you will have to execute 'tasksel' in root with the 'sudo' precursor for this to install the LAMP environment; run the following command and install the LAMP environment.
 
-   $ sudo tasksel
+    
+    $ sudo tasksel
 
+    
 Now you have to make your paths for the system to operate from there is a few the following paths we will discuss. 
 /fonts/Unpacking this folder is used to unpack zips to be staged into the conversion area anything that isn't a font gets deleted from this path. /fonts/Conversion this folder is using for crashing the conversion to the placement of staying open for survey or being packed. /fonts/Sorting this folder is used for any sorting that occurs currently use just after Unpacking the font archives. /fonts/Fonting this is the folder for your fonts SVN if your using this feature to move to offline position as most fonts unless they are popular can be offlined to an SVN or if you want to alter the code a Git repository while they are not being used.
 
@@ -28,18 +32,20 @@ Now you have to make your paths for the system to operate from there is a few th
 You will need to create these fonts folders now with 'mkdir' these are all listed in the constants.php if you need to alter them, you may find if you are handling a large amount of fonts as on average a storage zip is around 10 – 20Mb's but in complete glyph listing can be upwards of 120Mbs so each font file in storing in all formats will use this sort of file size, so you may want find some instructions on setting an remote local via webdav and mount SVN that is stored on somewhere where it will be cheaper to store the file-base this apart from retrieving and sending fonts doesn't have huge read and write.
 You will now need to make these paths or the paths you have decided and set them in the constants. The following commands will do this (We are assuming your user-name is 'web' in this example of calls to do on the ubuntu service.
 
-   $ sudo mkdir /fonts
-   $ sudo mkdir /fonts/Unpacking
-   $ sudo mkdir /fonts/Converting
-   $ sudo mkdir /fonts/Sorting
-   $ sudo mkdir /fonts/Fonting
-   $ sudo mkdir /fonts/Cache
-   $ sudo mkdir /tmp/Fonts-Uploads
-   $ sudo mkdir /tmp/Fonts-Cache
-   $ sudo chown -Rfv web:www-data /fonts
-   $ sudo chown -Rfv web:www-data /tmp/Fonts*
-   $ sudo chmod -Rfv 0777 /fonts
-   $ sudo chmod -Rfv 0777 /tmp/Fonts*
+    
+    $ sudo mkdir /fonts
+    $ sudo mkdir /fonts/Unpacking
+    $ sudo mkdir /fonts/Converting
+    $ sudo mkdir /fonts/Sorting
+    $ sudo mkdir /fonts/Fonting
+    $ sudo mkdir /fonts/Cache
+    $ sudo mkdir /tmp/Fonts-Uploads
+    $ sudo mkdir /tmp/Fonts-Cache
+    $ sudo chown -Rfv web:www-data /fonts
+    $ sudo chown -Rfv web:www-data /tmp/Fonts*
+    $ sudo chmod -Rfv 0777 /fonts
+    $ sudo chmod -Rfv 0777 /tmp/Fonts*
+    
 
 We are going to assume for the fonting api runtime PHP files you are going to store them in /var/www/fonts-api and this will be the path you have to unpack the downloaded archive from Chronolabs APIs on sourceforge.net into with the contants.php listed in the root of this folder.
 Setting Up Apache 2 (httpd)
@@ -49,7 +55,8 @@ You will have to make the file /etc/apache2/sites-available/fonts.mysite.com.con
 $ sudo nano /etc/apache2/sites-available/fonts.mysite.com.conf
 You need to put the following configuration in to run a standard site, there is more to add for SSL which is not included in this example but you can find many examples on what to add to this file for port 443 for SSL which is duplicated code for port 443 not 80 with the SSL Certificates included, use the following code as your measure of basis of what to configure for apache 2 (httpd):-
 
-   <VirtualHost *:80>
+    
+    <VirtualHost *:80>
            ServerName fonts.mysite.com
            ServerAdmin webmaster@mysite.com
            DocumentRoot /var/www/fonts-api
@@ -60,12 +67,15 @@ You need to put the following configuration in to run a standard site, there is 
                    AllowOverride All
                    Require all granted
            </Directory>
-   </VirtualHost>
+    </VirtualHost>
+    
 
 You need to now enable this website in apache the following command will do this from root:-
 
-   $ sudo a2ensite fonts.mysite.com
-   $ sudo service apache2 reload
+    
+    $ sudo a2ensite fonts.mysite.com
+    $ sudo service apache2 reload
+    
 
 This is all that is involved in configuring apache 2 httpd on Debian/Ubuntu, the next step is the database.
 
