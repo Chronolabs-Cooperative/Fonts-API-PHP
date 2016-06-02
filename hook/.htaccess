@@ -1,0 +1,12 @@
+php_value memory_limit 512M
+php_value upload_max_filesize 2096M
+php_value post_max_size 2096M
+php_value error_reporting 1
+php_value diaplay_errors 1
+
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+RewriteRule ^(.*?)/(.*?)$				index.php?mode=$1&$2			[L]
+RewriteRule ^(.*?)/$					index.php?mode=$1			[L]

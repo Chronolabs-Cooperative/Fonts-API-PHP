@@ -1,0 +1,3 @@
+cd %resourcepath
+svn add %archive --force
+svn commit -m "%commitmsg"
