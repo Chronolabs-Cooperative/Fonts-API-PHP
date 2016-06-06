@@ -160,7 +160,13 @@ while($archive = GLOBALS['FontsDB']->fetchArray($pool))
 						
 		$fingerprint = $archive['font_id'];
 		$naming = $data["FontName"] = spacerName($data["FontName"]);
-			
+		
+		if (!isset($data['Files']))
+			$updated==true;
+		if (!isset($data['Font']))
+			$updated==true;
+		if (!isset($data['Licenses']))
+			$updated==true;
 		// Builds types table
 		$types = array();
 		foreach($data['survey'] as $key => $values)

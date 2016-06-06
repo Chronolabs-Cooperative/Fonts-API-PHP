@@ -432,36 +432,38 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 			$GLOBALS['FontsDB']->queryF("INSERT INTO `fonts_callbacks` (`id`, `type`, `font_id`, `archive_id`, `upload_id`, `uri`, `email`) VALUES ('$cbid', 'upload', '$fingerprint', '$archive_id', '".$upload['id']."', '".$upload['callback']."','".$upload['email']."')");
 		}
 		
-		$path = str_replace(FONT_RESOURCES_RESOURCE, '', dirname($packfile));
-		$subs = explode('/', $path);
-		echo "\nIndexing: " . $subs[4] . ' ~~ ' . basename($file);
-		$data = array_unique(array_merge(json_decode(file_get_contents(FONT_RESOURCES_RESOURCE. "/".$subs[1].DIRECTORY_SEPARATOR.$subs[2].DIRECTORY_SEPARATOR.$subs[2]."--repository-mapping.json"), true), json_decode(getURIData(sprintf(FONT_RESOURCES_REPOMAP, $subs[1] . DIRECTORY_SEPARATOR . $subs[2], $subs[2]), 120, 120, array()), true)));
-		if (empty($data[$subs[1]][$subs[2]][md5_file($file)]))
-		{
-			$data[$subs[1]][$subs[2]][md5_file($packfile)]['repo'] = FONT_RESOURCES_STORE;
-			$data[$subs[1]][$subs[2]][md5_file($packfile)]['file'] = basename($packfile);
-			$data[$subs[1]][$subs[2]][md5_file($packfile)]['path'] = str_replace(FONT_RESOURCES_RESOURCE, "", dirname($file));
-			$data[$subs[1]][$subs[2]][md5_file($packfile)]['files'] = getArchivedZIPContentsArray($file);
-			$data[$subs[1]][$subs[2]][md5_file($packfile)]['resource'][$subs[2]] = $data;
-			$data[$subs[1]][$subs[2]][md5_file($packfile)]['resource'][$subs[1]] = $data;
-			writeRawFile($filea = FONT_RESOURCES_RESOURCE. "/".$subs[1].DIRECTORY_SEPARATOR.$subs[2].DIRECTORY_SEPARATOR.$subs[2]."--repository-mapping.json", json_encode($ids));
-		}
-		unset($data);
-		$alpha = array_unique(array_merge(json_decode(file_get_contents(FONT_RESOURCES_RESOURCE. "/".$subs[1].DIRECTORY_SEPARATOR.$subs[1]."--repository-mapping.json"), true), json_decode(getURIData(sprintf(FONT_RESOURCES_REPOMAP, $subs[1], $subs[1], 120, 120, array())), true)));
-		if (empty($alpha[$subs[1][md5_file($file)]]))
-		{
-				
-			$alpha[$subs[1]]['Identity'][$alpha[$subs[1]][md5_file($packfile)]['resource']['FontIdentity']] = $alpha[$subs[1]][md5_file($packfile)]['resource']['FontIdentity'];
-			$alpha[$subs[1]][md5_file($packfile)]['resource'] = $data;
-			writeRawFile(FONT_RESOURCES_RESOURCE. "/".$subs[1].DIRECTORY_SEPARATOR.$subs[1]."--repository-mapping.json", json_encode($alpha));
-			$ids = json_decode(getURIData(str_replace(array("%s/", "%s--", '?format=raw'), "", FONT_RESOURCES_REPOMAP), 120, 120, array()), true);;
-			$ids[$subs[1]][$subs[2]][$subs[3]][$alpha[$subs[1]][md5_file($packfile)]['FontIdentity']] = $alpha[$subs[1]][md5_file($packfile)]['resource']['FontIdentity'];
-			writeRawFile($fileb = FONT_RESOURCES_RESOURCE. "/".basename(str_replace(array("%s/", "%s--", '?format=raw'), "", FONT_RESOURCES_REPOMAP)), json_encode($ids));
-		}
-		unset($alpha);
 		
 		if (in_array('svn', explode(",", API_REPOSITORY)))
 		{
+
+			$path = str_replace(FONT_RESOURCES_RESOURCE, '', dirname($packfile));
+			$subs = explode('/', $path);
+			echo "\nIndexing: " . $subs[4] . ' ~~ ' . basename($file);
+			$data = array_unique(array_merge(json_decode(file_get_contents(FONT_RESOURCES_RESOURCE. "/".$subs[1].DIRECTORY_SEPARATOR.$subs[2].DIRECTORY_SEPARATOR.$subs[2]."--repository-mapping.json"), true), json_decode(getURIData(sprintf(FONT_RESOURCES_REPOMAP, $subs[1] . DIRECTORY_SEPARATOR . $subs[2], $subs[2]), 120, 120, array()), true)));
+			if (empty($data[$subs[1]][$subs[2]][md5_file($file)]))
+			{
+				$data[$subs[1]][$subs[2]][md5_file($packfile)]['repo'] = FONT_RESOURCES_STORE;
+				$data[$subs[1]][$subs[2]][md5_file($packfile)]['file'] = basename($packfile);
+				$data[$subs[1]][$subs[2]][md5_file($packfile)]['path'] = str_replace(FONT_RESOURCES_RESOURCE, "", dirname($file));
+				$data[$subs[1]][$subs[2]][md5_file($packfile)]['files'] = getArchivedZIPContentsArray($file);
+				$data[$subs[1]][$subs[2]][md5_file($packfile)]['resource'][$subs[2]] = $data;
+				$data[$subs[1]][$subs[2]][md5_file($packfile)]['resource'][$subs[1]] = $data;
+				writeRawFile($filea = FONT_RESOURCES_RESOURCE. "/".$subs[1].DIRECTORY_SEPARATOR.$subs[2].DIRECTORY_SEPARATOR.$subs[2]."--repository-mapping.json", json_encode($ids));
+			}
+			unset($data);
+			$alpha = array_unique(array_merge(json_decode(file_get_contents(FONT_RESOURCES_RESOURCE. "/".$subs[1].DIRECTORY_SEPARATOR.$subs[1]."--repository-mapping.json"), true), json_decode(getURIData(sprintf(FONT_RESOURCES_REPOMAP, $subs[1], $subs[1], 120, 120, array())), true)));
+			if (empty($alpha[$subs[1][md5_file($file)]]))
+			{
+			
+				$alpha[$subs[1]]['Identity'][$alpha[$subs[1]][md5_file($packfile)]['resource']['FontIdentity']] = $alpha[$subs[1]][md5_file($packfile)]['resource']['FontIdentity'];
+				$alpha[$subs[1]][md5_file($packfile)]['resource'] = $data;
+				writeRawFile(FONT_RESOURCES_RESOURCE. "/".$subs[1].DIRECTORY_SEPARATOR.$subs[1]."--repository-mapping.json", json_encode($alpha));
+				$ids = json_decode(getURIData(str_replace(array("%s/", "%s--", '?format=raw'), "", FONT_RESOURCES_REPOMAP), 120, 120, array()), true);;
+				$ids[$subs[1]][$subs[2]][$subs[3]][$alpha[$subs[1]][md5_file($packfile)]['FontIdentity']] = $alpha[$subs[1]][md5_file($packfile)]['resource']['FontIdentity'];
+				writeRawFile($fileb = FONT_RESOURCES_RESOURCE. "/".basename(str_replace(array("%s/", "%s--", '?format=raw'), "", FONT_RESOURCES_REPOMAP)), json_encode($ids));
+			}
+			unset($alpha);
+			
 			if (!file_exists(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-add.sh'))
 			{
 				$bash=array();
@@ -497,6 +499,34 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 		}
 		if (in_array('git', explode(",", API_REPOSITORY)))
 		{
+
+			$path = str_replace(FONT_RESOURCES_RESOURCE, '', dirname($packfile));
+			$subs = explode('/', $path);
+			echo "\nIndexing: " . $subs[4] . ' ~~ ' . basename($file);
+			$data = array_unique(array_merge(json_decode(file_get_contents(FONT_RESOURCES_RESOURCE. "/".$subs[1].DIRECTORY_SEPARATOR.$subs[2].DIRECTORY_SEPARATOR.$subs[2]."--repository-mapping.json"), true), json_decode(getURIData(sprintf(FONT_RESOURCES_REPOMAP_GIT, $subs[1] . DIRECTORY_SEPARATOR . $subs[2], $subs[2]), 120, 120, array()), true)));
+			if (empty($data[$subs[1]][$subs[2]][md5_file($file)]))
+			{
+				$data[$subs[1]][$subs[2]][md5_file($packfile)]['repo'] = FONT_RESOURCES_STORE;
+				$data[$subs[1]][$subs[2]][md5_file($packfile)]['file'] = basename($packfile);
+				$data[$subs[1]][$subs[2]][md5_file($packfile)]['path'] = str_replace(FONT_RESOURCES_RESOURCE, "", dirname($file));
+				$data[$subs[1]][$subs[2]][md5_file($packfile)]['files'] = getArchivedZIPContentsArray($file);
+				$data[$subs[1]][$subs[2]][md5_file($packfile)]['resource'][$subs[2]] = $data;
+				$data[$subs[1]][$subs[2]][md5_file($packfile)]['resource'][$subs[1]] = $data;
+				writeRawFile($filea = FONT_RESOURCES_RESOURCE. "/".$subs[1].DIRECTORY_SEPARATOR.$subs[2].DIRECTORY_SEPARATOR.$subs[2]."--repository-mapping.json", json_encode($ids));
+			}
+			unset($data);
+			$alpha = array_unique(array_merge(json_decode(file_get_contents(FONT_RESOURCES_RESOURCE. "/".$subs[1].DIRECTORY_SEPARATOR.$subs[1]."--repository-mapping.json"), true), json_decode(getURIData(sprintf(FONT_RESOURCES_REPOMAP_GIT, $subs[1], $subs[1], 120, 120, array())), true)));
+			if (empty($alpha[$subs[1][md5_file($file)]]))
+			{
+			
+				$alpha[$subs[1]]['Identity'][$alpha[$subs[1]][md5_file($packfile)]['resource']['FontIdentity']] = $alpha[$subs[1]][md5_file($packfile)]['resource']['FontIdentity'];
+				$alpha[$subs[1]][md5_file($packfile)]['resource'] = $data;
+				writeRawFile(FONT_RESOURCES_RESOURCE. "/".$subs[1].DIRECTORY_SEPARATOR.$subs[1]."--repository-mapping.json", json_encode($alpha));
+				$ids = json_decode(getURIData(str_replace(array("%s/", "%s--", '?format=raw'), "", FONT_RESOURCES_REPOMAP), 120, 120, array()), true);;
+				$ids[$subs[1]][$subs[2]][$subs[3]][$alpha[$subs[1]][md5_file($packfile)]['FontIdentity']] = $alpha[$subs[1]][md5_file($packfile)]['resource']['FontIdentity'];
+				writeRawFile($fileb = FONT_RESOURCES_RESOURCE. "/".basename(str_replace(array("%s/", "%s--", '?format=raw'), "", FONT_RESOURCES_REPOMAP)), json_encode($ids));
+			}
+			unset($alpha);
 			if (!file_exists(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-add.sh'))
 			{
 				$bash=array();
