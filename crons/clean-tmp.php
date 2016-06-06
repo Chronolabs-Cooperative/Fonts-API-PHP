@@ -24,15 +24,30 @@ set_time_limit(1999);
 require_once dirname(__DIR__).'/functions.php';
 require_once dirname(__DIR__).'/class/fontages.php';
 
-foreach(getDirListAsArray("/tmp") as $dir)
-	foreach(getCompleteDirListAsArray("/tmp/$dir") as $folder)
+foreach(getDirListAsArray(FONTS_CACHE) as $dir)
+	foreach(getCompleteDirListAsArray(FONTS_CACHE."/$dir") as $folder)
 		foreach(getFileListAsArray($folder) as $key => $file)
 		{
 			if (filectime($folder . DIRECTORY_SEPARATOR . $key) <= time() - (12 * 3600))
 			{
 				unlink($folder . DIRECTORY_SEPARATOR . $key);
+				rmdir($folder);
 				echo ".";
 			} else {
 				echo "x";				
+			}
+		}
+	
+foreach(getDirListAsArray(FONT_RESOURCES_CACHE) as $dir)
+	foreach(getCompleteDirListAsArray(FONT_RESOURCES_CACHE."/$dir") as $folder)
+		foreach(getFileListAsArray($folder) as $key => $file)
+		{
+			if (filectime($folder . DIRECTORY_SEPARATOR . $key) <= time() - (12 * 3600))
+			{
+				unlink($folder . DIRECTORY_SEPARATOR . $key);
+				rmdir($folder);
+				echo ".";
+			} else {
+				echo "x";
 			}
 		}
