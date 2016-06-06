@@ -1230,12 +1230,12 @@ if (!function_exists("getIPIdentity")) {
 						$_SESSION['locality']['ip'] = $ip;
 					
 					$_SESSION['ipdata'][$ip] = array();
-					$_SESSION['ipdata'][$ip]['ipaddy'] = $_SESSION['locality']['ip'];
+					$_SESSION['ipdata'][$ip]['ipaddy'] = $ip;
 					if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) === false)
 						$_SESSION['ipdata'][$ip]['type'] = 'ipv6';
 					else 
 						$_SESSION['ipdata'][$ip]['type'] = 'ipv4';
-					$_SESSION['ipdata'][$ip]['netbios'] = gethostbyaddr($_SESSION['ipdata'][$ip]['ipaddy']);
+					$_SESSION['ipdata'][$ip]['netbios'] = gethostbyaddr($ip);
 					$_SESSION['ipdata'][$ip]['data'] = array('ipstack' => gethostbynamel($_SESSION['ipdata'][$ip]['netbios']));
 					$_SESSION['ipdata'][$ip]['domain'] = getBaseDomain("http://".$_SESSION['ipdata'][$ip]['netbios']);
 					$_SESSION['ipdata'][$ip]['country'] = $_SESSION['locality']['country']['iso'];
