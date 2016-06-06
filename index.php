@@ -58,7 +58,7 @@
 					$help=false;
 				else
 					$help=true;
-				if (in_array($state, array('zip', '7z', 'rar', 'rar5', 'exe')))
+				if (in_array($state, array_keys(getArchivingShellExec())))
 					$help=false;
 				else
 					$help=true;

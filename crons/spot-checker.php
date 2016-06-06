@@ -627,7 +627,7 @@ while($archive = GLOBALS['FontsDB']->fetchArray($pool))
 			}
 				
 		}
-		
+		sleep(22);
 		exec($cmd = "rm -Rfv $currently", $output);
 		echo "Executing: $cmd\n".implode("\n", $output);
 		$packfile = $fingerprint = '';
