@@ -187,14 +187,14 @@
         <em><strong><a href="<?php echo API_URL; ?>/v2/archive/<?php echo $fontmd5; ?>/callback.api?uri=http://your.callback.com/uri.php&email=your@emailaddress.com" target="_blank"><?php echo API_URL; ?>/v2/archive/<?php echo $fontmd5; ?>/callback.api?uri=http://your.callback.com/uri.php&amp;email=your@emailaddress.com</a></strong></em><br /><br />
         <h3> Variable passed by function 'archive' callback via $_POST</h3>
         <code style="margin-left: 54px; max-height: 46px; overflow: v-scroll; height: 36px !important; margin: 32px; ">
-			<?php 	if (!isset($_SESSION['iipid']))
-					$_SESSION['iipid'] = getIPIdentity(whitelistGetIP(true), true);
-					unset($_SESSION['iipid']['whois']);
-					$_SESSION['iipid']['whois'] = '...';
+			<?php 	if (!isset($_SESSION['network']))
+						$_SESSION['network'] = getIPIdentity(whitelistGetIP(true), true);
+					unset($_SESSION['network']['whois']);
+					$_SESSION['network']['whois'] = '...';
 					echo "<br/>/** " . API_URL . "/v2/archive/" .  $fontmd5 . "/callback.api ~ variables on call!";
 					echo "<br/> * <br/>";
 					echo " * \t\t\t\$_POST['format'] = 'zip';<br/>";
-					foreach($_SESSION['iipid'] as $kui => $id)
+					foreach($_SESSION['network'] as $kui => $id)
 						echo " * \t\t\t\$_POST['ipid']['$kui'] = '" . $id. "';<br/>"; 
 					echo "*/<br/><br/>";
 ?>
@@ -206,7 +206,7 @@
 			<?php 	echo "<br/>\t/** " . API_URL . "/v2/fonthit/" .  $fontmd5 . "/callback.api ~ variables on call!";
 					echo "<br/>\t * <br/>";
 					echo "\t * \t\t\$_POST['type'] = 'ttf';<br/>";
-					foreach($_SESSION['iipid'] as $kui => $id)
+					foreach($_SESSION['network'] as $kui => $id)
 						echo "\t * \t\t\$_POST['ipid']['$kui'] = '" . $id. "';<br/>"; 
 					echo "*/<br/><br/>";
 ?>

@@ -33,7 +33,7 @@ include_once dirname(dirname(__FILE__)).'/functions.php';
 include_once dirname(dirname(__FILE__)).'/class/fontages.php';
 set_time_limit(7200);
 
-$pool = $GLOBALS['FontsDB']->queryF($sql = "SELECT `a`.* from `fonts_archiving` as `a` INNER JOIN `fonts` as `b` ON `a`.`font_id` = `b`.`id` WHERE `b`.`medium` IN ('FONT_RESOURCES_RESOURCE', 'FONT_RESOURCES_CACHE') ORDER BY `a`.`checked` ASC LIMIT 16");
+$pool = $GLOBALS['FontsDB']->queryF($sql = "SELECT `a`.* from `fonts_archiving` as `a` INNER JOIN `fonts` as `b` ON `a`.`font_id` = `b`.`id` WHERE `b`.`medium` IN ('FONT_RESOURCES_RESOURCE', 'FONT_RESOURCES_CACHE') ORDER BY `a`.`checked` ASC LIMIT 12");
 // Searches For Unrecorded Fonts
 while($archive = GLOBALS['FontsDB']->fetchArray($pool))
 {
