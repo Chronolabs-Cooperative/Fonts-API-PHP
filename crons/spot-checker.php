@@ -98,7 +98,10 @@ while($archive = GLOBALS['FontsDB']->fetchArray($pool))
 		echo "Executing: $cmd\n";
 		exec($cmd, $output);
 		echo implode("\n", $output);
-		$numstarting = count(getCompleteFilesListAsArray(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe")));
+		foreach(getCompleteFilesListAsArray($currently) as $file => $filz)
+			if (substr($file, strlen($file) - strlen(API_BASE), strlen(API_BASE)) == strlen(API_BASE) && !empty($data['Font']))
+				writeFontResourceHeader($currently . DIRECTORY_SEPARATOR . $file, $data['Font']['licence'], $data['Font']);
+		$numstarting = count(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"));
 		$totalmaking = count(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"))-1;
 		exec("cd $currently", $output, $return);
 		$covertscript = cleanWhitespaces(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"));
@@ -535,7 +538,7 @@ while($archive = GLOBALS['FontsDB']->fetchArray($pool))
 			unlink($packfile);
 			deleteFilesNotListedByArray($currently, array(API_BASE, 'file.diz', 'resource.json', 'LICENCE'));
 			foreach(getCompleteFilesListAsArray($currently) as $file)
-				if (substr($file, strlen($file)-3) == API_BASE)
+				if (substr($file, strlen($file)-strlen(API_BASE), strlen(API_BASE)) == API_BASE)
 					writeFontRepositoryHeader($currently . DIRECTORY_SEPARATOR . $file, $data['Font']['licence'], $data['Font']);
 			if (!file_exists($currently . DIRECTORY_SEPARATOR . 'LICENCE'))
 				copy(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . $datastore['Font']['licence'] . DIRECTORY_SEPARATOR . 'LICENCE', $currently . DIRECTORY_SEPARATOR . 'LICENCE');
@@ -571,7 +574,54 @@ while($archive = GLOBALS['FontsDB']->fetchArray($pool))
 				if (!$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `repacked` = UNIX_TIMESTAMP() WHERE `id` = '" . $archive['id'] . "'"))
 					die("Failed SQL: $sql;\n");
 			}
+
+			if (in_array('svn', explode(",", API_REPOSITORY)))
+			{
+				if (!file_exists(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-update.sh'))
+				{
+					$bash=array();
+					$bash[] = "#! bash";
+					$bash[] = "cd ".FONT_RESOURCES_RESOURCE;
+					$bash[] = "svn cleanup";
+					$bash[] = "svn update";
+				} else {
+					echo "Setting Memory Limit To: " .(floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-update.sh')) / (1024) + 50 . "M") . "/n";
+					ini_set('memory_limit', floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-update.sh') / (1024) + 50) . "M");
+					$bash = file(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-update.sh');
+					unset($bash[count($bash)-1]);
+				}
+				$bash[] = "cd " . dirname($packfile);
+				$bash[] = "svn cleanup";
+				$bash[] = "svn add . --force";
+				$bash[] = "svn commit -m \"Updating Repository for the font: $naming\"";
+				$bash[] = "unlink " . dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-update.sh';
+				writeRawFile(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-update.sh', implode("\n", $bash));
+				unset($bash);
+			}
+			if (in_array('git', explode(",", API_REPOSITORY)))
+			{
+				if (!file_exists(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-update.sh'))
+				{
+					$bash=array();
+					$bash[] = "#! bash";
+					$bash[] = "cd ".FONT_RESOURCES_RESOURCE;
+				} else {
+					echo "Setting Memory Limit To: " .(floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-update.sh')) / (1024) + 50 . "M") . "/n";
+					ini_set('memory_limit', floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-update.sh') / (1024) + 50) . "M");
+					$bash = file(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-update.sh');
+					unset($bash[count($bash)-1]);
+				}
+				$bash[] = "cd " . dirname($packfile);
+				$bash[] = "git add ".basename($packfile)."";
+				$bash[] = "git commit -m \"Importing into Repository for 1st time; the font: $naming\"";
+				$bash[] = "git push origin master";
+				$bash[] = "unlink " . dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-update.sh';
+				writeRawFile(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-update.sh', implode("\n", $bash));
+				unset($bash);
+			}
+				
 		}
+		
 		exec($cmd = "rm -Rfv $currently", $output);
 		echo "Executing: $cmd\n".implode("\n", $output);
 		$packfile = $fingerprint = '';

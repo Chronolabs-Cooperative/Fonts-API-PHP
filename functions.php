@@ -2148,6 +2148,65 @@ if (!function_exists("getFontRawData")) {
 					$json = json_decode(getArchivedZIPFile($zip = FONT_RESOURCES_CACHE . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'font-resource.json'), true);
 					break;
 			}
+			if ($output!="font-resource.json")
+			{
+				$found = false;
+				$cachefile = FONTS_CACHE . DIRECTORY_SEPARATOR . '--raw--' . DIRECTORY_SEPARATOR . md5(getRegionalFontName($row['font_id']).$row['font_id']) . '.zip';
+				if (!is_dir(FONTS_CACHE . DIRECTORY_SEPARATOR . '--raw--' . DIRECTORY_SEPARATOR))
+					mkdir(FONTS_CACHE . DIRECTORY_SEPARATOR . '--raw--' . DIRECTORY_SEPARATOR, 0777, true);
+				if (!file_exists($cachefile))
+					$found = false;
+				else {
+					foreach(getArchivedZIPContentsArray($cachefile) as $crc => $file)
+						if (substr($file, strlen($file) - strlen($output)) == $output)
+							$found = true;
+				}
+				if ($found != true)
+				{
+					mkdir($currently = FONT_RESOURCES_CONVERTING . DIRECTORY_SEPARATOR . md5_file($zip), 0777, true);
+					exec("cd \"$currently\"");
+					foreach(getArchivedZIPContentsArray($zip) as $crc => $file)
+						if (substr($file, strlen($file) - strlen(API_BASE)) == API_BASE)
+						{
+							$basefile = $file;
+							continue;
+						}
+					writeRawFile($font = FONTS_CACHE . DIRECTORY_SEPARATOR . $basefile, getArchivedZIPFile($zip, $basefile, $row['font_id']));					
+					if (isset($json['Font']))
+						writeFontResourceHeader($font, $json["Font"]['licence'], $json['Font']);
+					$totalmaking = count(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"))-1;
+					exec("cd $currently", $output, $return);
+					$covertscript = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"));
+					foreach($covertscript as $line => $value)
+						if (strpos($value, $output) && substr($value,0,4)!='Open' && !in_array($output, array('z', 'php')))
+							unset($covertscript[$line]);
+						elseif(in_array($output, array('z', 'php') && substr($value,0,4)!='Open' && (!strpos($value, 'ttf')) && !strpos($value, 'afm')))
+							unset($covertscript[$line]);
+					writeRawFile($script = FONT_RESOURCES_CACHE.DIRECTORY_SEPARATOR.md5(microtime(true).json_encode($fonts)).".pe", implode("\n", $covertscript));
+					exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", $script, $font), $output, $return);;
+					echo "Executed: $exe<br/>\n\n$output\n\n<br/><br/>";
+					unlink($script);
+					if (in_array($output, array('z', 'php')))
+					{
+						$parts = explode('.', basename($font));
+						unset($parts[count($parts)-1]);
+						$fbase = implode(".", $parts);
+						if (file_exists($currently . DIRECTORY_SEPARATOR . $fbase . '.ttf') && file_exists($currently . DIRECTORY_SEPARATOR . $fbase . '.afm'))
+							MakePHPFont($currently . DIRECTORY_SEPARATOR . $fbase . '.ttf', $currently . DIRECTORY_SEPARATOR . $fbase . '.afm', $currently, true);
+					}
+					$packing = getArchivingShellExec();
+					chdir($currently);
+					$cmda = str_replace("%folder", "./", str_replace("%pack", $cachefile, str_replace("%comment", $comment, (substr($packing['zip'],0,1)!="#"?$packing['zip']:substr($packing['zip'],1)))));
+					echo "Executing: $cmda\n";
+					exec($cmda, $output, $resolv);
+					if (!file_exists($cachefile))
+						die("File not found: $cachefile ~~ Failed: $cmda");
+					$output = array();
+					exec($cmd = "rm -Rfv $currently", $output);
+					echo "Executing: $cmd\n".implode("\n", $output);
+				}
+				$zip = $cachefile;
+			}
 			$fontfiles = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql = "SELECT * from `fonts_files` WHERE `font_id` = '" . $row['font_id'] . "' AND `type` = '$output'"));
 			$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts` SET `hits` = `hits` + 1, `accessed` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['font_id'] . "'");
 			$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `hits` = `hits` + 1, `accessed` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
@@ -2178,138 +2237,9 @@ if (!function_exists("getFontRawData")) {
 							return getArchivedZIPFile($zip, $ufofile, $row['font_id']);
 							break;
 					}
-			if (!is_dir($currently = $unpackdir = FONT_RESOURCES_UNPACKING . DIRECTORY_SEPARATOR . $clause))
-				mkdir ($unpackdir, 0777, true);
-			chdir($unpackdir);
-			$packing = getExtractionShellExec();
-			$cmd = "rm -rfv ./*";
-			$cmd = str_replace("%path", "./", str_replace("%pack", $zip, (substr($packing['zip'],0,1)!="#"?$packing['zip']:substr($packing['zip'],1))));
-			exec($cmd, $out);
-				
-			$totalmaking = count(file(__DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"))-1;
-			exec("cd $currently", $out, $return);
-			$covertscript = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"));
-			foreach($covertscript as $line => $value)
-				foreach(getFontsListAsArray($currently) as $file => $values)
-					if (strpos($value, $values['type']))
-						unset($covertscript[$line]);
-			writeRawFile($script = FONT_RESOURCES_CACHE.DIRECTORY_SEPARATOR.md5(microtime(true).$clause).".pe", implode("\n", $covertscript));			
-			foreach(getFontsListAsArray($currently) as $file => $values)
-			{
-				exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", $script, $currently . DIRECTORY_SEPARATOR . $values['file']), $out, $return);;
-				foreach(getFontsListAsArray($currently) as $file => $values)
-					if ($values['type'] == $output)
-						continue;
-			}
-			unlink($script);
-			while($filesold != count($fontfiles = getFontsListAsArray($currently)))
-			{
-				$filesold = count($fontfiles = getFontsListAsArray($currently));
-				@exec("cd $currently", $out, $return);
-				$covertscript = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"));
-				$ttffile = $afmfile = '';
-				foreach($covertscript as $line => $value)
-					foreach($fontfiles as $file => $values)
-					{
-						if (strpos($value, $values['type']))
-							unset($covertscript[$line]);
-							switch($values['type'])
-							{
-								case "ttf":
-									$ttffile = $file;
-									break;
-								case "afm":
-									$afmfile = $file;
-									break;
-							}
-					}
-				writeRawFile($script = FONT_RESOURCES_CACHE.DIRECTORY_SEPARATOR.md5(microtime(true).json_encode($fonts)).'.pe', implode("\n", $covertscript));
-				foreach($fontfiles as $file => $values)
-				{
-					@exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", $script, $currently . DIRECTORY_SEPARATOR . $values['file']), $out, $return);
-				}
-				unlink($script);
-			}
-			if (file_exists($currently . DIRECTORY_SEPARATOR . $ttffile) && file_exists($currently . DIRECTORY_SEPARATOR . $afmfile))
-				MakePHPFont($currently . DIRECTORY_SEPARATOR . $ttffile, $currently . DIRECTORY_SEPARATOR . $afmfile, $currently, true);
-			foreach(getFontsListAsArray($currently) as $file => $values)
-				if ($values['type'] == $output)
-				{
-					$data = file_get_contents($currently . DIRECTORY_SEPARATOR . basename($values['file']));
-					if (!is_dir(FONTS_CACHE . DIRECTORY_SEPARATOR . '--data--'))
-						mkdir(FONTS_CACHE . DIRECTORY_SEPARATOR . '--data--', 0777, true);
-					writeRawFile($font, $data);
-				}
-			
-			$filez = getFileListAsArray($currently);
-			foreach(getCompleteDirListAsArray($currently) as $path)
-			{
-				$filez[str_replace($currently, "", $path)] = getFileListAsArray($path);
-			}
-			
-			$expanded = 0;
-			foreach($filez as $path => $files)
-			{
-				if (!is_array($files))
-				{
-					$expanded = $expanded + filesize($currently . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . $files);
-					list($count) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql = "SELECT count(*) from `fonts_files` WHERE `font_id` = '" . $json["FontIdentity"]. "' AND  `archive_id` = '" . $archive["id"]. "' AND `path` LIKE '/' AND `filename` = '$files'"));
-					if ($count==0)
-					{
-						$exts = explode('.', $files);
-						$ext = $exts[count($exts)-1];
-						$type = 'other';
-						foreach(array('json', 'diz', 'pfa', 'pfb', 'pt3', 't42', 'sfd', 'ttf', 'bdf', 'otf', 'otb', 'cff', 'cef', 'gai', 'woff', 'svg', 'ufo', 'pf3', 'ttc', 'gsf', 'cid', 'bin', 'hqx', 'dfont', 'mf', 'ik', 'fon', 'fnt', 'pcf', 'pmf', 'pdb', 'eot', 'afm', 'php', 'z', 'png', 'gif', 'jpg', 'data', 'css', 'other') as $fileext)
-							if (strpos($files, ".$filetype")>0)
-								$type = $filetype;
-								@$GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `fonts_files` (`font_id`, `archive_id`, `type`, `extension`, `filename`, `path`, `bytes`, `hits`, `created`) VALUES('" . $json["FontIdentity"]. "', '" . $archive["id"]. "','$type','$ext','$files','/','" .filesize($currently . DIRECTORY_SEPARATOR . $files) . "',0,unix_timestamp())");
-					}
-				} elseif (is_array($files))
-				{
-					foreach($files as $ky => $filz)
-					{
-						$expanded = $expanded + filesize($currently . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . $filz);
-						list($count) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql = "SELECT count(*) from `fonts_files` WHERE `font_id` = '" . $json["FontIdentity"]. "' AND  `archive_id` = '" . $archive["id"]. "' AND `path` LIKE '$path' AND `filename` = '$filz'"));
-						if ($count==0)
-						{
-							$exts = explode('.', $filz);
-							$ext = $exts[count($exts)-1];
-							$type = 'other';
-							foreach(array('json', 'diz', 'pfa', 'pfb', 'pt3', 't42', 'sfd', 'ttf', 'bdf', 'otf', 'otb', 'cff', 'cef', 'gai', 'woff', 'svg', 'ufo', 'pf3', 'ttc', 'gsf', 'cid', 'bin', 'hqx', 'dfont', 'mf', 'ik', 'fon', 'fnt', 'pcf', 'pmf', 'pdb', 'eot', 'afm', 'php', 'z', 'png', 'gif', 'jpg', 'data', 'css', 'other') as $fileext)
-								if (strpos($filz, ".$filetype")>0)
-									$type = $filetype;
-									@$GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `fonts_files` (`font_id`, `archive_id`, `type`, `extension`, `filename`, `path`, `bytes`, `hits`, `created`) VALUES('" . $json["FontIdentity"]. "', '" . $archive["id"]. "','$type','$ext','$filz','$path','" .filesize($currently . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . $filz) . "',0,unix_timestamp())");
-						}
-					}
-				}
-			}
-			$sql = "SELECT * from `uploads` WHERE (`font_id` = '$clause')";
-			$result = $GLOBALS['FontsDB']->queryF($sql);
-			$upload = $GLOBALS['FontsDB']->fetchArray($result);
-			$sql = "SELECT * from `fonts_archiving` WHERE (`font_id` = '$clause')";
-			$result = $GLOBALS['FontsDB']->queryF($sql);
-			$archive = $GLOBALS['FontsDB']->fetchArray($result);
-			// Writes file.diz
-			writeRawFile($comment = $currently . DIRECTORY_SEPARATOR . "file.diz", getFileDIZ(0, $upload['id'], $clause, $filename = $packname.'.zip', $expanded, $filez)."\n.");
-			$packpath = FONT_RESOURCES_RESOURCE . DIRECTORY_SEPARATOR . $archive['path'];
-			if (!is_dir($packpath))
-				mkdir($packpath, 0777, true);
-			$packing = getArchivingShellExec();
-			if (!is_dir($sortpath))
-				mkdir($sortpath, 0777, true);
-			chdir($currently);
-			$cmda = str_replace("%folder", "./", str_replace("%pack", $packfile = $packpath . DIRECTORY_SEPARATOR . $archive['filename']), str_replace("%comment", $comment = $currently . DIRECTORY_SEPARATOR . 'file.diz', (substr($packing['zip'],0,1)!="#"?$packing['zip']:substr($packing['zip'],1))));
-			exec($cmda, $out, $resolv);
-			$cmdb = str_replace("%pack", $packfile, str_replace("%comment", $comment, "/usr/bin/zip -z \"%pack\" < %comment"));
-			exec($cmdb, $out, $resolve);
-			$cmd = "rm -rf .";
-			exec($cmdb, $out, $resolve);
-			$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `repacks` = `repacks` + 1, `repacked` = UNIX_TIMESTAMP() WHERE `font_id` = '$clause'");
-			$sql = "UPDATE `fonts` SET `medium` = 'FONT_RESOURCES_RESOURCE' WHERE (`id` = '$clause')";
-			@$GLOBALS['FontsDB']->queryF($sql);
 			if (!empty($data))
 				return $data;
-			die("Font Type: *.$output - Not found in Font Resource: ".basename($zip));
+			die("Font Type: $output - Not found in Font Resource: ".basename($zip));
 		}
 		return false;
 	}
@@ -2575,141 +2505,109 @@ if (!function_exists("getFontDownload")) {
 				die("SQL Failed: $sql;");
 			if (!$GLOBALS['FontsDB']->queryF($sql = "UPDATE `networking` SET `downloads` = `downloads` +1 WHERE `ip_id` LIKE '$ipid'"))
 				die("SQL Failed: $sql;");
-			$expanded = 0;
-			$output = array();
-			$extract = getExtractionShellExec();
-			$cmd = str_replace("%pack", $zip, str_replace("%path", $currently, (substr($extract['zip'],0,1)!="#"?$extract['zip']:substr($extract['zip'],1))));
-			exec($cmd, $output);
-			//$packed = getFileListAsArray($currently);
-			$count = 0;
-			foreach(getCompleteDirListAsArray($currently) as $path)
+			
+			$found = false;
+			$cachefile = FONTS_CACHE . DIRECTORY_SEPARATOR . '--download--' . DIRECTORY_SEPARATOR . md5(getRegionalFontName($row['font_id']).$row['font_id']) . '.' . $state;
+			if (!is_dir(FONTS_CACHE . DIRECTORY_SEPARATOR . '--download--' . DIRECTORY_SEPARATOR))
+				mkdir(FONTS_CACHE . DIRECTORY_SEPARATOR . '--download--' . DIRECTORY_SEPARATOR, 0777, true);
+			if (!file_exists($cachefile))
+				$found = false;
+			if ($found != true)
 			{
-				$packed[str_replace($currently.DIRECTORY_SEPARATOR, "", $path)] = getFileListAsArray($path);
-				$count = $count + count($packed[str_replace($currently.DIRECTORY_SEPARATOR, "", $path)]);
-			}
-			if ($count<2)
-				die("Path: $currently<br/>\nFailed: $cmd<br/>\n".implode("<br/>\n", $output));
-			exec("rm -Rfv " . $unpacking);
-			$cmd = "chmod -Rfv 0777 ".$currently;
-			exec($cmd, $output);
-			$filez = getFileListAsArray($currently);
-			foreach(getCompleteDirListAsArray($currently) as $path)
-			{
-				$filez[str_replace($currently, "", $path)] = getFileListAsArray($path);
-			}
-			$resource['files'] = $filez;
-			writeRawFile($currently . DIRECTORY_SEPARATOR . "font-resource.json", json_encode($resource));
-			unlink($currently . DIRECTORY_SEPARATOR . "file.diz");
-			writeRawFile($currently . DIRECTORY_SEPARATOR . "file.diz", getFileDIZ($row['font_id'], 0, $row['font_id'], $row['filename'], $expanded, $filez));
-			$sortpath = $currently;
-			$output = array();
-			$packing = getArchivingShellExec();
-			$fontfiles = getCompleteFontsListAsArray($currently);
-			foreach($fontfiles['ttf'] as $md5 => $preview)
-			{
-				if (isset($preview) && file_exists($preview))
-				{
-					require_once __DIR__ . DIRECTORY_SEPARATOR . 'class' . DIRECTORY_SEPARATOR . 'WideImage' . DIRECTORY_SEPARATOR . 'WideImage.php';
-					$img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-preview.png');
-					$height = $img->getHeight();
-					$lsize = 66;
-					$ssize = 14;
-					$step = mt_rand(8,11);
-					$canvas = $img->getCanvas();
-					$i=0;
-					while($i<$height)
+				mkdir($currently = FONT_RESOURCES_CONVERTING . DIRECTORY_SEPARATOR . md5_file($zip.microtime(true)), 0777, true);
+				exec("cd \"$currently\"");
+				foreach(getArchivedZIPContentsArray($zip) as $crc => $file)
+					if (substr($file, strlen($file) - strlen(API_BASE)) == API_BASE)
 					{
-						$canvas->useFont($preview, $point = $ssize + ($lsize - (($lsize  * ($i/$height)))), $img->allocateColor(0, 0, 0));
-						$canvas->writeText(19, $i, "All Work and No Pay Makes Wishcraft a Dull Bored!");
-						$i=$i+$point + $step;
+						$basefile = $file;
+						continue;
 					}
-					$canvas->useFont($preview, 14, $img->allocateColor(0, 0, 0));
-					$canvas->writeText('right', 'bottom', API_URL);
-					$img->saveToFile($currently . DIRECTORY_SEPARATOR . 'Font Preview for '.getRegionalFontName($row['font_id']).'.jpg');
-					$img->saveToFile($currently . DIRECTORY_SEPARATOR . 'Font Preview for '.getRegionalFontName($row['font_id']).'.gif');
-					$img->saveToFile($currently . DIRECTORY_SEPARATOR . 'Font Preview for '.getRegionalFontName($row['font_id']).'.png');
-					unset($img);
-					$title = spacerName(getRegionalFontName($row['font_id']));
-					if (strlen($title)<=9)
-						$img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-title-small.png');
-					elseif (strlen($title)<=18)
-						$img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-title-medium.png');
-					elseif (strlen($title)<=35)
-						$img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-title-large.png');
-					elseif (strlen($title)>=36)
-						$img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-title-extra.png');
-					$canvas->useFont($preview, 78, $img->allocateColor(0, 0, 0));
-					$canvas->writeText('center', 'center', $title);
-					$img->saveToFile($currently . DIRECTORY_SEPARATOR . 'font-name-banner.jpg');
-					$img->saveToFile($currently . DIRECTORY_SEPARATOR . 'font-name-banner.gif');
-					$img->saveToFile($currently . DIRECTORY_SEPARATOR . 'font-name-banner.png');
-					unset($img);
-				}
-			}
-			chdir($currently);
-			$filelist = getCompleteFilesListAsArray($currently);
-			$cmd = (substr($packing['zip'],0,1)!="#"?DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR:'') . str_replace("%filelist", "\"".implode("\" \"", $filelist)."\"", str_replace("%folder", "./", str_replace("%pack", $packfile = ($sortpath . (substr($sortpath, strlen($sortpath)-1, 1)!=DIRECTORY_SEPARATOR?DIRECTORY_SEPARATOR:"") . $row['filename']), str_replace("%commentfile", "./file.diz", (substr($packing['zip'],0,1)!="#"?$packing['zip']:substr($packing['zip'],1))))));
-			exec($cmd, $output);
-			switch($font['medium'])
-			{
-				case 'FONT_RESOURCES_CACHE':
-				case 'FONT_RESOURCES_RESOURCE':
-					if (!is_dir(FONT_RESOURCES_RESOURCE . $row['path']))
-						mkdir(FONT_RESOURCES_RESOURCE . $row['path'], 0777, true);
-					if (!copy($packfile, FONT_RESOURCES_RESOURCE . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']))
-					{
-						die("Failed: $cmd<br/>\n<br/>\n" .implode("<br/>\n", $output));
-					}
-					break;
-			}
-			$output = array();
-			if (!is_dir($sortpath))
-				mkdir($sortpath, 0777, true);
-			chdir($currently);
-			$cmd = "chmod -Rfv 0777 ".FONTS_CACHE;
-			exec($cmd, $output);
-			$output = array();
-			$cmd = (substr($packing[$state],0,1)!="#"?DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR:'') . str_replace("%filelist", "\"".implode("\" \"", $filelist)."\"", str_replace("%folder", "./", str_replace("%pack", $packfile = ($sortpath . (substr($sortpath, strlen($sortpath)-1, 1)!=DIRECTORY_SEPARATOR?DIRECTORY_SEPARATOR:"") . $filename), str_replace("%commentfile", "./file.diz", (substr($packing[$state],0,1)!="#"?$packing[$state]:substr($packing[$state],1))))));
-			exec($cmd, $output);		
+				writeRawFile($font = FONTS_CACHE . DIRECTORY_SEPARATOR . $basefile, getArchivedZIPFile($zip, $basefile, $row['font_id']));
+				if (isset($resource['Font']))
+					writeFontResourceHeader($font, $resource["Font"]['licence'], $resource['Font']);
+				$totalmaking = count(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"))-1;
+				exec("cd $currently", $output, $return);
+				$covertscript = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts-distribution.pe"));
+				foreach($covertscript as $line => $value)
+					if (strpos($value, API_BASE))
+						unset($covertscript[$line]);
+				writeRawFile($script = FONT_RESOURCES_CACHE.DIRECTORY_SEPARATOR.md5(microtime(true).API_URL).".pe", implode("\n", $covertscript));
+				exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", $script, $font), $output, $return);;
+				echo "Executed: $exe<br/>\n\n$output\n\n<br/><br/>";
+				unlink($script);
+				$parts = explode('.', basename($font));
+				unset($parts[count($parts)-1]);
+				$fbase = implode(".", $parts);
+				if (file_exists($currently . DIRECTORY_SEPARATOR . $fbase . '.ttf') && file_exists($currently . DIRECTORY_SEPARATOR . $fbase . '.afm'))
+					MakePHPFont($currently . DIRECTORY_SEPARATOR . $fbase . '.ttf', $currently . DIRECTORY_SEPARATOR . $fbase . '.afm', $currently, true);
 
-			if (file_exists($packfile))
-			{
-				$resultb = $GLOBALS['FontsDB']->queryF($sql = "SELECT * FROM `fonts_callbacks` WHERE `failed` <= unix_timestamp() - (3600 * 6) AND LENGTH(`uri`) > 0 AND `type` IN ('archive') AND `font_id` = '" . $row['font_id'] . "'");
-				while($callback = $GLOBALS['FontsDB']->fetchArray($resultb))
+				$fontfiles = getCompleteFontsListAsArray($currently);
+				foreach($fontfiles['ttf'] as $md5 => $preview)
 				{
-					@setCallBackURI($callback['uri'], 145, 145, array_merge(array('format' => $output, 'downloads' => $font['downloaded']+1, 'font-key' => $row['font_id'], 'ipid' => getIPIdentity('', true))), array('success'=>"UPDATE `fonts_callbacks` SET `calls` = `calls` + 1, `last` = UNIX_TIMESTAMP() WHERE `id` = '" . $callback['id'] . "'"));
-				}
-				switch($font['medium'])
-				{
-					case 'FONT_RESOURCES_CACHE':
-					case 'FONT_RESOURCES_RESOURCE':
-						$GLOBALS['FontsDB']->queryF($sql = 'UPDATE `fonts` SET `medium` = \'FONT_RESOURCES_RESOURCE\', downloaded` = `downloaded` + 1 WHERE `id` = \'' . $row['font_id'] . "'");
-						$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_downloads` SET `fingerprint` = '".md5_file($packfile) . "' WHERE `font_id` = '" . $row['font_id'] . "' AND `archive_id` = '" . $row['id'] . "' AND `filename` = '$filename' AND `ipid` = '$ipid'");
-						break;
-					case 'FONT_RESOURCES_PEERS':
-						$resultb = $GLOBALS['FontsDB']->queryF($sql = "SELECT * FROM `peers` WHERE `down` <= unix_timestamp() - (3600 * 6) AND `polinating` = 'yes' AND `peer-id` = '" . $font['peer_id'] . "'");
-						while($peer = $GLOBALS['FontsDB']->fetchArray($resultb))
+					if (isset($preview) && file_exists($preview))
+					{
+						require_once __DIR__ . DIRECTORY_SEPARATOR . 'class' . DIRECTORY_SEPARATOR . 'WideImage' . DIRECTORY_SEPARATOR . 'WideImage.php';
+						$img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-preview.png');
+						$height = $img->getHeight();
+						$lsize = 66;
+						$ssize = 14;
+						$step = mt_rand(8,11);
+						$canvas = $img->getCanvas();
+						$i=0;
+						while($i<$height)
 						{
-							@setCallBackURI(sprintf($peer['api-uri'].$peer['api-uri-callback'], 'download'), 345, 345, array('peer-id'=>$GLOBALS['peer-id'], 'font-id' => $row['font_id'], 'ip' => whitelistGetIP(true), 'ipid' => getIPIdentity(whitelistGetIP(true), true)), array('success'=>"UPDATE `peers` SET `called` = UNIX_TIMESTAMP() WHERE `peer-id` = '" . $peer['peer-id'] . "'"));
+							$canvas->useFont($preview, $point = $ssize + ($lsize - (($lsize  * ($i/$height)))), $img->allocateColor(0, 0, 0));
+							$canvas->writeText(19, $i, "All Work and No Pay Makes Wishcraft a Dull Bored!");
+							$i=$i+$point + $step;
 						}
-						break;
+						$canvas->useFont($preview, 14, $img->allocateColor(0, 0, 0));
+						$canvas->writeText('right', 'bottom', API_URL);
+						$img->saveToFile($currently . DIRECTORY_SEPARATOR . 'Font Preview for '.getRegionalFontName($row['font_id']).'.png');
+						unset($img);
+						$title = spacerName(getRegionalFontName($row['font_id']));
+						if (strlen($title)<=9)
+							$img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-title-small.png');
+							elseif (strlen($title)<=18)
+							$img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-title-medium.png');
+							elseif (strlen($title)<=35)
+							$img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-title-large.png');
+							elseif (strlen($title)>=36)
+							$img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-title-extra.png');
+							$canvas->useFont($preview, 78, $img->allocateColor(0, 0, 0));
+							$canvas->writeText('center', 'center', $title);
+							$img->saveToFile($currently . DIRECTORY_SEPARATOR . 'font-name-banner.png');
+							unset($img);
+					}
 				}
+				writeRawFile($currently . DIRECTORY_SEPARATOR . "font-resource.json", getArchivedZIPFile($zip, "font-resource.json", $row['font_id']));
+				writeRawFile($currently . DIRECTORY_SEPARATOR . "LICENCE", getArchivedZIPFile($zip, "LICENCE", $row['font_id']));
+				writeRawFile($currently . DIRECTORY_SEPARATOR . "file.diz", getArchivedZIPFile($zip, "file.diz", $row['font_id']));
+				$output = array();
+				$packing = getArchivingShellExec();
+				$stamping = getArchivingStampingExec();
+				$cmd = (substr($packing[$state],0,1)!="#"?DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR:'') . str_replace("%filelist", "\"".implode("\" \"", $filelist)."\"", str_replace("%folder", "./", str_replace("%pack", $cachefile, str_replace("%commentfile", "./file.diz", (substr($packing[$state],0,1)!="#"?$packing[$state]:substr($packing[$state],1))))));
+				exec($cmd, $output);
+				if (isset($stamping[$state]))
+				{
+					$cmdb = str_replace("%pack", $cachefile, str_replace("%comment", $currently . DIRECTORY_SEPARATOR . "file.diz", $stamping[$state]));
+					exec($cmdb, $output, $resolve);
+				}
+				$cmd = "rm -Rfv " . dirname($currently);
+				exec($cmd, $output);
+			}
+			if (file_exists($cachefile)) {	
 				if(ini_get('zlib.output_compression')) {
 					ini_set('zlib.output_compression', 'Off');
 				}
 				// Send Headers
 				header('Content-Type: ' . getMimetype($state));
-				header('Content-Disposition: attachment; filename="' . spacerName($filename) . '"');
+				header('Content-Disposition: attachment; filename="' . getRegionalFontName($row['font_id']) . '.'.$state.'"');
 				header('Content-Transfer-Encoding: binary');
 				header('Accept-Ranges: bytes');
 				header('Cache-Control: private');
 				header('Pragma: private');
 				header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
-				$data = file_get_contents($packfile);
-				// Deletes File
-				unlink($packfile);
-				$cmd = "rm -Rfv " . dirname($currently);
-				exec($cmd, $output);
+				$data = file_get_contents($cachefile);
 				die($data);
 			} else {
 				$cmd = "rm -Rfv " . dirname($currently);
@@ -2785,19 +2683,18 @@ if (!function_exists("getFontUFORawData")) {
 					break;
 			}
 			$filez = $files = $folder = array();
-			$zipcontents = getArchivedZIPContentsArray($zip);
-			foreach($zipcontents as $key => $file)
+			foreach($json['Files'] as $key => $file)
 			{
-				if (strpos($file['path'], '.ufo'))
+				if (strpos(dirname($key), '.ufo'))
 				{
-					$parts = explode('.ufo/', $file['path']);
+					$parts = explode('.ufo/', dirname($key));
 					if (strlen($state)==1 || empty($state) && !isset($parts[1]) && isset($parts[0]))
 					{
-						$files['.'][md5($file['filename'])] = $file['filename']; 
+						$files['.'][md5($key)] = basename($file); 
 					} elseif ($parts[1] == substr($state, 0, strlen($state) - 1))
 					{
 						$folder[md5($parts[1])] = $parts[1];
-						$files[$parts[1]][md5($file['filename'])] = $file['filename'];
+						$files[$parts[1]][md5($key)] = basename($file);
 					} elseif (isset($parts[1]))
 					{
 						$folder[md5($parts[1])] = $parts[1];

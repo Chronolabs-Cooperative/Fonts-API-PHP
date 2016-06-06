@@ -37,7 +37,7 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 	if ($archive  = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql = "SELECT * from `fonts_archiving` WHERE `font_id` = '" . $upload['font_id'] . "'")))
 	{
 		$font  = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql = "SELECT * from `fonts` WHERE `id` = '" . $upload['font_id'] . "'"));
-		$naming = getRegionalFontName($upload['font_id'], $archive['files'], floor($archive['bytes'] / 1024 / 1024), );
+		$naming = getRegionalFontName($upload['font_id']);
 		$tos = array();
 		$tos['to'][] = $upload['email'];
 		$resultb = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `fonts_contributors` WHERE `font_id` = '".$upload['font_id'] . "'");
