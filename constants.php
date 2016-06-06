@@ -27,7 +27,7 @@
 	 */
 	if (!defined('API_DEBUG'))
 		define('API_DEBUG', true);
-	define('API_VERSION', '2.2.18');
+	define('API_VERSION', '2.3.0');
 	define('MAXIMUM_QUERIES', 2600);
 	
 	/**
@@ -52,6 +52,9 @@
 	define('API_URL_ZIP', '/v2/data/%s/zip/download.api');
 	define('API_URL_FONTS', '/v2/fonts/all/json.api?local=only');
 	define('API_POLINATING', (strpos(API_URL, 'localhost')&&strpos(API_URL, 'labs.coop')&&strpos(API_URL, 'syd.labs.coop')?false:true));
+	define('API_REPOSITORY', 'git'); // = git or svn or git,svn
+	define('API_BASE', 'eot');
+	define('API_LICENCE', 'gpl3');
 	
 	/**
 	 * 
@@ -61,11 +64,13 @@
 	define('FONT_RESOURCES_SORTING', '/fonts/Sorting');
 	define('FONT_RESOURCES_CONVERTING', '/fonts/Converting');
 	define('FONT_RESOURCES_RESOURCE', '/fonts/Fonting');
-	define('FONT_RESOURCES_SVN', '/fonts/Fonting');
 	define('FONT_RESOURCES_CACHE', '/fonts/Cache');
 	define('FONT_RESOURCES_STORE', 'https://sourceforge.net/p/chronolabsapis/Fonting/HEAD/tree/%s?format=raw');
 	define('FONT_RESOURCES_PEERS', 'https://sourceforge.net/p/chronolabsapis/Fonting/HEAD/tree/peers.json?format=raw');
 	define('FONT_RESOURCES_REPOMAP', 'https://sourceforge.net/p/chronolabsapis/Fonting/HEAD/tree/%s/%s--repository-mapping.json?format=raw');
+	define('FONT_RESOURCES_STORE_GIT', 'https://github.com/Chronolabs-Cooperative/Fonting-Repository/raw/master/%s');
+	define('FONT_RESOURCES_PEERS_GIT', 'https://github.com/Chronolabs-Cooperative/Fonting-Repository/raw/master/peers.json');
+	define('FONT_RESOURCES_REPOMAP_GIT', 'https://github.com/Chronolabs-Cooperative/Fonting-Repository/raw/master/%s/%s--repository-mapping.json');
 	define('FONT_UPLOAD_PATH', '/tmp/Fonts-Uploads');
 	define('FONTS_CACHE', '/tmp/Fonts-Cache');
 	

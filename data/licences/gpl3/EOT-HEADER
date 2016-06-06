@@ -1,6 +1,6 @@
-%!PS-AdobeFont-1.0: %fontnamespaced% %fontversion%
+%!PS-AdobeFont-1.0: %fontnamespaced% 666.666
 %%Title: %fontname%
-%Version: %fontversion%
+%Version: 666.666
 %%CreationDate: %fontdate%
 %%Creator: %fontcreator%
 %Copyright: %%fontcopyright%%
@@ -14,15 +14,14 @@
 /FontBBox {%fontbbox% }readonly def
 /PaintType %fontpainttype% def
 /FontInfo %fontinfo% begin
- /version (%fontversion%) readonly def
+ /version (666.666) readonly def
  /Notice (%%%fontcopyright%%%) readonly def
  /FullName (%fontname%) readonly def
- /FamilyName (%fontname%) readonly def
+ /FamilyName (%fontfamilyname%) readonly def
  /Weight (%fontweight%) readonly def
  /FSType %fontfstype% def
- /ItalicAngle %fontitalangle% def
+ /ItalicAngle %fontitalicangle% def
  /isFixedPitch %fontfixedpitch% def
  /UnderlinePosition %fontunderline% def
  /UnderlineThickness %fontunderthickness% def
 end readonly def
-/Encoding 256 array

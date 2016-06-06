@@ -3690,6 +3690,237 @@ if (!function_exists("getNodesArray")) {
 }
 
 
+if (!function_exists("writeFontResourceHeader")) {
+	function writeFontResourceHeader($font, $licence = 'gpl3', $values = array())
+	{
+		$baseheader = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . $licence . DIRECTORY_SEPARATOR . strtoupper(API_BASE) . '-HEADER'));
+		if (count($baseheader)>0)
+		{
+			$stoptxt = '';
+			foreach(array_reverse(array_keys($baseheader)) as $key)
+				if (strlen(trim($baseheader[$key]))>0 && empty($stoptxt))
+					$stoptxt = $baseheader[$key];
+
+			$output = file(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . $licence . DIRECTORY_SEPARATOR . strtoupper(API_BASE) . '-HEADER');
+			$buffer = false;
+			foreach($file($font) as $line)
+			{
+				if ($buffer == true)
+					$output[] = $line;
+				elseif (substr($line, 0, strlen($stoptxt)) == $stoptxt)
+					$buffer = true;
+			}
+			$data = implode("", $output);
+			if (file_exists($licfile = __DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . $licence . DIRECTORY_SEPARATOR . 'LICENCE'))
+			{
+				$licence = cleanWhitespaces(file($licfile));
+				$ccp = '';
+				foreach($licence as $line)
+					if (!empty($ccp))
+						$ccp .= "% $line\n";
+					else 
+						$ccp = "$line\n";
+				$ccp .= "% ----------------------------------------------------------------------------\n";
+				$data = str_replace('%%fontcopyright%%', $ccp, $data);
+				$data = str_replace('%%%fontcopyright%%%', implode("\010", $licence), $data);
+				$data = str_replace('%fontcompany%', $values['company'], $data);
+				$data = str_replace('%fontuploaddate%', date("YYYYmmdd", $values['uploaded']), $data);
+				$data = str_replace('%apiurl%', API_URL, $data);
+			} elseif (file_exists($licfile = __DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . 'cc' . DIRECTORY_SEPARATOR . 'LICENCE')) {	
+				$licence = cleanWhitespaces(file($licfile));
+				$ccp = '';
+				foreach($licence as $line)
+					if (!empty($ccp))
+						$ccp .= "% $line\n";
+					else
+						$ccp = "$line\n";
+				$ccp .= "% ----------------------------------------------------------------------------\n";
+				$data = str_replace('%%fontcopyright%%', $ccp, $data);
+				$data = str_replace('%%%fontcopyright%%%', implode("\010", $licence), $data);
+				$data = str_replace('%fontcompany%', $values['company'], $data);
+				$data = str_replace('%fontuploaddate%', date("YYYYmmdd", $values['uploaded']), $data);
+				$data = str_replace('%apiurl%', API_URL, $data);
+			}
+			foreach($values as $key => $value)
+			{
+				switch($key)
+				{
+					case 'title':
+						$data = str_replace('%fontnamespaced%', sef(str_replace(" ", "", $value)), $data);
+						$data = str_replace('%fontname%', $value, $data);
+						break;
+					case 'version':
+						$data = str_replace('666.666', $value, $data);
+						break;
+					case 'date':
+						$data = str_replace('%fontdate%', $value, $data);
+						break;
+					case 'creator':
+						$data = str_replace('%fontcreator%', $value, $data);
+						break;
+					case 'type':
+						$data = str_replace('%fonttype%', $value, $data);
+						break;
+					case 'matrix':
+						$data = str_replace('%fontmatrix%', $value, $data);
+						break;
+					case 'bbox':
+						$data = str_replace('%fontbbox%', $value, $data);
+						break;
+					case 'painttype':
+						$data = str_replace('%fontpainttype%', $value, $data);
+						break;
+					case 'info':
+						$data = str_replace('%fontinfo%', $value, $data);
+						break;
+					case 'family':
+						$data = str_replace('%fontfamilyname%', $value, $data);
+						break;
+					case 'weight':
+						$data = str_replace('%fontweight%', $value, $data);
+						break;
+					case 'fstype':
+						$data = str_replace('%fontfstype%', $value, $data);
+						break;
+					case 'italicangle':
+						$data = str_replace('%fontitalicangle%', $value, $data);
+						break;
+					case 'fixedpitch':
+						$data = str_replace('%fontfixedpitch%', $value, $data);
+						break;
+					case 'underlineposition':
+						$data = str_replace('%fontunderline%', $value, $data);
+						break;
+					case 'underlinethickness':
+						$data = str_replace('%fontunderthickness%', $value, $data);
+						break;
+				}
+			}				
+			writeRawFile($font, $data);
+		}
+	}
+}
+
+
+
+if (!function_exists("writeFontRepositoryHeader")) {
+	function writeFontRepositoryHeader($font, $licence = 'gpl3', $values = array())
+	{
+		$baseheader = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . $licence . DIRECTORY_SEPARATOR . strtoupper(API_BASE) . '-HEADER'));
+		if (count($baseheader)>0)
+		{
+			$stoptxt = '';
+			foreach(array_reverse(array_keys($baseheader)) as $key)
+				if (strlen(trim($baseheader[$key]))>0 && empty($stoptxt))
+					$stoptxt = $baseheader[$key];
+				
+			$output = file(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . $licence . DIRECTORY_SEPARATOR . strtoupper(API_BASE) . '-HEADER');
+			$buffer = false;
+			foreach($file($font) as $line)
+			{
+				if ($buffer == true)
+					$output[] = $line;
+				elseif (substr($line, 0, strlen($stoptxt)) == $stoptxt)
+					$buffer = true;
+			}
+			$data = implode("", $output);
+			writeRawFile($font, $data);
+		}
+	}
+}
+
+if (!function_exists("getBaseFontValueStore")) {
+	function getBaseFontValueStore($font)
+	{
+		$result = array('uploaded' => microtime(true));
+		if (file_exists($font))
+		foreach(file($font) as $line)
+		{
+			$line = str_replace(array("/n", "/r", "\n", "\r", "\t", "/t"), '', $line);
+			if (substr($line,0, $from = strlen('%%Title: ')) == '%%Title: ')
+			{
+				$result['title'] = trim(substr($line, $from, strlen($line) - $from));
+			} elseif (substr($line,0, $from = strlen('%Version: ')) == '%Version: ')
+			{
+				$result['version'] = floatval(trim(substr($line, $from, strlen($line) - $from)));
+			} elseif (substr($line,0, $from = strlen('%%CreationDate: ')) == '%%CreationDate: ')
+			{
+				$result['date'] = trim(substr($line, $from, strlen($line) - $from));
+			} elseif (substr($line,0, $from = strlen('%%Creator: ')) == '%%Creator: ')
+			{
+				$result['creator'] = trim(substr($line, $from, strlen($line) - $from));
+			} elseif (substr($line,0, $from = strlen('/FontType ')) == '/FontType ')
+			{
+				$result['type'] = trim(substr($line, $from, strlen($line) - $from - strlen(' def')));
+			} elseif (substr($line,0, $from = strlen('/FontMatrix [')) == '/FontMatrix [')
+			{
+				$result['matrix'] = trim(substr($line, $from, strlen($line) - $from - strlen(' ]readonly def')));
+			} elseif (substr($line,0, $from = strlen('/FontName /')) == '/FontName /')
+			{
+				$result['named'] = trim(substr($line, $from, strlen($line) - $from - strlen(' def')));
+			} elseif (substr($line,0, $from = strlen('/FontBBox {')) == '/FontBBox { ')
+			{
+				$result['bbox'] = trim(substr($line, $from, strlen($line) - $from - strlen(' }readonly def')));
+			} elseif (substr($line,0, $from = strlen('/PaintType ')) == '/PaintType ')
+			{
+				$result['painttype'] = trim(substr($line, $from, strlen($line) - $from - strlen(' def')));
+			} elseif (substr($line,0, $from = strlen('/FontInfo ')) == '/FontInfo ')
+			{
+				$result['info'] = trim(substr($line, $from, strlen($line) - $from - strlen(' begin')));
+			} elseif (substr($line,0, $from = strlen(' /FullName (')) == ' /FullName (')
+			{
+				$result['name'] = trim(substr($line, $from, strlen($line) - $from - strlen(') readonly def')));
+			} elseif (substr($line,0, $from = strlen(' /FamilyName (')) == ' /FamilyName (')
+			{
+				$result['family'] = trim(substr($line, $from, strlen($line) - $from - strlen(') readonly def')));
+			} elseif (substr($line,0, $from = strlen(' /Weight (')) == ' /Weight (')
+			{
+				$result['weight'] = trim(substr($line, $from, strlen($line) - $from - strlen(') readonly def')));
+			} elseif (substr($line,0, $from = strlen(' /FSType ')) == ' /FSType ')
+			{
+				$result['fstype'] = trim(substr($line, $from, strlen($line) - $from - strlen(' def')));
+			} elseif (substr($line,0, $from = strlen(' /ItalicAngle ')) == ' /ItalicAngle ')
+			{
+				$result['italicangle'] = trim(substr($line, $from, strlen($line) - $from - strlen(' def')));
+			} elseif (substr($line,0, $from = strlen(' /isFixedPitch  ')) == ' /isFixedPitch ')
+			{
+				$result['fixedpitch'] = trim(substr($line, $from, strlen($line) - $from - strlen(' def')));
+			} elseif (substr($line,0, $from = strlen(' /UnderlinePosition ')) == ' /UnderlinePosition ')
+			{
+				$result['underlineposition'] = trim(substr($line, $from, strlen($line) - $from - strlen(' def')));
+			} elseif (substr($line,0, $from = strlen(' /UnderlineThickness ')) == ' /UnderlineThickness ')
+			{
+				$result['underlinethickness'] = trim(substr($line, $from, strlen($line) - $from - strlen(' def')));
+			} elseif (substr($line,0, $from = strlen('end readonly def')) == 'end readonly def')
+			{
+				return $result;
+			}
+		}
+		return $result;
+	}
+}
+
+
+if (!function_exists("deleteFilesNotListedByArray")) {
+	function deleteFilesNotListedByArray($dirname, $skipped = array())
+	{
+		foreach(array_reverse(getCompleteDirListAsArray($dirname)) as $file)
+		{
+			$found = false;
+			foreach($skipped as $skip)
+				if (strtolower(substr($file, strlen($file)-strlen($skip)))==strtolower($skip))
+					$found = true;
+			if ($found == false)
+			{
+				unlink($dirname.DIRECTORY_SEPARATOR.$file);
+				rmdir(dirname($dirname.DIRECTORY_SEPARATOR.$file));
+			}
+		}
+			
+	}
+
+}
+
 if (!function_exists("getCompleteFilesListAsArray")) {
 	function getCompleteFilesListAsArray($dirname, $result = array())
 	{
@@ -3864,6 +4095,18 @@ if (!function_exists("getFontsListAsArray")) {
 	}
 }
 
+if (!function_exists("getArchivingStampingExec")) {
+	function getArchivingShellExec()
+	{
+		$ret = array();
+		foreach(cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'packs-stamping.diz')) as $values)
+		{
+			$parts = explode("||", $values);
+			$ret[$parts[0]] = $parts[1];
+		}
+		return $ret;
+	}
+}
 
 if (!function_exists("getArchivingShellExec")) {
 	function getArchivingShellExec()

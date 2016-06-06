@@ -247,7 +247,9 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 					'FontSubfamily' => $fontage->getFontSubfamily(), "FontSubfamilyID" => $fontage->getFontSubfamilyID(),
 					'FontFullName' => $naming = spacerName($fontage->getFontFullName()), "FontVersion" => $fontage->getFontVersion(),
 					'FontWeight' => $fontage->getFontWeight(), "FontPostscriptName" => $fontage->getFontPostscriptName(),
-					"Files" => $filez,'Table' => $fontage->getTable(), "UnicodeCharMap" => $fontage->getUnicodeCharMap(),
+					"Files" => getCompleteFilesListAsArray($currently),
+					"Font" => array_merge($datastore['Font']), "Licences" => array($datastore['Font']['licence'] => cleanWhitespaces(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . $datastore['Font']['licence'] . DIRECTORY_SEPARATOR . 'LICENCE')))
+					,'Table' => $fontage->getTable(), "UnicodeCharMap" => $fontage->getUnicodeCharMap(),
 					"Reserves" => $reserves, 'Names' => removeIdentities($names), 'Nodes' => removeIdentities($nodes),
 					"Contributors" => removeIdentities($contributors), 'FontIdentity' => $fingerprint, 'Bytes' => $expanded,
 					"Networking" => $networking);
@@ -375,18 +377,27 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 	
 	// Writes file.diz
 	writeRawFile($comment = $currently . DIRECTORY_SEPARATOR . "file.diz", getFileDIZ(0, $upload['id'], $fingerprint, $filename = $packname.'.zip', $expanded, $filez)."\n.");
-	
+	deleteFilesNotListedByArray($currently, array(API_BASE, 'file.diz', 'resource.json', 'LICENCE'));
+	foreach(getCompleteFilesListAsArray($currently) as $file)
+		if (substr($file, strlen($file)-3) == API_BASE)
+			writeFontRepositoryHeader($currently . DIRECTORY_SEPARATOR . $file, $data['Font']['licence'], $data['Font']);
+	if (!file_exists($currently . DIRECTORY_SEPARATOR . 'LICENCE'))
+		copy(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . $datastore['Font']['licence'] . DIRECTORY_SEPARATOR . 'LICENCE', $currently . DIRECTORY_SEPARATOR . 'LICENCE');
 	$packing = getArchivingShellExec();
+	$stamping = getArchivingStampingExec();
 	if (!is_dir($sortpath))
 		mkdir($sortpath, 0777, true);
 	chdir($currently);
 	$cmda = str_replace("%folder", "./", str_replace("%pack", $packfile, str_replace("%comment", $comment, (substr($packing['zip'],0,1)!="#"?$packing['zip']:substr($packing['zip'],1)))));
 	echo "Executing: $cmda\n";
 	exec($cmda, $output, $resolv);
-	$cmdb = str_replace("%pack", $packfile, str_replace("%comment", $comment, "/usr/bin/zip -z \"%pack\" < %comment"));
-	echo "Executing: $cmdb\n";
-	exec($cmdb, $output, $resolve);
-	echo implode("\n", $output);
+	if (isset($stamping['zip']))
+	{
+		$cmdb = str_replace("%pack", $packfile, str_replace("%comment", $comment, $stamping['zip']));
+		echo "Executing: $cmdb\n";
+		exec($cmdb, $output, $resolve);
+		echo implode("\n", $output);
+	}
 	if (!file_exists($packfile))
 		die("File not found: $packfile ~~ Failed: $cmda");
 	if (file_exists($packfile))
@@ -413,45 +424,13 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 				die("Failed SQL: $sql;\n");
 		}
 		list($nodecount) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF("SELECT count(*) FROM  `nodes_linking` WHERE `font_id` = '" . $fingerprint . "'"));
-		if (!$GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `fonts` (`id`, `peer_id`, `archive_id`, `type`, `state`, `names`, `fingers`, `nodes`, `created`, `normal`, `italic`, `bold`, `wide`, `condensed`, `light`, `semi`, `book`, `body`, `header`, `heading`, `footer`, `graphic`, `system`, `quote`, `block`, `admin`, `logo`, `slogon`, `legal`, `script`, `medium`, `data`, `longitude`, `latitude`) VALUES ('$fingerprint', '".$GLOBALS['peer-id']."','$archive_id', 'local', 'online', '".count($names)."', '$fingercount', '$nodecount', '".time()."', '".(in_array('normal', $types)?'yes':'no')."', '".(in_array('italic', $types)?'yes':'no')."', '".(in_array('bold', $types)?'yes':'no')."', '".(in_array('wide', $types)?'yes':'no')."', '".(in_array('condensed', $types)?'yes':'no')."', '".(in_array('light', $types)?'yes':'no')."', '".(in_array('semi', $types)?'yes':'no')."', '".(in_array('book', $types)?'yes':'no')."', '".(in_array('body', $types)?'yes':'no')."', '".(in_array('header', $types)?'yes':'no')."', '".(in_array('heading', $types)?'yes':'no')."', '".(in_array('footer', $types)?'yes':'no')."', '".(in_array('graphic', $types)?'yes':'no')."', '".(in_array('system', $types)?'yes':'no')."', '".(in_array('quote', $types)?'yes':'no')."', '".(in_array('block', $types)?'yes':'no')."', '".(in_array('admin', $types)?'yes':'no')."', '".(in_array('logo', $types)?'yes':'no')."', '".(in_array('slogon', $types)?'yes':'no')."', '".(in_array('legal', $types)?'yes':'no')."', '".(in_array('script', $types)?'yes':'no')."', '".'FONT_RESOURCES_RESOURCE'."', '" . $GLOBALS['FontsDB']->escape(json_encode($data)) . "', '" . $upload['longitude'] . "', '" . $upload['latitude'] . "')"))
+		if (!$GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `fonts` (`id`, `peer_id`, `archive_id`, `type`, `state`, `names`, `fingers`, `nodes`, `created`, `normal`, `italic`, `bold`, `wide`, `condensed`, `light`, `semi`, `book`, `body`, `header`, `heading`, `footer`, `graphic`, `system`, `quote`, `block`, `admin`, `logo`, `slogon`, `legal`, `script`, `medium`, `data`, `longitude`, `latitude`, `version`, `date`, `uploaded`, `licence`, `company`, `matrix`, `bbox`, `painttype`, `info`, `family`, `weight`, `fstype`, `italicangle`, `fixedpitch`, `underlineposition`, `underlinethickness`) VALUES ('$fingerprint', '".$GLOBALS['peer-id']."','$archive_id', 'local', 'online', '".count($names)."', '$fingercount', '$nodecount', '".time()."', '".(in_array('normal', $types)?'yes':'no')."', '".(in_array('italic', $types)?'yes':'no')."', '".(in_array('bold', $types)?'yes':'no')."', '".(in_array('wide', $types)?'yes':'no')."', '".(in_array('condensed', $types)?'yes':'no')."', '".(in_array('light', $types)?'yes':'no')."', '".(in_array('semi', $types)?'yes':'no')."', '".(in_array('book', $types)?'yes':'no')."', '".(in_array('body', $types)?'yes':'no')."', '".(in_array('header', $types)?'yes':'no')."', '".(in_array('heading', $types)?'yes':'no')."', '".(in_array('footer', $types)?'yes':'no')."', '".(in_array('graphic', $types)?'yes':'no')."', '".(in_array('system', $types)?'yes':'no')."', '".(in_array('quote', $types)?'yes':'no')."', '".(in_array('block', $types)?'yes':'no')."', '".(in_array('admin', $types)?'yes':'no')."', '".(in_array('logo', $types)?'yes':'no')."', '".(in_array('slogon', $types)?'yes':'no')."', '".(in_array('legal', $types)?'yes':'no')."', '".(in_array('script', $types)?'yes':'no')."', '".'FONT_RESOURCES_RESOURCE'."', '" . $GLOBALS['FontsDB']->escape(json_encode($data)) . "', '" . $upload['longitude'] . "', '" . $upload['latitude'] . "', '" . $data['Font']['version'] . "', '" . $data['Font']['date'] . "', '" . $data['Font']['uploaded'] . "', '" . $data['Font']['licence'] . "', '" . $data['Font']['company'] . "', '" . $data['Font']['matrix'] . "', '" . $data['Font']['bbox'] . "', '" . $data['Font']['painttype'] . "', '" . $data['Font']['info'] . "', '" . $data['Font']['family'] . "', '" . $data['Font']['weight'] . "', '" . $data['Font']['fstype'] . "', '" . $data['Font']['italicangle'] . "', '" . $data['Font']['fixedpitch'] . "', '" . $data['Font']['underlineposition'] . "', '" . $data['Font']['underlinethickness'] . "')"))
 			die("Failed SQL: $sql;\n");
 		if (!empty($upload['callback']))
 		{
 			$cbid = md5($fingerprint.$archive_id.$upload['callback']);
 			$GLOBALS['FontsDB']->queryF("INSERT INTO `fonts_callbacks` (`id`, `type`, `font_id`, `archive_id`, `upload_id`, `uri`, `email`) VALUES ('$cbid', 'upload', '$fingerprint', '$archive_id', '".$upload['id']."', '".$upload['callback']."','".$upload['email']."')");
 		}
-		echo "Setting Memory Limit To: " .(floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-add.sh')) / (1024) + 50 . "M") . "/n";
-		ini_set('memory_limit', floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-add.sh') / (1024) + 50) . "M");
-		if (!file_exists(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-add.sh'))
-		{
-			$bash=array();
-			$bash[] = "#! bash";
-			$bash[] = "cd ".FONT_RESOURCES_RESOURCE;
-			$bash[] = "svn cleanup";
-			$bash[] = "svn update";
-		} else {
-			$bash = file(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-add.sh');
-			unset($bash[count($bash)-1]);
-		}
-		$bash[] = "cd " . dirname($packfile);
-		$bash[] = "svn cleanup";
-		$bash[] = "svn add . --force";
-		$bash[] = "svn commit -m \"Importing into Repository for 1st time; the font: $naming\"";
-		$bash[] = "cd " . dirname(dirname($packfile));
-		$bash[] = "svn cleanup";
-		$bash[] = "svn add . --force";
-		$bash[] = "svn commit -m \"Importing into Repository for 1st time; the font: ".basename(dirname(dirname($packfile)))."\"";
-		$bash[] = "cd " . dirname(dirname(dirname($packfile)));
-		$bash[] = "svn cleanup";
-		$bash[] = "svn add . --force";
-		$bash[] = "svn commit -m \"Importing into Repository for 1st time; the font: ".basename(dirname(dirname(dirname($packfile))))."\"";
-		$bash[] = "cd " . dirname(dirname(dirname(dirname($packfile))));
-		$bash[] = "svn cleanup";
-		$bash[] = "svn add . --force";
-		$bash[] = "svn commit -m \"Importing into Repository for 1st time; the font: ".basename(dirname(dirname(dirname(dirname($packfile)))))."\"";
-		$bash[] = "unlink " . dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-add.sh';
-		writeRawFile(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-add.sh', implode("\n", $bash));
-		unset($bash);
 		
 		$path = str_replace(FONT_RESOURCES_RESOURCE, '', dirname($packfile));
 		$subs = explode('/', $path);
@@ -465,7 +444,7 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 			$data[$subs[1]][$subs[2]][md5_file($packfile)]['files'] = getArchivedZIPContentsArray($file);
 			$data[$subs[1]][$subs[2]][md5_file($packfile)]['resource'][$subs[2]] = $data;
 			$data[$subs[1]][$subs[2]][md5_file($packfile)]['resource'][$subs[1]] = $data;
-			writeRawFile(FONT_RESOURCES_RESOURCE. "/".$subs[1].DIRECTORY_SEPARATOR.$subs[2].DIRECTORY_SEPARATOR.$subs[2]."--repository-mapping.json", json_encode($ids));
+			writeRawFile($filea = FONT_RESOURCES_RESOURCE. "/".$subs[1].DIRECTORY_SEPARATOR.$subs[2].DIRECTORY_SEPARATOR.$subs[2]."--repository-mapping.json", json_encode($ids));
 		}
 		unset($data);
 		$alpha = array_unique(array_merge(json_decode(file_get_contents(FONT_RESOURCES_RESOURCE. "/".$subs[1].DIRECTORY_SEPARATOR.$subs[1]."--repository-mapping.json"), true), json_decode(getURIData(sprintf(FONT_RESOURCES_REPOMAP, $subs[1], $subs[1], 120, 120, array())), true)));
@@ -477,9 +456,71 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 			writeRawFile(FONT_RESOURCES_RESOURCE. "/".$subs[1].DIRECTORY_SEPARATOR.$subs[1]."--repository-mapping.json", json_encode($alpha));
 			$ids = json_decode(getURIData(str_replace(array("%s/", "%s--", '?format=raw'), "", FONT_RESOURCES_REPOMAP), 120, 120, array()), true);;
 			$ids[$subs[1]][$subs[2]][$subs[3]][$alpha[$subs[1]][md5_file($packfile)]['FontIdentity']] = $alpha[$subs[1]][md5_file($packfile)]['resource']['FontIdentity'];
-			writeRawFile(FONT_RESOURCES_RESOURCE. "/".basename(str_replace(array("%s/", "%s--", '?format=raw'), "", FONT_RESOURCES_REPOMAP)), json_encode($ids));
+			writeRawFile($fileb = FONT_RESOURCES_RESOURCE. "/".basename(str_replace(array("%s/", "%s--", '?format=raw'), "", FONT_RESOURCES_REPOMAP)), json_encode($ids));
 		}
 		unset($alpha);
+		
+		if (in_array('svn', explode(",", API_REPOSITORY)))
+		{
+			if (!file_exists(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-add.sh'))
+			{
+				$bash=array();
+				$bash[] = "#! bash";
+				$bash[] = "cd ".FONT_RESOURCES_RESOURCE;
+				$bash[] = "svn cleanup";
+				$bash[] = "svn update";
+			} else {
+				echo "Setting Memory Limit To: " .(floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-add.sh')) / (1024) + 50 . "M") . "/n";
+				ini_set('memory_limit', floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-add.sh') / (1024) + 50) . "M");
+				$bash = file(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-add.sh');
+				unset($bash[count($bash)-1]);
+			}
+			$bash[] = "cd " . dirname($packfile);
+			$bash[] = "svn cleanup";
+			$bash[] = "svn add . --force";
+			$bash[] = "svn commit -m \"Importing into Repository for 1st time; the font: $naming\"";
+			$bash[] = "cd " . dirname(dirname($packfile));
+			$bash[] = "svn cleanup";
+			$bash[] = "svn add . --force";
+			$bash[] = "svn commit -m \"Importing into Repository for 1st time; the font: ".basename(dirname(dirname($packfile)))."\"";
+			$bash[] = "cd " . dirname(dirname(dirname($packfile)));
+			$bash[] = "svn cleanup";
+			$bash[] = "svn add . --force";
+			$bash[] = "svn commit -m \"Importing into Repository for 1st time; the font: ".basename(dirname(dirname(dirname($packfile))))."\"";
+			$bash[] = "cd " . dirname(dirname(dirname(dirname($packfile))));
+			$bash[] = "svn cleanup";
+			$bash[] = "svn add . --force";
+			$bash[] = "svn commit -m \"Importing into Repository for 1st time; the font: ".basename(dirname(dirname(dirname(dirname($packfile)))))."\"";
+			$bash[] = "unlink " . dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-add.sh';
+			writeRawFile(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-add.sh', implode("\n", $bash));
+			unset($bash);
+		}
+		if (in_array('git', explode(",", API_REPOSITORY)))
+		{
+			if (!file_exists(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-add.sh'))
+			{
+				$bash=array();
+				$bash[] = "#! bash";
+				$bash[] = "cd ".FONT_RESOURCES_RESOURCE;
+			} else {
+				echo "Setting Memory Limit To: " .(floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-add.sh')) / (1024) + 50 . "M") . "/n";
+				ini_set('memory_limit', floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-add.sh') / (1024) + 50) . "M");
+				$bash = file(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-add.sh');
+				unset($bash[count($bash)-1]);
+			}
+			$bash[] = "cd " . dirname($packfile);
+			$bash[] = "git add ".basename($packfile)."";
+			$bash[] = "cd " . dirname($filea);
+			$bash[] = "git add ".basename($filea)."";
+			$bash[] = "cd " . dirname($fileb);
+			$bash[] = "git add ".basename($fileb)."";
+			$bash[] = "git commit -m \"Importing into Repository for 1st time; the font: $naming\"";
+			$bash[] = "git push origin master";
+			$bash[] = "unlink " . dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-add.sh';
+			writeRawFile(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-add.sh', implode("\n", $bash));
+			unset($bash);
+		}
+		
 	} else 
 		echo("Error: Failed generated archived pack font file!!\n");
 	

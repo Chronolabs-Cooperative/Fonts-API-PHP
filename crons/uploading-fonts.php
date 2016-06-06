@@ -220,74 +220,82 @@ foreach($uploader[$ipid] as $time => $data) {
 					{
 						if (copy($fontfile, $copypath . DIRECTORY_SEPARATOR .  strtolower(basename($fontfile))))
 						{
-							if (file_exists($copypath . DIRECTORY_SEPARATOR .  strtolower(basename($fontfile))))
+							if (file_exists($uploadfile = $copypath . DIRECTORY_SEPARATOR .  strtolower(basename($fontfile))))
 							{
+								@exec("cd $copypath", $out, $return);
+								@exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", dirname(__DIR__ ) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts-upload.pe", $uploadfile), $out, $return);
+								deleteFilesNotListedByArray($copypath, array(API_BASE=>API_BASE));
 								unlink($fontfile);
-								$ffile++;
-								$data['process'] = microtime(true);
-								$data['mode'] = 'queuing';
-								$data['current'] = $copypath . DIRECTORY_SEPARATOR .  strtolower(basename($fontfile));
-								file_put_contents(constant("FONT_RESOURCES_UNPACKING") . $data['path'] . DIRECTORY_SEPARATOR . "upload.json", json_encode($data));
-									
-								
-								sort($emailcc);
-								sort($emailbcc);
-								$ccid = md5(json_encode($emailcc));
-								$bccid = md5(json_encode($emailbcc));
-								
-								$sql = "SELECT count(*) FROM `emails` WHERE `id` = '$ccid'";
-								list($count) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql));
-								if ($count == 0)
+								foreach(getFontsListAsArray($copypath) as $file)
+									if ($file['type']==API_BASE)
+										$uploadfile = $copypath . DIRECTORY_SEPARATOR . $file['file'];
+								$fontdata = getBaseFontValueStore($uploadfile);
+								if (isset($fontdata['version']))
+									$fontdata['version'] = $fontdata['version'] + 1.001;
+								$fontdata['person'] = $data['form']['name'];
+								$fontdata['company'] = $data['form']['bizo'];
+								$fontdata['uploaded'] = microtime(true);
+								$fontdata['licence'] = API_LICENCE;
+								writeFontRepositoryHeader($uploadfile, API_LICENCE, $fontdata);
+								$fingerprint = md5_file($uploadfile);
+								$sql = "SELECT count(*) FROM `fonts_fingering` WHERE `fingerprint` LIKE '" . $fingerprint . "'";
+								list($fingers) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql));
+								if ($fingers==0)
 								{
-									if (!$GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `emails` (`id`, `emails`) VALUES('$ccid', '".$GLOBALS['FontsDB']->escape(json_encode($emailcc))."')"))
-										die("SQL Failed: $sql;");
-								}
-								
-								$sql = "SELECT count(*) FROM `emails` WHERE `id` = '$bccid'";
-								list($count) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql));
-								if ($count == 0)
-								{
-									if (!$GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `emails` (`id`, `emails`) VALUES('$bccid', '".$GLOBALS['FontsDB']->escape(json_encode($emailcc))."')"))
-										die("SQL Failed: $sql;");
-								}
-								
-								$queued[] = $fontfile;
-								$sql = "INSERT INTO `uploads` (`ip_id`, `available`, `key`, `scope`, `email`, `uploaded_file`, `uploaded_path`, `uploaded`, `referee_uri`, `callback`, `bytes`, `batch-size`, `datastore`, `cc`, `bcc`, `frequency`, `elapses`, `longitude`, `latitude`) VALUES ('$ipid','" . $available = mt_rand(7,13) . "','" . $GLOBALS['FontsDB']->escape(md5_file($copypath . DIRECTORY_SEPARATOR .  strtolower(basename($fontfile)))) . "','" . $GLOBALS['FontsDB']->escape($scope) . "','" . $GLOBALS['FontsDB']->escape($email = $data['form']['email']) . "','" . $GLOBALS['FontsDB']->escape($filename = strtolower(basename($fontfile))) . "','" . $GLOBALS['FontsDB']->escape($copypath) . "','" . time(). "','" . $GLOBALS['FontsDB']->escape($_SERVER['HTTP_REFERER']) . "','" . $GLOBALS['FontsDB']->escape($callback = $data['form']['callback']) . "'," . (filesize($fontfile)==''?0:filesize($fontfile)) . "," . $size . ",'" . $GLOBALS['FontsDB']->escape(json_encode(array('scope' => $data['form']['scope'], 'ipsec' => $locality = json_decode(getURIData("https://lookups.ringwould.com.au/v1/country/".(in_array($ip = whitelistGetIP(true), array('127.0.0.1','10.1.1.1'))?'myself':$ip)."/json.api"), true), 'name' => $data['form']['name'], 'bizo' => $data['form']['bizo'], 'batch-size' => $size))) . "','$ccid','$bccid','" . $GLOBALS['FontsDB']->escape($freq = mt_rand(2.76,6.75)*3600*24) . "','" . $GLOBALS['FontsDB']->escape($elapse = mt_rand(9,27)*3600*24) . "','". (!isset($_SESSION['locality']['location']["coordinates"]["longitude"])?"0.0001":$_SESSION['locality']['location']["coordinates"]["longitude"])."','". (!isset($_SESSION['locality']['location']["coordinates"]["latitude"])?"0.0001":$_SESSION['locality']['location']["coordinates"]["latitude"])."')";
-								if ($GLOBALS['FontsDB']->queryF($sql))
-								{
-									$uploadid = $GLOBALS['FontsDB']->getInsertId();
-									if ($scope == 'none')
+									$ffile++;
+									$data['process'] = microtime(true);
+									$data['mode'] = 'queuing';
+									$data['current'] = $copypath . DIRECTORY_SEPARATOR .  strtolower(basename($fontfile));
+									file_put_contents(constant("FONT_RESOURCES_UNPACKING") . $data['path'] . DIRECTORY_SEPARATOR . "upload.json", json_encode($data));
+									sort($emailcc);
+									sort($emailbcc);
+									$ccid = md5(json_encode($emailcc));
+									$bccid = md5(json_encode($emailbcc));
+									$sql = "SELECT count(*) FROM `emails` WHERE `id` = '$ccid'";
+									list($count) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql));
+									if ($count == 0)
 									{
-										$sql = "UPDATE `uploads` SET `quizing` = UNIX_TIMESTAMP(), `expired` = UNIX_TIMESTAMP()+1831, `slotting` = 0, `needing` = 1, `finished` = 2, `surveys` = 2, `available` = 0 WHERE `id` = $uploadid";
-										$GLOBALS['FontsDB']->queryF($sql);
+										if (!$GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `emails` (`id`, `emails`) VALUES('$ccid', '".$GLOBALS['FontsDB']->escape(json_encode($emailcc))."')"))
+											die("SQL Failed: $sql;");
 									}
-									echo "\nCreated Upload Identity: ".$uploadid;
-									if (!empty($cullist[$finger]))
+									$sql = "SELECT count(*) FROM `emails` WHERE `id` = '$bccid'";
+									list($count) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql));
+									if ($count == 0)
 									{
-										foreach($cullist[$finger] as $typeb => $fingers) {
-											foreach($fingers as $fingerprint => $file)
-											{
-												$culled[$finger][$fingerprint][$typeb] = basename($file);
-												$sql = "INSERT INTO `fonts_fingering` (`type`, `upload_id`, `fingerprint`) VALUES ('" . $GLOBALS['FontsDB']->escape($typeb) . "','" . $GLOBALS['FontsDB']->escape($uploadid) . "','" . $GLOBALS['FontsDB']->escape($fingerprint) . "')";
-												$GLOBALS['FontsDB']->queryF($sql);
-											}
+										if (!$GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `emails` (`id`, `emails`) VALUES('$bccid', '".$GLOBALS['FontsDB']->escape(json_encode($emailcc))."')"))
+											die("SQL Failed: $sql;");
+									}
+									$queued[] = $fontfile;
+									$sql = "INSERT INTO `uploads` (`ip_id`, `available`, `key`, `scope`, `email`, `uploaded_file`, `uploaded_path`, `uploaded`, `referee_uri`, `callback`, `bytes`, `batch-size`, `datastore`, `cc`, `bcc`, `frequency`, `elapses`, `longitude`, `latitude`) VALUES ('$ipid','" . $available = mt_rand(7,13) . "','" . $GLOBALS['FontsDB']->escape(md5_file($copypath . DIRECTORY_SEPARATOR .  strtolower(basename($uploadfile)))) . "','" . $GLOBALS['FontsDB']->escape($scope) . "','" . $GLOBALS['FontsDB']->escape($email = $data['form']['email']) . "','" . $GLOBALS['FontsDB']->escape($filename = strtolower(basename($uploadfile))) . "','" . $GLOBALS['FontsDB']->escape($copypath) . "','" . time(). "','" . $GLOBALS['FontsDB']->escape($_SERVER['HTTP_REFERER']) . "','" . $GLOBALS['FontsDB']->escape($callback = $data['form']['callback']) . "'," . (filesize($fontfile)==''?0:filesize($fontfile)) . "," . $size . ",'" . $GLOBALS['FontsDB']->escape(json_encode(array('scope' => $data['form']['scope'], 'ipsec' => $locality = json_decode(getURIData("https://lookups.labs.coop/v1/country/".(in_array($ip = whitelistGetIP(true), array('127.0.0.1','10.1.1.1'))?'myself':$ip)."/json.api"), true), 'name' => $data['form']['name'], 'bizo' => $data['form']['bizo'], 'batch-size' => $size, 'font' => $fontdata))) . "','$ccid','$bccid','" . $GLOBALS['FontsDB']->escape($freq = mt_rand(2.76,6.75)*3600*24) . "','" . $GLOBALS['FontsDB']->escape($elapse = mt_rand(9,27)*3600*24) . "','". (!isset($_SESSION['locality']['location']["coordinates"]["longitude"])?"0.0001":$_SESSION['locality']['location']["coordinates"]["longitude"])."','". (!isset($_SESSION['locality']['location']["coordinates"]["latitude"])?"0.0001":$_SESSION['locality']['location']["coordinates"]["latitude"])."')";
+									if ($GLOBALS['FontsDB']->queryF($sql))
+									{
+										$uploadid = $GLOBALS['FontsDB']->getInsertId();
+										if ($scope == 'none')
+										{
+											$sql = "UPDATE `uploads` SET `quizing` = UNIX_TIMESTAMP(), `expired` = UNIX_TIMESTAMP()+1831, `slotting` = 0, `needing` = 1, `finished` = 2, `surveys` = 2, `available` = 0 WHERE `id` = $uploadid";
+											$GLOBALS['FontsDB']->queryF($sql);
 										}
-									}
-									$sql = "INSERT INTO `fonts_fingering` (`type`, `upload_id`, `fingerprint`) VALUES ('" . $GLOBALS['FontsDB']->escape($type) . "','" . $GLOBALS['FontsDB']->escape($uploadid) . "','" . $GLOBALS['FontsDB']->escape($finger) . "')";
-									$GLOBALS['FontsDB']->queryF($sql);
-									$success[] = basename($fontfile);
-									$data['success'][] = basename($fontfile);
-									if (isset($data['form']['callback']) && !empty($data['form']['callback']))
-										@setCallBackURI($data['form']['callback'], 145, 145, array('action'=>'uploaded', 'file-md5' => $finger, 'allocated' => $available, 'key' => $key, 'email' => $data['form']['email'], 'name' => $data['form']['name'], 'bizo' => $data['form']['bizo'], 'frequency' => $freq, 'elapsing' => $elapses, 'filename' => $filename, 'culled' => false));
-										$GLOBALS["FontsDB"]->queryF('UPDATE `networking` SET `fonts` = `fonts` + 1 WHERE `ip_id` = "'.$ipid.'"');
-									echo "\nUploaded file Queued: ".basename($fontfile);
-									if ($ffile>=mt_rand(109, 210))
-									{
-										$data['mode'] = 'culling';
-										$uploader = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
-										$uploader[$ipid][$time] = $data;
-										file_put_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($uploader));
-										die("Scheduling of font limit; reached, $ffile files for font's processed in this session!!\n");
+										echo "\nCreated Upload Identity: ".$uploadid;
+										$sql = "INSERT INTO `fonts_fingering` (`type`, `upload_id`, `fingerprint`) VALUES ('" . $GLOBALS['FontsDB']->escape(API_BASE) . "','" . $GLOBALS['FontsDB']->escape($uploadid) . "','" . $GLOBALS['FontsDB']->escape($fingerprint) . "')";
+										$GLOBALS['FontsDB']->queryF($sql);
+										$success[] = basename($fontfile);
+										$data['success'][] = basename($fontfile);
+										if (isset($data['form']['callback']) && !empty($data['form']['callback']))
+											@setCallBackURI($data['form']['callback'], 145, 145, array('action'=>'uploaded', 'file-md5' => $finger, 'allocated' => $available, 'key' => $key, 'email' => $data['form']['email'], 'name' => $data['form']['name'], 'bizo' => $data['form']['bizo'], 'frequency' => $freq, 'elapsing' => $elapses, 'filename' => $filename, 'culled' => false));
+											$GLOBALS["FontsDB"]->queryF('UPDATE `networking` SET `fonts` = `fonts` + 1 WHERE `ip_id` = "'.$ipid.'"');
+										echo "\nUploaded file Queued: ".basename($fontfile);
+										if ($ffile>=mt_rand(109, 210))
+										{
+											$data['mode'] = 'culling';
+											$uploader = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
+											$uploader[$ipid][$time] = $data;
+											file_put_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($uploader));
+											die("Scheduling of font limit; reached, $ffile files for font's processed in this session!!\n");
+										}
+									} else {
+										echo "Font Already Exists: $fingerprint - Deleting $uploadfile\n";
+										unlink($uploadfile);
+										rmdir(dirname($uploadfile));
 									}
 								} else
 									die('SQL Failed: ' . $sql);
@@ -314,7 +322,7 @@ foreach($uploader[$ipid] as $time => $data) {
 					if (!empty($auth[0]) && !empty($auth[1]) && !empty($auth[2]))
 						$mailer->multimailer->setSMTPAuth($auth[0], $auth[1], $auth[2]);
 					$html = file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'uploading-fonts.html');
-					$html = str_replace("{X_FONTFILES}", "<li style='float:left; display: block; width: 24%;'>" . implode("</li><li style='float:left; display: block; width: 24%;'>", $success) . "</li>", $html);
+					$html = str_replace("{X_FONTFILES}", "<li style='float:left; display: block; width: 24%;'>" . implode("</li><li style='float:left; display: block; width: 24%;'>", $data['success']) . "</li>", $html);
 					if ($mailer->sendMail($data['form']['email'], array(),  array(), "Font uploads queued!!!", $html, array(), NULL, true))
 					{
 						echo "Sent mail to: " . $data['form']['email']."\n\n<br/>\n";
