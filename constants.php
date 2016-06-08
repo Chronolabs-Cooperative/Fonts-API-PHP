@@ -56,6 +56,9 @@
 	define('API_BASE', 'eot');
 	define('API_LICENCE', 'gpl3');
 	
+	// Prefix for Identity Tags for Fonts..
+	define('API_IDENTITY_TAG', 'labscoop-');
+	
 	/**
 	 * 
 	 * @var string

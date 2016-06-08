@@ -2535,8 +2535,8 @@ if (!function_exists("getFontDownload")) {
 				if (file_exists($currently . DIRECTORY_SEPARATOR . $fbase . '.ttf') && file_exists($currently . DIRECTORY_SEPARATOR . $fbase . '.afm'))
 					MakePHPFont($currently . DIRECTORY_SEPARATOR . $fbase . '.ttf', $currently . DIRECTORY_SEPARATOR . $fbase . '.afm', $currently, true);
 
-				$fontfiles = getCompleteFontsListAsArray($currently);
-				foreach($fontfiles['ttf'] as $md5 => $preview)
+				$files = getCompleteFontsListAsArray($currently);
+				foreach($files['ttf'] as $md5 => $preview)
 				{
 					if (isset($preview) && file_exists($preview))
 					{
@@ -2571,6 +2571,43 @@ if (!function_exists("getFontDownload")) {
 							$canvas->writeText('center', 'center', $title);
 							$img->saveToFile($currently . DIRECTORY_SEPARATOR . 'font-name-banner.png');
 							unset($img);
+					}
+				}
+				$grader = array();
+				$files = getFontsListAsArray($currently);
+				foreach($files as $id => $values)
+				{
+					if (filesize($currently . DIRECTORY_SEPARATOR . $values['file']) > 0)
+					{
+						$grader[$values['type']] = $currently . DIRECTORY_SEPARATOR . $values['file'];
+					}
+				}
+				$keies = array_keys($grader);
+				foreach(array("ttf", "otf", "woff") as $type)
+				{
+					if (file_exists($grader[$type]))
+					{
+				
+						$reserves = getReserves(getRegionalFontName($row['font_id']));
+						$css[] = "/** " .getRegionalFontName($row['font_id']) ." */";
+						$css[] = "@font-face {";
+						foreach($reserves['css'] as $tag => $value)
+							$css[] = "\t$tag:\t\t'" .$value. "';";
+							$css[] = "\tfont-family:\t\t'" .getRegionalFontName($row['font_id']). "';";
+						foreach($files as $type => $values)
+							$css[] = ($keies[0]==$values['type']?"\tsrc:\t\t":"\t\t\t")."url('./".$values['file']."') format('".$values['type']."')" .($keies[count($keies)-1]==$values['type']?";":",") ."\t\t/* Filesize: ". filesize($currently . DIRECTORY_SEPARATOR . $values['file']) . " bytes, md5: " . md5_file($currently . DIRECTORY_SEPARATOR . $values['file']) . " */";
+							$css[] = "}";
+						$css[] = "";
+						$css[] = "/** " .$row['font_id'] ." */";
+						$css[] = "@font-face {";
+						foreach($reserves['css'] as $tag => $value)
+							$css[] = "\t$tag:\t\t'" .$value. "';";
+							$css[] = "\tfont-family:\t\t'" .$row['font_id']. "';";
+						foreach($files as $type => $values)
+							$css[] = ($keies[0]==$values['type']?"\tsrc:\t\t":"\t\t\t")."url('./".$values['file']."') format('".$values['type']."')" .($keies[count($keies)-1]==$values['type']?";":",") ."\t\t/* Filesize: ". filesize($currently . DIRECTORY_SEPARATOR . $values['file']) . " bytes, md5: " . md5_file($currently . DIRECTORY_SEPARATOR . $values['file']) . " */";
+							$css[] = "}";							
+						writeRawFile($currently . DIRECTORY_SEPARATOR . getRegionalFontName($row['font_id']) . ".css", implode("\n", $css));
+						continue;
 					}
 				}
 				chdir($currently);
