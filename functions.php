@@ -1474,8 +1474,8 @@ if (!function_exists("getPreviewHTML")) {
 								$canvas->writeText(19, $i, getFontPreviewText());
 								$i=$i+$point + $step;
 							}
-							$canvas->useFont(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'titles.ttf', 14, $img->allocateColor(0, 0, 0));
-							$canvas->writeText('right', 'bottom', API_URL);
+							$canvas->useFont(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'titles.ttf', 19, $img->allocateColor(0, 0, 0));
+							$canvas->writeText('right - 13', 'bottom - 4', API_URL);
 							header("Content-type: ".getMimetype($state));
 							die($img->output($state));
 							exit(0);
@@ -2554,8 +2554,8 @@ if (!function_exists("getFontDownload")) {
 							$canvas->writeText(19, $i, getFontPreviewText());
 							$i=$i+$point + $step;
 						}
-						$canvas->useFont($preview, 14, $img->allocateColor(0, 0, 0));
-						$canvas->writeText('right', 'bottom', API_URL);
+						$canvas->useFont(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'titles.ttf', 19, $img->allocateColor(0, 0, 0));
+						$canvas->writeText('right - 13', 'bottom - 4', API_URL);
 						$img->saveToFile($currently . DIRECTORY_SEPARATOR . 'Font Preview for '.getRegionalFontName($row['font_id']).'.png');
 						unset($img);
 						$title = spacerName(getRegionalFontName($row['font_id']));
