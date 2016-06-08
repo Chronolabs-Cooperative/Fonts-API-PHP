@@ -36,6 +36,7 @@ set_time_limit(7200);
 $result = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `uploads` WHERE `uploaded` > '0' AND `converted` > '0' AND `quizing` > '0' AND `storaged` <= '0'  AND (`finished` >= `needing` OR `expired` < UNIX_TIMESTAMP()) ORDER BY RAND() LIMIT 7");
 while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 {
+	$GLOBALS['FontsDB']->queryF("START TRANSACTION");
 	$datastore = json_decode($upload['datastore'], true);
 	echo "Packing Font: " . ($datastore["FontName"] = spacerName($datastore["FontName"])) . "\n";
 	$ipnet = array();
@@ -221,8 +222,15 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 	} else
 		$fingerprint = $upload['font_id'];
 		
-	$GLOBALS['FontsDB']->queryF("INSERT INTO `fonts_archiving` (`font_id`, `filename`, `path`, `repository`, `files`, `bytes`, `fingerprint`, `hits`, `packing`) VALUES ('$fingerprint', '$filename', '" . str_replace(FONT_RESOURCES_RESOURCE, '', dirname($packfile)) . "', '" . FONT_RESOURCES_STORE . "', '0', '" . 0 . "', '" . md5_file(NULL) . "', 0, 'zip')");
+	if (!$GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `fonts_archiving` (`font_id`, `filename`, `path`, `repository`, `files`, `bytes`, `fingerprint`, `packing`) VALUES ('$fingerprint', '$filename', '" . str_replace(FONT_RESOURCES_RESOURCE, '', dirname($packfile)) . "', '" . FONT_RESOURCES_STORE . "', '0', '" . 0 . "', '" . md5_file(NULL) . "', 'zip')"))
+			die("SQL Failed: $sql");
 	$archive_id = $GLOBALS['FontsDB']->getInsertId();
+	
+	foreach(getFontsListAsArray($currently) as $file)
+		if ($file['type']==API_BASE)
+			$basefile = $currently . DIRECTORY_SEPARATOR . $file['file'];
+	$fontdata = getBaseFontValueStore($basefile);
+	$fontdata['version']=$fontdata['version']+1.001;
 	
 	$grader = array();
 	foreach(getFontsListAsArray($currently) as $id => $values)
@@ -247,8 +255,8 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 					'FontSubfamily' => $fontage->getFontSubfamily(), "FontSubfamilyID" => $fontage->getFontSubfamilyID(),
 					'FontFullName' => $naming = spacerName($fontage->getFontFullName()), "FontVersion" => $fontage->getFontVersion(),
 					'FontWeight' => $fontage->getFontWeight(), "FontPostscriptName" => $fontage->getFontPostscriptName(),
-					"Files" => getCompleteFilesListAsArray($currently),
-					"Font" => array_merge($datastore['Font']), "Licences" => array($datastore['Font']['licence'] => cleanWhitespaces(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . $datastore['Font']['licence'] . DIRECTORY_SEPARATOR . 'LICENCE')))
+					"Files" => getCompleteFilesListAsArray($currently, $currently),
+					"Font" => !isset($datastore['Font'])?$fontdata:$datastore['Font'], "Licences" => array($datastore['Font']['licence'] => cleanWhitespaces(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . $datastore['Font']['licence'] . DIRECTORY_SEPARATOR . 'LICENCE')))
 					,'Table' => $fontage->getTable(), "UnicodeCharMap" => $fontage->getUnicodeCharMap(),
 					"Reserves" => $reserves, 'Names' => removeIdentities($names), 'Nodes' => removeIdentities($nodes),
 					"Contributors" => removeIdentities($contributors), 'FontIdentity' => $fingerprint, 'Bytes' => $expanded,
@@ -270,56 +278,7 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 		}
 	}
 	
-	$fontfiles = getCompleteFontsListAsArray($currently);
-	foreach($fontfiles['ttf'] as $md5 => $preview)
-	{
-		if (isset($preview) && file_exists($preview))
-		{
-			require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'class' . DIRECTORY_SEPARATOR . 'WideImage' . DIRECTORY_SEPARATOR . 'WideImage.php';
-			$img = WideImage::load(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-preview.png');
-			$height = $img->getHeight();
-			$lsize = 66;
-			$ssize = 14;
-			$step = mt_rand(8,11);
-			$canvas = $img->getCanvas();
-			$i=0;
-			while($i<$height)
-			{
-				$canvas->useFont($preview, $point = $ssize + ($lsize - (($lsize  * ($i/$height)))), $img->allocateColor(0, 0, 0));
-				$canvas->writeText(19, $i, "All Work and No Pay Makes Wishcraft a Dull Bored!");
-				$i=$i+$point + $step;
-			}
-			$canvas->useFont($preview, 14, $img->allocateColor(0, 0, 0));
-			$canvas->writeText('right', 'bottom', API_URL);
-			$img->saveToFile($currently . DIRECTORY_SEPARATOR . 'Font Preview for '.$naming.'.jpg');
-			$img->saveToFile($currently . DIRECTORY_SEPARATOR . 'Font Preview for '.$naming.'.gif');
-			$img->saveToFile($currently . DIRECTORY_SEPARATOR . 'Font Preview for '.$naming.'.png');
-			unset($img);
-			if (strlen($naming)<=9)
-			{
-				$img = WideImage::load(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-title-small.png');
-			} elseif (strlen($naming)<=12)
-			{
-				$img = WideImage::load(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-title-medium.png');
-			}elseif (strlen($naming)<=21)
-			{
-				$img = WideImage::load(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-title-large.png');
-			} else
-			{
-				$img = WideImage::load(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-title-extra.png');
-			}
-			$height = $img->getHeight();
-			$point = $height * (32/99);
-			$canvas = $img->getCanvas();
-			$canvas->useFont($font, $point, $img->allocateColor(0, 0, 0));
-			$canvas->writeText('center', 'center', $naming);
-			$img->saveToFile($currently . DIRECTORY_SEPARATOR . 'font-name-banner.jpg');
-			$img->saveToFile($currently . DIRECTORY_SEPARATOR . 'font-name-banner.gif');
-			$img->saveToFile($currently . DIRECTORY_SEPARATOR . 'font-name-banner.png');
-			unset($img);
-		}
-	}
-
+	
 	$filez = array();
 	foreach(getCompleteDirListAsArray($currently) as $path)
 	{
@@ -431,23 +390,21 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 			$cbid = md5($fingerprint.$archive_id.$upload['callback']);
 			$GLOBALS['FontsDB']->queryF("INSERT INTO `fonts_callbacks` (`id`, `type`, `font_id`, `archive_id`, `upload_id`, `uri`, `email`) VALUES ('$cbid', 'upload', '$fingerprint', '$archive_id', '".$upload['id']."', '".$upload['callback']."','".$upload['email']."')");
 		}
-		
+		$GLOBALS['FontsDB']->queryF("COMMIT");
 		
 		if (in_array('svn', explode(",", API_REPOSITORY)))
 		{
 
 			$path = str_replace(FONT_RESOURCES_RESOURCE, '', dirname($packfile));
 			$subs = explode('/', $path);
-			echo "\nIndexing: " . $subs[4] . ' ~~ ' . basename($file);
+			echo "\nIndexing: " . $subs[4] . ' ~~ ' . basename($packfile);
 			$data = array_unique(array_merge(json_decode(file_get_contents(FONT_RESOURCES_RESOURCE. "/".$subs[1].DIRECTORY_SEPARATOR.$subs[2].DIRECTORY_SEPARATOR.$subs[2]."--repository-mapping.json"), true), json_decode(getURIData(sprintf(FONT_RESOURCES_REPOMAP, $subs[1] . DIRECTORY_SEPARATOR . $subs[2], $subs[2]), 120, 120, array()), true)));
 			if (empty($data[$subs[1]][$subs[2]][md5_file($file)]))
 			{
 				$data[$subs[1]][$subs[2]][md5_file($packfile)]['repo'] = FONT_RESOURCES_STORE;
 				$data[$subs[1]][$subs[2]][md5_file($packfile)]['file'] = basename($packfile);
 				$data[$subs[1]][$subs[2]][md5_file($packfile)]['path'] = str_replace(FONT_RESOURCES_RESOURCE, "", dirname($file));
-				$data[$subs[1]][$subs[2]][md5_file($packfile)]['files'] = getArchivedZIPContentsArray($file);
-				$data[$subs[1]][$subs[2]][md5_file($packfile)]['resource'][$subs[2]] = $data;
-				$data[$subs[1]][$subs[2]][md5_file($packfile)]['resource'][$subs[1]] = $data;
+				$data[$subs[1]][$subs[2]][md5_file($packfile)]['files'] = getArchivedZIPContentsArray($packfile);
 				writeRawFile($filea = FONT_RESOURCES_RESOURCE. "/".$subs[1].DIRECTORY_SEPARATOR.$subs[2].DIRECTORY_SEPARATOR.$subs[2]."--repository-mapping.json", json_encode($ids));
 			}
 			unset($data);
@@ -456,7 +413,7 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 			{
 			
 				$alpha[$subs[1]]['Identity'][$alpha[$subs[1]][md5_file($packfile)]['resource']['FontIdentity']] = $alpha[$subs[1]][md5_file($packfile)]['resource']['FontIdentity'];
-				$alpha[$subs[1]][md5_file($packfile)]['resource'] = $data;
+				$alpha[$subs[1]][md5_file($packfile)]['resource'] = $data[$subs[1]][$subs[2]][md5_file($packfile)];
 				writeRawFile(FONT_RESOURCES_RESOURCE. "/".$subs[1].DIRECTORY_SEPARATOR.$subs[1]."--repository-mapping.json", json_encode($alpha));
 				$ids = json_decode(getURIData(str_replace(array("%s/", "%s--", '?format=raw'), "", FONT_RESOURCES_REPOMAP), 120, 120, array()), true);;
 				$ids[$subs[1]][$subs[2]][$subs[3]][$alpha[$subs[1]][md5_file($packfile)]['FontIdentity']] = $alpha[$subs[1]][md5_file($packfile)]['resource']['FontIdentity'];
@@ -551,7 +508,7 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 			writeRawFile(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-add.sh', implode("\n", $bash));
 			unset($bash);
 		}
-		
+			
 	} else 
 		echo("Error: Failed generated archived pack font file!!\n");
 	

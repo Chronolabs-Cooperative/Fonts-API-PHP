@@ -3809,67 +3809,68 @@ if (!function_exists("getBaseFontValueStore")) {
 	{
 		$result = array('uploaded' => microtime(true), 'licence' => API_LICENCE);
 		if (file_exists($font))
-		foreach(file($font) as $line)
+		foreach(cleanWhitespaces(file($font)) as $line)
 		{
-			$line = str_replace(array("/n", "/r", "\n", "\r", "\t", "/t"), '', $line);
 			if (substr($line,0, $from = strlen('%%Title: ')) == '%%Title: ')
 			{
-				$result['title'] = trim(substr($line, $from, strlen($line) - $from));
+				$result['title'] = spacerName(trim(substr($line, $from-1, strlen($line) - $from + 1)));
 			} elseif (substr($line,0, $from = strlen('%Version: ')) == '%Version: ')
 			{
-				$result['version'] = floatval(trim(substr($line, $from, strlen($line) - $from)));
+				$result['version'] = floatval(trim(substr($line, $from-1, strlen($line) - $from + 1)));
 			} elseif (substr($line,0, $from = strlen('%%CreationDate: ')) == '%%CreationDate: ')
 			{
-				$result['date'] = trim(substr($line, $from, strlen($line) - $from));
+				$result['date'] = trim(substr($line, $from-1, strlen($line) - $from + 1));
 			} elseif (substr($line,0, $from = strlen('%%Creator: ')) == '%%Creator: ')
 			{
-				$result['creator'] = trim(substr($line, $from, strlen($line) - $from));
+				$result['creator'] = trim(substr($line, $from-1, strlen($line) - $from + 1));
 			} elseif (substr($line,0, $from = strlen('/FontType ')) == '/FontType ')
 			{
-				$result['type'] = trim(substr($line, $from, strlen($line) - $from - strlen(' def')));
+				$result['type'] = trim(substr($line, $from-1, strlen($line) - $from - strlen(' def') + 1));
 			} elseif (substr($line,0, $from = strlen('/FontMatrix [')) == '/FontMatrix [')
 			{
-				$result['matrix'] = trim(substr($line, $from, strlen($line) - $from - strlen(' ]readonly def')));
+				$result['matrix'] = trim(substr($line, $from, strlen($line) - $from - strlen(' ]readonly def') ));
 			} elseif (substr($line,0, $from = strlen('/FontName /')) == '/FontName /')
 			{
 				$result['named'] = trim(substr($line, $from, strlen($line) - $from - strlen(' def')));
 			} elseif (substr($line,0, $from = strlen('/FontBBox {')) == '/FontBBox { ')
 			{
-				$result['bbox'] = trim(substr($line, $from, strlen($line) - $from - strlen(' }readonly def')));
+				$result['bbox'] = trim(substr($line, $from-1, strlen($line) - $from - strlen(' }readonly def') + 1));
 			} elseif (substr($line,0, $from = strlen('/PaintType ')) == '/PaintType ')
 			{
-				$result['painttype'] = trim(substr($line, $from, strlen($line) - $from - strlen(' def')));
+				$result['painttype'] = trim(substr($line, $from-1, strlen($line) - $from - strlen(' def') + 1));
 			} elseif (substr($line,0, $from = strlen('/FontInfo ')) == '/FontInfo ')
 			{
-				$result['info'] = trim(substr($line, $from, strlen($line) - $from - strlen(' begin')));
-			} elseif (substr($line,0, $from = strlen(' /FullName (')) == ' /FullName (')
+				$result['info'] = trim(substr($line, $from-1, strlen($line) - $from - strlen(' begin') + 1));
+			} elseif (substr($line,0, $from = strlen('/FullName (')) == '/FullName (')
 			{
-				$result['name'] = trim(substr($line, $from, strlen($line) - $from - strlen(') readonly def')));
-			} elseif (substr($line,0, $from = strlen(' /FamilyName (')) == ' /FamilyName (')
+				$result['name'] = trim(substr($line, $from, strlen($line) - $from - strlen(') readonly def') ));
+			} elseif (substr($line,0, $from = strlen('/FamilyName (')) == '/FamilyName (')
 			{
-				$result['family'] = trim(substr($line, $from, strlen($line) - $from - strlen(') readonly def')));
-			} elseif (substr($line,0, $from = strlen(' /Weight (')) == ' /Weight (')
+				$result['family'] = trim(substr($line, $from, strlen($line) - $from - strlen(') readonly def') ));
+			} elseif (substr($line,0, $from = strlen('/Weight (')) == '/Weight (')
 			{
-				$result['weight'] = trim(substr($line, $from, strlen($line) - $from - strlen(') readonly def')));
-			} elseif (substr($line,0, $from = strlen(' /FSType ')) == ' /FSType ')
+				$result['weight'] = trim(substr($line, $from, strlen($line) - $from - strlen(') readonly def') ));
+			} elseif (substr($line,0, $from = strlen('/FSType ')) == '/FSType ')
 			{
-				$result['fstype'] = trim(substr($line, $from, strlen($line) - $from - strlen(' def')));
-			} elseif (substr($line,0, $from = strlen(' /ItalicAngle ')) == ' /ItalicAngle ')
+				$result['fstype'] = trim(substr($line, $from-1, strlen($line) - $from - strlen(' def') + 1));
+			} elseif (substr($line,0, $from = strlen('/ItalicAngle ')) == '/ItalicAngle ')
 			{
-				$result['italicangle'] = trim(substr($line, $from, strlen($line) - $from - strlen(' def')));
-			} elseif (substr($line,0, $from = strlen(' /isFixedPitch  ')) == ' /isFixedPitch ')
+				$result['italicangle'] = trim(substr($line, $from-1, strlen($line) - $from - strlen(' def') + 1));
+			} elseif (substr($line,0, $from = strlen(' /isFixedPitch  ')) == '/isFixedPitch ')
 			{
-				$result['fixedpitch'] = trim(substr($line, $from, strlen($line) - $from - strlen(' def')));
-			} elseif (substr($line,0, $from = strlen(' /UnderlinePosition ')) == ' /UnderlinePosition ')
+				$result['fixedpitch'] = trim(substr($line, $from-1, strlen($line) - $from - strlen(' def') + 1));
+			} elseif (substr($line,0, $from = strlen('/UnderlinePosition ')) == '/UnderlinePosition ')
 			{
-				$result['underlineposition'] = trim(substr($line, $from, strlen($line) - $from - strlen(' def')));
-			} elseif (substr($line,0, $from = strlen(' /UnderlineThickness ')) == ' /UnderlineThickness ')
+				$result['underlineposition'] = trim(substr($line-1, $from-1, strlen($line) - $from - strlen(' def') + 1));
+			} elseif (substr($line,0, $from = strlen('/UnderlineThickness ')) == '/UnderlineThickness ')
 			{
-				$result['underlinethickness'] = trim(substr($line, $from, strlen($line) - $from - strlen(' def')));
+				$result['underlinethickness'] = trim(substr($line-1, $from-1, strlen($line) - $from - strlen(' def') + 1));
 			} elseif (substr($line,0, $from = strlen('end readonly def')) == 'end readonly def')
 			{
 				return $result;
 			}
+		} else {
+			$result['version'] = 1.007;
 		}
 		return $result;
 	}
@@ -3896,11 +3897,11 @@ if (!function_exists("deleteFilesNotListedByArray")) {
 }
 
 if (!function_exists("getCompleteFilesListAsArray")) {
-	function getCompleteFilesListAsArray($dirname, $result = array())
+	function getCompleteFilesListAsArray($dirname, $remove = '')
 	{
 		foreach(getCompleteDirListAsArray($dirname) as $path)
 			foreach(getFileListAsArray($path) as $file)
-				$result[$path.DIRECTORY_SEPARATOR.$file] = $path.DIRECTORY_SEPARATOR.$file;
+				$result[str_replace($remove, '', $path.DIRECTORY_SEPARATOR.$file)] = str_replace($remove, '', $path.DIRECTORY_SEPARATOR.$file);
 		return $result;
 	}
 
