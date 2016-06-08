@@ -1474,8 +1474,39 @@ if (!function_exists("getPreviewHTML")) {
 								$canvas->writeText(19, $i, getFontPreviewText());
 								$i=$i+$point + $step;
 							}
-							$canvas->useFont(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'titles.ttf', 19, $img->allocateColor(0, 0, 0));
-							$canvas->writeText('right - 13', 'bottom - 4', API_URL);
+							if (!$_SESSION['shorturls']['download']['zip'])
+							{
+								$json = json_decode(getURIData(API_SHORTENING_URL.'/v2/url.api', 45, 45, array('response'=>'json', 'url'=>API_URL . '/v2/data/'.$clause.'/zip/download.api')), true);
+								switch (API_SHORTENING_TYPE)
+								{
+									default:
+									case "random":
+										switch((string)mt_rand(0,1))
+										{
+											case "0":
+												$_SESSION['shorturls']['downloads']['zip'][$clause] = $json['short'];
+												break;
+											case "1":
+												$_SESSION['shorturls']['downloads']['zip'][$clause] = $json['domain'];
+												break;
+										}
+									case "short":
+									case "domain":
+										$_SESSION['shorturls']['downloads']['zip'][$clause] = $json[API_SHORTENING_TYPE];
+								
+								}
+							}
+							$url = $_SESSION['shorturls']['downloads']['zip'][$clause];
+							$canvas->useFont(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'titles.ttf', 19, $img->allocateColor(50, 85, 105));
+							$canvas->writeText('right - 27', 'bottom - ' . (24+22+22+22), getRegionalFontName($clause) . " -- Font Name");
+							if (!empty($url))
+							{
+								$canvas->writeText('right - 27', 'bottom - ' . (24+22+22), $url . " -- Download Font");
+								$canvas->writeText('right - 27', 'bottom - ' . (24+22), $clause . " -- Font Identity");
+							} else 
+								$canvas->writeText('right - 27', 'bottom - ' . (24+22+22), $clause . " -- Font Fingerprint");
+							$canvas->useFont(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'titles.ttf', 26, $img->allocateColor(30, 40, 50));
+							$canvas->writeText('right - 27', 'bottom - 4', API_URL . " -- Generated ".date("Y-m-d, D H:i:s"));
 							header("Content-type: ".getMimetype($state));
 							die($img->output($state));
 							exit(0);
@@ -1815,14 +1846,14 @@ if (!function_exists("getURIData")) {
 	{
 		if (!function_exists("curl_init"))
 		{
-			return file_get_contents($uri);
+			die("Need to install php-curl: $ sudo apt-get install php-curl");
 		}
 		if (!$btt = curl_init($uri)) {
 			return false;
 		}
 		curl_setopt($btt, CURLOPT_HEADER, 0);
-		curl_setopt($btt, CURLOPT_POST, (count($posts)==0?false:true));
-		if (count($posts)!=0)
+		curl_setopt($btt, CURLOPT_POST, (count($post_data)==0?false:true));
+		if (count($post_data)!=0)
 			curl_setopt($btt, CURLOPT_POSTFIELDS, http_build_query($post_data));
 		curl_setopt($btt, CURLOPT_CONNECTTIMEOUT, $connectout);
 		curl_setopt($btt, CURLOPT_TIMEOUT, $timeout);
@@ -2554,8 +2585,39 @@ if (!function_exists("getFontDownload")) {
 							$canvas->writeText(19, $i, getFontPreviewText());
 							$i=$i+$point + $step;
 						}
-						$canvas->useFont(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'titles.ttf', 19, $img->allocateColor(0, 0, 0));
-						$canvas->writeText('right - 13', 'bottom - 4', API_URL);
+						if (!$_SESSION['shorturls']['download']['zip'])
+						{
+							$json = json_decode(getURIData(API_SHORTENING_URL.'/v2/url.api', 45, 45, array('response'=>'json', 'url'=>API_URL . '/v2/data/'.$clause.'/zip/download.api')), true);
+							switch (API_SHORTENING_TYPE)
+							{
+								default:
+								case "random":
+									switch((string)mt_rand(0,1))
+									{
+										case "0":
+											$_SESSION['shorturls']['downloads']['zip'][$clause] = $json['short'];
+											break;
+										case "1":
+											$_SESSION['shorturls']['downloads']['zip'][$clause] = $json['domain'];
+											break;
+									}
+								case "short":
+								case "domain":
+									$_SESSION['shorturls']['downloads']['zip'][$clause] = $json[API_SHORTENING_TYPE];
+							
+							}
+						}
+						$url = $_SESSION['shorturls']['downloads']['zip'][$clause];
+						$canvas->useFont(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'titles.ttf', 19, $img->allocateColor(50, 85, 105));
+						$canvas->writeText('right - 27', 'bottom - ' . (24+22+22+22), getRegionalFontName($clause) . " -- Font Name");
+						if (!empty($url))
+						{
+							$canvas->writeText('right - 27', 'bottom - ' . (24+22+22), $url . " -- Download Font");
+							$canvas->writeText('right - 27', 'bottom - ' . (24+22), $clause . " -- Font Identity");
+						} else 
+							$canvas->writeText('right - 27', 'bottom - ' . (24+22+22), $clause . " -- Font Fingerprint");
+						$canvas->useFont(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'titles.ttf', 26, $img->allocateColor(30, 40, 50));
+						$canvas->writeText('right - 27', 'bottom - 4', API_URL . " -- Generated ".date("Y-m-d, D H:i:s"));
 						$img->saveToFile($currently . DIRECTORY_SEPARATOR . 'Font Preview for '.getRegionalFontName($row['font_id']).'.png');
 						unset($img);
 						$title = spacerName(getRegionalFontName($row['font_id']));
