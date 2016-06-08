@@ -85,6 +85,8 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 	{
 		echo "File: $file\n";
 		$data = json_decode(getArchivedZIPFile($file, 'font-resource.json'), true);	
+		if (!isset($data['Files'])||!isset($data['Licences'])||!isset($data['Files']))
+			$updated=true;
 		$fingerprint = $archive['font_id'];
 		$naming = $data["FontName"];
 		if (!is_dir($currently = $unpackdir = FONT_RESOURCES_UNPACKING . DIRECTORY_SEPARATOR . sha1($file.$archive['font_id'])))
@@ -365,7 +367,7 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 				{
 					$cssfiles[$title] = $upload['font_id'] . ".css";
 				}
-				$data = array(	"CSS"=>$cssfiles,'FontType' => $fontage->getFontType(), 'FontCopyright' => $fontage->getFontCopyright(), "FontName" => $fontage->getFontName(),
+				$data = array(	"CSS"=>$cssfiles,'FontType' => $fontage->getFontType(), 'FontCopyright' => $fontage->getFontCopyright(), "FontName" => $naming = $fontage->getFontName(),
 					'FontSubfamily' => $fontage->getFontSubfamily(), "FontSubfamilyID" => $fontage->getFontSubfamilyID(),
 					'FontFullName' => $naming = spacerName($fontage->getFontFullName()), "FontVersion" => $fontage->getFontVersion(),
 					'FontWeight' => $fontage->getFontWeight(), "FontPostscriptName" => $fontage->getFontPostscriptName(),
@@ -549,7 +551,7 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 			if (!file_exists($currently . DIRECTORY_SEPARATOR . 'LICENCE'))
 				copy(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . $datastore['Font']['licence'] . DIRECTORY_SEPARATOR . 'LICENCE', $currently . DIRECTORY_SEPARATOR . 'LICENCE');
 			$packing = getArchivingShellExec();
-			$stamping = getArchivingStampingExec();
+			$stamping = getStampingShellExec();
 			if (!is_dir($sortpath))
 				mkdir($sortpath, 0777, true);
 			chdir($currently);
@@ -619,13 +621,12 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 				}
 				$bash[] = "cd " . dirname($packfile);
 				$bash[] = "git add ".basename($packfile)."";
-				$bash[] = "git commit -m \"Importing into Repository for 1st time; the font: $naming\"";
+				$bash[] = "git commit -m \"Updating Repository for 1st time; the font: $naming\"";
 				$bash[] = "git push origin master";
 				$bash[] = "unlink " . dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-update.sh';
 				writeRawFile(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-update.sh', implode("\n", $bash));
 				unset($bash);
 			}
-				
 		}
 		sleep(22);
 		exec($cmd = "rm -Rfv $currently", $output);

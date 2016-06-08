@@ -3742,7 +3742,7 @@ if (!function_exists("writeFontRepositoryHeader")) {
 				
 			$output = file(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . $licence . DIRECTORY_SEPARATOR . strtoupper(API_BASE) . '-HEADER');
 			$buffer = false;
-			foreach($file($font) as $line)
+			foreach(file($font) as $line)
 			{
 				if ($buffer == true)
 					$output[] = $line;
@@ -4021,7 +4021,7 @@ if (!function_exists("getFontsListAsArray")) {
 	}
 }
 
-if (!function_exists("getArchivingStampingExec")) {
+if (!function_exists("getStampingShellExec")) {
 	function getStampingShellExec()
 	{
 		$ret = array();
