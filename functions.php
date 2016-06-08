@@ -2487,6 +2487,7 @@ if (!function_exists("getFontDownload")) {
 						if ($sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] < microtime(true) + ($next = mt_rand(1800*.3236, 2560*.5436)))
 							$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] + $next;
 					}
+					$zip = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]["resource"];
 					writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial", serialize($sessions));
 					$resource = json_decode(getArchivedZIPFile($zip = FONT_RESOURCES_CACHE . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'font-resource.json'), true);
 					break;
@@ -2508,11 +2509,9 @@ if (!function_exists("getFontDownload")) {
 			if (!is_dir(FONTS_CACHE . DIRECTORY_SEPARATOR . '--download--' . DIRECTORY_SEPARATOR))
 				mkdir(FONTS_CACHE . DIRECTORY_SEPARATOR . '--download--' . DIRECTORY_SEPARATOR, 0777, true);
 			if (!file_exists($cachefile))
-				$found = false;
-			if ($found != true)
 			{
-				mkdir($currently = FONT_RESOURCES_CONVERTING . DIRECTORY_SEPARATOR . md5_file($zip.microtime(true)), 0777, true);
-				exec("cd \"$currently\"");
+				mkdir($currently = FONT_RESOURCES_CONVERTING . DIRECTORY_SEPARATOR . md5(md5_file($zip).microtime(true).getRegionalFontName($row['font_id'])), 0777, true);
+				chdir($currently);
 				foreach(getArchivedZIPContentsArray($zip) as $crc => $file)
 					if (substr($file['filename'], strlen($file['filename']) - strlen(API_BASE)) == API_BASE)
 					{
@@ -2522,13 +2521,13 @@ if (!function_exists("getFontDownload")) {
 				writeRawFile($font = $currently . DIRECTORY_SEPARATOR . $basefile, getArchivedZIPFile($zip, $basefile, $row['font_id']));
 				if (isset($resource['Font']))
 					writeFontResourceHeader($font, $resource["Font"]['licence'], $resource['Font']);
-				exec("cd $currently", $output, $return);
+				$outt = array(); exec("cd $currently", $outt, $return);
 				$covertscript = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts-distribution.pe"));
 				foreach($covertscript as $line => $value)
 					if (strpos($value, API_BASE))
 						unset($covertscript[$line]);
 				writeRawFile($script = FONT_RESOURCES_CACHE.DIRECTORY_SEPARATOR.md5(microtime(true).API_URL).".pe", implode("\n", $covertscript));
-				exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", $script, $font), $output, $return);;
+				$outt = array(); exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", $script, $font), $outt, $return);;
 				unlink($script);
 				$parts = explode('.', basename($font));
 				unset($parts[count($parts)-1]);
@@ -2574,21 +2573,21 @@ if (!function_exists("getFontDownload")) {
 							unset($img);
 					}
 				}
+				chdir($currently);
 				writeRawFile($currently . DIRECTORY_SEPARATOR . "font-resource.json", getArchivedZIPFile($zip, "font-resource.json", $row['font_id']));
 				writeRawFile($currently . DIRECTORY_SEPARATOR . "LICENCE", getArchivedZIPFile($zip, "LICENCE", $row['font_id']));
 				writeRawFile($currently . DIRECTORY_SEPARATOR . "file.diz", getArchivedZIPFile($zip, "file.diz", $row['font_id']));
-				$output = array();
 				$packing = getArchivingShellExec();
 				$stamping = getStampingShellExec();
 				$cmd = (substr($packing[$state],0,1)!="#"?DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR:'') . str_replace("%filelist", "\"".implode("\" \"", $filelist)."\"", str_replace("%folder", "./", str_replace("%pack", $cachefile, str_replace("%commentfile", "./file.diz", (substr($packing[$state],0,1)!="#"?$packing[$state]:substr($packing[$state],1))))));
-				exec($cmd, $output);
-				if (isset($stamping[$state]))
+				$outt = shell_exec($cmd);
+				if (isset($stamping[$state]) && file_exists($currently . DIRECTORY_SEPARATOR . "file.diz"))
 				{
 					$cmdb = str_replace("%pack", $cachefile, str_replace("%comment", $currently . DIRECTORY_SEPARATOR . "file.diz", $stamping[$state]));
-					exec($cmdb, $output, $resolve);
+					$outt = array(); exec($cmdb, $outt, $resolve);
 				}
-				$cmd = "rm -Rfv " . dirname($currently);
-				exec($cmd, $output);
+				$cmd = "rm -Rfv \"$currently\"";
+				$outt = array(); exec($cmd, $outt);
 			}
 			if (file_exists($cachefile)) {	
 				if(ini_get('zlib.output_compression')) {
@@ -2605,9 +2604,7 @@ if (!function_exists("getFontDownload")) {
 				$data = file_get_contents($cachefile);
 				die($data);
 			} else {
-				$cmd = "rm -Rfv " . dirname($currently);
-				exec($cmd, $output);
-				die("Failed: $cmd<br/>\n<br/>\n" .implode("<br/>\n", $output));
+				die("Failed Cache File for Download: $cachefile");
 			}
 			
 		}
