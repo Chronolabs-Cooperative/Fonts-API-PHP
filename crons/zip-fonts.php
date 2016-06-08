@@ -33,7 +33,7 @@ include_once dirname(dirname(__FILE__)).'/functions.php';
 include_once dirname(dirname(__FILE__)).'/class/fontages.php';
 set_time_limit(7200);
 
-$result = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `uploads` WHERE `uploaded` > '0' AND `converted` > '0' AND `quizing` > '0' AND `storaged` <= '0'  AND `finished` >= (`needing`) ORDER BY RAND() LIMIT 3");
+$result = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `uploads` WHERE `uploaded` > '0' AND `converted` > '0' AND `quizing` > '0' AND `storaged` <= '0'  AND (`finished` >= `needing` OR `expired` < UNIX_TIMESTAMP()) ORDER BY RAND() LIMIT 3");
 while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 {
 	$datastore = json_decode($upload['datastore'], true);
@@ -474,7 +474,7 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 			} else {
 				echo "Setting Memory Limit To: " .(floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-add.sh')) / (1024) + 50 . "M") . "/n";
 				ini_set('memory_limit', floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-add.sh') / (1024) + 50) . "M");
-				$bash = file(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-add.sh');
+				$bash = cleanWhitespaces(file(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-add.sh'));
 				unset($bash[count($bash)-1]);
 			}
 			$bash[] = "cd " . dirname($packfile);
@@ -535,7 +535,7 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 			} else {
 				echo "Setting Memory Limit To: " .(floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-add.sh')) / (1024) + 50 . "M") . "/n";
 				ini_set('memory_limit', floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-add.sh') / (1024) + 50) . "M");
-				$bash = file(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-add.sh');
+				$bash = cleanWhitespaces(file(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-add.sh'));
 				unset($bash[count($bash)-1]);
 			}
 			$bash[] = "cd " . dirname($packfile);

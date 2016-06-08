@@ -603,7 +603,7 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 						} else {
 							echo "Setting Memory Limit To: " .(floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-update.sh')) / (1024) + 50 . "M") . "/n";
 							ini_set('memory_limit', floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-update.sh') / (1024) + 50) . "M");
-							$bash = file(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-update.sh');
+							$bash = cleanWhitespaces(file(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-update.sh'));
 							unset($bash[count($bash)-1]);
 						}
 						$bash[] = "cd " . dirname($packfile);
@@ -624,7 +624,7 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 						} else {
 							echo "Setting Memory Limit To: " .(floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-update.sh')) / (1024) + 50 . "M") . "/n";
 							ini_set('memory_limit', floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-update.sh') / (1024) + 50) . "M");
-							$bash = file(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-update.sh');
+							$bash = cleanWhitespaces(file(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-update.sh'));
 							unset($bash[count($bash)-1]);
 						}
 						$bash[] = "cd " . dirname($packfile);
