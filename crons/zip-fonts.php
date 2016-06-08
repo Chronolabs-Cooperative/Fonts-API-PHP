@@ -33,7 +33,7 @@ include_once dirname(dirname(__FILE__)).'/functions.php';
 include_once dirname(dirname(__FILE__)).'/class/fontages.php';
 set_time_limit(7200);
 
-$result = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `uploads` WHERE `uploaded` > '0' AND `converted` > '0' AND `quizing` > '0' AND `storaged` <= '0'  AND (`finished` >= `needing` OR `expired` < UNIX_TIMESTAMP()) ORDER BY RAND() LIMIT 3");
+$result = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `uploads` WHERE `uploaded` > '0' AND `converted` > '0' AND `quizing` > '0' AND `storaged` <= '0'  AND (`finished` >= `needing` OR `expired` < UNIX_TIMESTAMP()) ORDER BY RAND() LIMIT 11");
 while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 {
 	$datastore = json_decode($upload['datastore'], true);

@@ -670,7 +670,7 @@ if (!function_exists("getFontsWaitingConverted")) {
 	 */
 	function getFontsWaitingConverted()
 	{
-		list($total) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF("SELECT count(*) from `uploads` WHERE `converted` > 0 AND `storaged` = 0"));
+		list($total) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF("SELECT count(*) from `uploads` WHERE `uploaded` > '0' AND `converted` > '0' AND `quizing` > '0' AND `storaged` <= '0'  AND (`finished` >= `needing` OR `expired` < UNIX_TIMESTAMP())"));
 		return $total;
 	}
 }
