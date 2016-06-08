@@ -543,90 +543,96 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 		
 		if ($updated==true)	
 		{
-			unlink($packfile);
 			deleteFilesNotListedByArray($currently, array(API_BASE, 'file.diz', 'resource.json', 'LICENCE'));
-			die(print_r(getCompleteFilesListAsArray($currently), true));
 			foreach(getCompleteFilesListAsArray($currently) as $file)
 				if (substr($file, strlen($file)-strlen(API_BASE), strlen(API_BASE)) == API_BASE)
 					writeFontRepositoryHeader($currently . DIRECTORY_SEPARATOR . $file, $data['Font']['licence'], $data['Font']);
 			if (!file_exists($currently . DIRECTORY_SEPARATOR . 'LICENCE'))
 				copy(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . $datastore['Font']['licence'] . DIRECTORY_SEPARATOR . 'LICENCE', $currently . DIRECTORY_SEPARATOR . 'LICENCE');
-			$packing = getArchivingShellExec();
-			$stamping = getStampingShellExec();
-			if (!is_dir($sortpath))
-				mkdir($sortpath, 0777, true);
-			chdir($currently);
-			$cmda = str_replace("%folder", "./", str_replace("%pack", $packfile, str_replace("%comment", $comment, (substr($packing['zip'],0,1)!="#"?$packing['zip']:substr($packing['zip'],1)))));
-			echo "Executing: $cmda\n";
-			exec($cmda, $output, $resolv);
-			if (isset($stamping['zip']))
-			{
-				$cmdb = str_replace("%pack", $packfile, str_replace("%comment", $comment, $stamping['zip']));
-				echo "Executing: $cmdb\n";
-				exec($cmdb, $output, $resolve);
-				echo implode("\n", $output);
-			}
-			if (!file_exists($packfile))
-				die("File not found: $packfile ~~ Failed: $cmda");
-			echo implode("\n", $output);
-			if (file_exists($packfile))
-			{
-				$GLOBALS['FontsDB']->queryF("UPDATE `uploads` SET `cleaned` = '".time()."', `datastore` = \"".$GLOBALS['FontsDB']->escape(json_encode($data))."\" WHERE `id` = " . $upload['id']);
-				foreach($nodes as $type => $values)
+			foreach(getCompleteFilesListAsArray($currently) as $file)
+				if (substr($file, strlen($file)-strlen(API_BASE), strlen(API_BASE)) == API_BASE)
 				{
-					if (!$GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `nodes_linking` (`font_id`, `node_id`) VALUES ('$fingerprint', '".$values['node_id']."')"))
-						die("Failed SQL: $sql;\n");
-				}
-				list($nodecount) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF("SELECT count(*) FROM  `nodes_linking` WHERE `font_id` = '" . $fingerprint . "'"));
-				if (!$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts` SET `nodes` = '$nodecount', `medium` = 'FONT_RESOURCES_RESOURCE', `version` = '" . $data['Font']['version'] . "', `date` = '" . $data['Font']['date'] . "', `uploaded` = '" . $data['Font']['uploaded'] . "', `licence` = '" . $data['Font']['licence'] . "', `company` = '" . $data['Font']['company'] . "', `matrix` = '" . $data['Font']['matrix'] . "', `bbox` = '" . $data['Font']['bbox'] . "', `painttype` = '" . $data['Font']['painttype'] . "', `info` = '" . $data['Font']['info'] . "', `family` = '" . $data['Font']['family'] . "', `weight` = '" . $data['Font']['weight'] . "', `fstype` = '" . $data['Font']['fstype'] . "', `italicangle` = '" . $data['Font']['italicangle'] . "', `fixedpitch` = '" . $data['Font']['fixedpitch'] . "', `underlineposition` = '" . $data['Font']['underlineposition'] . "', `underlinethickness` = '" . $data['Font']['underlinethickness'] . "' WHERE `id` = '$fingerprint'"))
-					die("Failed SQL: $sql;\n");
-				if (!$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `repacked` = UNIX_TIMESTAMP() WHERE `id` = '" . $archive['id'] . "'"))
-					die("Failed SQL: $sql;\n");
-			}
-
-			if (in_array('svn', explode(",", API_REPOSITORY)))
-			{
-				if (!file_exists(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-update.sh'))
-				{
-					$bash=array();
-					$bash[] = "#! bash";
-					$bash[] = "cd ".FONT_RESOURCES_RESOURCE;
-					$bash[] = "svn cleanup";
-					$bash[] = "svn update";
-				} else {
-					echo "Setting Memory Limit To: " .(floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-update.sh')) / (1024) + 50 . "M") . "/n";
-					ini_set('memory_limit', floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-update.sh') / (1024) + 50) . "M");
-					$bash = file(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-update.sh');
-					unset($bash[count($bash)-1]);
-				}
-				$bash[] = "cd " . dirname($packfile);
-				$bash[] = "svn cleanup";
-				$bash[] = "svn add . --force";
-				$bash[] = "svn commit -m \"Updating Repository for the font: $naming\"";
-				$bash[] = "unlink " . dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-update.sh';
-				writeRawFile(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-update.sh', implode("\n", $bash));
-				unset($bash);
-			}
-			if (in_array('git', explode(",", API_REPOSITORY)))
-			{
-				if (!file_exists(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-update.sh'))
-				{
-					$bash=array();
-					$bash[] = "#! bash";
-					$bash[] = "cd ".FONT_RESOURCES_RESOURCE;
-				} else {
-					echo "Setting Memory Limit To: " .(floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-update.sh')) / (1024) + 50 . "M") . "/n";
-					ini_set('memory_limit', floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-update.sh') / (1024) + 50) . "M");
-					$bash = file(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-update.sh');
-					unset($bash[count($bash)-1]);
-				}
-				$bash[] = "cd " . dirname($packfile);
-				$bash[] = "git add ".basename($packfile)."";
-				$bash[] = "git commit -m \"Updating Repository for 1st time; the font: $naming\"";
-				$bash[] = "git push origin master";
-				$bash[] = "unlink " . dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-update.sh';
-				writeRawFile(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-update.sh', implode("\n", $bash));
-				unset($bash);
+					echo "Deleteing: $packfile ~ for regeneration\n";
+					unlink($packfile);
+					$packing = getArchivingShellExec();
+					$stamping = getStampingShellExec();
+					if (!is_dir($sortpath))
+						mkdir($sortpath, 0777, true);
+					chdir($currently);
+					$cmda = str_replace("%folder", "./", str_replace("%pack", $packfile, str_replace("%comment", $comment, (substr($packing['zip'],0,1)!="#"?$packing['zip']:substr($packing['zip'],1)))));
+					echo "Executing: $cmda\n";
+					exec($cmda, $output, $resolv);
+					if (isset($stamping['zip']))
+					{
+						$cmdb = str_replace("%pack", $packfile, str_replace("%comment", $comment, $stamping['zip']));
+						echo "Executing: $cmdb\n";
+						exec($cmdb, $output, $resolve);
+						echo implode("\n", $output);
+					}
+					if (!file_exists($packfile))
+						die("File not found: $packfile ~~ Failed: $cmda");
+					echo implode("\n", $output);
+					if (file_exists($packfile))
+					{
+						$GLOBALS['FontsDB']->queryF("UPDATE `uploads` SET `cleaned` = '".time()."', `datastore` = \"".$GLOBALS['FontsDB']->escape(json_encode($data))."\" WHERE `id` = " . $upload['id']);
+						foreach($nodes as $type => $values)
+						{
+							if (!$GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `nodes_linking` (`font_id`, `node_id`) VALUES ('$fingerprint', '".$values['node_id']."')"))
+								die("Failed SQL: $sql;\n");
+						}
+						list($nodecount) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF("SELECT count(*) FROM  `nodes_linking` WHERE `font_id` = '" . $fingerprint . "'"));
+						if (!$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts` SET `nodes` = '$nodecount', `medium` = 'FONT_RESOURCES_RESOURCE', `version` = '" . $data['Font']['version'] . "', `date` = '" . $data['Font']['date'] . "', `uploaded` = '" . $data['Font']['uploaded'] . "', `licence` = '" . $data['Font']['licence'] . "', `company` = '" . $data['Font']['company'] . "', `matrix` = '" . $data['Font']['matrix'] . "', `bbox` = '" . $data['Font']['bbox'] . "', `painttype` = '" . $data['Font']['painttype'] . "', `info` = '" . $data['Font']['info'] . "', `family` = '" . $data['Font']['family'] . "', `weight` = '" . $data['Font']['weight'] . "', `fstype` = '" . $data['Font']['fstype'] . "', `italicangle` = '" . $data['Font']['italicangle'] . "', `fixedpitch` = '" . $data['Font']['fixedpitch'] . "', `underlineposition` = '" . $data['Font']['underlineposition'] . "', `underlinethickness` = '" . $data['Font']['underlinethickness'] . "' WHERE `id` = '$fingerprint'"))
+							die("Failed SQL: $sql;\n");
+						if (!$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `repacked` = UNIX_TIMESTAMP() WHERE `id` = '" . $archive['id'] . "'"))
+							die("Failed SQL: $sql;\n");
+					}
+		
+					if (in_array('svn', explode(",", API_REPOSITORY)))
+					{
+						if (!file_exists(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-update.sh'))
+						{
+							$bash=array();
+							$bash[] = "#! bash";
+							$bash[] = "cd ".FONT_RESOURCES_RESOURCE;
+							$bash[] = "svn cleanup";
+							$bash[] = "svn update";
+						} else {
+							echo "Setting Memory Limit To: " .(floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-update.sh')) / (1024) + 50 . "M") . "/n";
+							ini_set('memory_limit', floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-update.sh') / (1024) + 50) . "M");
+							$bash = file(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-update.sh');
+							unset($bash[count($bash)-1]);
+						}
+						$bash[] = "cd " . dirname($packfile);
+						$bash[] = "svn cleanup";
+						$bash[] = "svn add . --force";
+						$bash[] = "svn commit -m \"Updating Repository for the font: $naming\"";
+						$bash[] = "unlink " . dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-update.sh';
+						writeRawFile(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-update.sh', implode("\n", $bash));
+						unset($bash);
+					}
+					if (in_array('git', explode(",", API_REPOSITORY)))
+					{
+						if (!file_exists(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-update.sh'))
+						{
+							$bash=array();
+							$bash[] = "#! bash";
+							$bash[] = "cd ".FONT_RESOURCES_RESOURCE;
+						} else {
+							echo "Setting Memory Limit To: " .(floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-update.sh')) / (1024) + 50 . "M") . "/n";
+							ini_set('memory_limit', floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-update.sh') / (1024) + 50) . "M");
+							$bash = file(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-update.sh');
+							unset($bash[count($bash)-1]);
+						}
+						$bash[] = "cd " . dirname($packfile);
+						$bash[] = "git add ".basename($packfile)."";
+						$bash[] = "git commit -m \"Updating Repository for 1st time; the font: $naming\"";
+						$bash[] = "git push origin master";
+						$bash[] = "unlink " . dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-update.sh';
+						writeRawFile(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-update.sh', implode("\n", $bash));
+						unset($bash);
+					}
+				continue;
+				
 			}
 		}
 		sleep(22);

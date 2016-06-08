@@ -3830,7 +3830,7 @@ if (!function_exists("getBaseFontValueStore")) {
 if (!function_exists("deleteFilesNotListedByArray")) {
 	function deleteFilesNotListedByArray($dirname, $skipped = array())
 	{
-		foreach(array_reverse(getCompleteDirListAsArray($dirname)) as $file)
+		foreach(array_reverse(getCompleteFilesListAsArray($dirname)) as $file)
 		{
 			$found = false;
 			foreach($skipped as $skip)
@@ -3842,7 +3842,6 @@ if (!function_exists("deleteFilesNotListedByArray")) {
 				rmdir(dirname($file));
 			}
 		}
-			
 	}
 
 }
