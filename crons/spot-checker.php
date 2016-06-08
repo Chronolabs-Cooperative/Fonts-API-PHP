@@ -620,6 +620,7 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 						{
 							$bash=array();
 							$bash[] = "#! bash";
+							$bash[] = "rm -f ".FONT_RESOURCES_RESOURCE ."/.git/index.lock";
 							$bash[] = "cd ".FONT_RESOURCES_RESOURCE;
 						} else {
 							echo "Setting Memory Limit To: " .(floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-update.sh')) / (1024) + 50 . "M") . "/n";

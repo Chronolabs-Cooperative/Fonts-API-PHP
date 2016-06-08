@@ -384,7 +384,7 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 	if (!file_exists($currently . DIRECTORY_SEPARATOR . 'LICENCE'))
 		copy(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . $datastore['Font']['licence'] . DIRECTORY_SEPARATOR . 'LICENCE', $currently . DIRECTORY_SEPARATOR . 'LICENCE');
 	$packing = getArchivingShellExec();
-	$stamping = getArchivingStampingExec();
+	$stamping = getStampingShellExec();
 	if (!is_dir($sortpath))
 		mkdir($sortpath, 0777, true);
 	chdir($currently);
@@ -468,6 +468,7 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 			{
 				$bash=array();
 				$bash[] = "#! bash";
+				$bash[] = "rm -f ".FONT_RESOURCES_RESOURCE ."/.git/index.lock";
 				$bash[] = "cd ".FONT_RESOURCES_RESOURCE;
 				$bash[] = "svn cleanup";
 				$bash[] = "svn update";
