@@ -414,7 +414,7 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 				while($i<$height)
 				{
 					$canvas->useFont($preview, $point = $ssize + ($lsize - (($lsize  * ($i/$height)))), $img->allocateColor(0, 0, 0));
-					$canvas->writeText(19, $i, "All Work and No Pay Makes Wishcraft a Dull Bored!");
+					$canvas->writeText(19, $i, getFontPreviewText());
 					$i=$i+$point + $step;
 				}
 				$canvas->useFont($preview, 14, $img->allocateColor(0, 0, 0));

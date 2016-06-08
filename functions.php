@@ -3755,6 +3755,18 @@ if (!function_exists("writeFontRepositoryHeader")) {
 	}
 }
 
+if (!function_exists("getFontPreviewText")) {
+	function getFontPreviewText()
+	{
+		$texts = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'preview-texts.diz'));
+		shuffle($texts); shuffle($texts); shuffle($texts); shuffle($texts);
+		$text = '';
+		while(empty($text))
+			$text = $texts[mt_rand(0, count($texts)-1)];
+		return $text;
+	}
+}
+
 if (!function_exists("getBaseFontValueStore")) {
 	function getBaseFontValueStore($font)
 	{
