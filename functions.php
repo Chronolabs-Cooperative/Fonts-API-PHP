@@ -2163,8 +2163,8 @@ if (!function_exists("getFontRawData")) {
 				}
 				if ($found != true)
 				{
-					mkdir($currently = FONT_RESOURCES_CONVERTING . DIRECTORY_SEPARATOR . md5_file($zip.$row['font_id']), 0777, true);
-					exec("cd \"$currently\"");
+					mkdir($currently = FONT_RESOURCES_CONVERTING . DIRECTORY_SEPARATOR . sha1(md5_file($zip).$row['font_id']), 0777, true);
+					chdir($currently);
 					foreach(getArchivedZIPContentsArray($zip) as $crc => $file)
 						if (substr($file['filename'], strlen($file['filename']) - strlen(API_BASE)) == API_BASE)
 						{
@@ -2183,7 +2183,7 @@ if (!function_exists("getFontRawData")) {
 						elseif(in_array($output, array('z', 'php') && substr($value,0,4)!='Open' && (!strpos($value, 'ttf')) && !strpos($value, 'afm')))
 							unset($covertscript[$line]);
 					writeRawFile($script = FONT_RESOURCES_CACHE.DIRECTORY_SEPARATOR.md5(microtime(true).$zip.$row['font_id']).".pe", implode("\n", $covertscript));
-					$outt = array(); exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", $script, $font), $outt, $return);
+					$outt = shell_exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", $script, $font));
 					unlink($script);
 					if (in_array($output, array('z', 'php')))
 					{
