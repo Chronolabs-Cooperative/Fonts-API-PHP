@@ -27,7 +27,7 @@ set_time_limit(1999);
 require_once dirname(__DIR__).'/functions.php';
 require_once dirname(__DIR__).'/class/fontages.php';
 
-$result = $GLOBALS['FontsDB']->queryF("SELECT * from `uploads` WHERE `uploaded` > '0' AND (`converted` <= '0' AND `converted` => '-7')  ORDER BY RAND() LIMIT 27");
+$result = $GLOBALS['FontsDB']->queryF("SELECT * from `uploads` WHERE `uploaded` > '0' AND `converted` = '0' AND `storaged` = 0 ORDER BY RAND() LIMIT 27");
 while($row = $GLOBALS['FontsDB']->fetchArray($result))
 {
 	$skip = false;
