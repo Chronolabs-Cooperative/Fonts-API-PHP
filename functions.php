@@ -2498,7 +2498,7 @@ if (!function_exists("getFontDownload")) {
 			if (!mkdir($currently = FONT_RESOURCES_SORTING . DIRECTORY_SEPARATOR .$state . DIRECTORY_SEPARATOR . $ipid. DIRECTORY_SEPARATOR . $row['font_id'], 0777, true))
 				if (!is_dir($currently))
 					die("Failed to make path: $currently");
-			$filename = urldecode(str_replace('.zip', ".$state", $row['filename']));
+			$filename = getRegionalFontName($row['font_id']) . '.'.$state;
 			if (!$GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `fonts_downloads` (`font_id`, `archive_id`, `filename`, `ip_id`, `when`) VALUES ('" . $row['font_id'] . "', '" . $row['id'] . "', '$filename', '$ipid', unix_timestamp())"))
 				die("SQL Failed: $sql;");
 			if (!$GLOBALS['FontsDB']->queryF($sql = "UPDATE `networking` SET `downloads` = `downloads` +1 WHERE `ip_id` LIKE '$ipid'"))

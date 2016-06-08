@@ -35,7 +35,7 @@ set_time_limit(7200);
 
 $pool = $GLOBALS['FontsDB']->queryF($sql = "SELECT `a`.* from `fonts_archiving` as `a` INNER JOIN `fonts` as `b` ON `a`.`font_id` = `b`.`id` WHERE `b`.`medium` IN ('FONT_RESOURCES_RESOURCE', 'FONT_RESOURCES_CACHE') ORDER BY `a`.`checked` ASC LIMIT 12");
 // Searches For Unrecorded Fonts
-while($archive = GLOBALS['FontsDB']->fetchArray($pool))
+while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 {
 	$sortpath = FONT_RESOURCES_RESOURCE . DIRECTORY_SEPARATOR . $archive['path'];
 	$packfile = $sortpath . DIRECTORY_SEPARATOR . $archive['filename'];
@@ -87,7 +87,7 @@ while($archive = GLOBALS['FontsDB']->fetchArray($pool))
 		$data = json_decode(getArchivedZIPFile($file, 'font-resource.json'), true);	
 		$fingerprint = $archive['font_id'];
 		$naming = $data["FontName"];
-		if (!is_dir($currently = $unpackdir = FONT_RESOURCES_UNPACKING . DIRECTORY_SEPARATOR . $archive['font_id']))
+		if (!is_dir($currently = $unpackdir = FONT_RESOURCES_UNPACKING . DIRECTORY_SEPARATOR . sha1($file.$archive['font_id'])))
 			mkdir ($unpackdir, 0777, true);
 		chdir($unpackdir);
 		$packing = getExtractionShellExec();
