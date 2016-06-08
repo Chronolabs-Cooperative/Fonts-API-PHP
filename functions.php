@@ -3758,7 +3758,7 @@ if (!function_exists("writeFontRepositoryHeader")) {
 if (!function_exists("getBaseFontValueStore")) {
 	function getBaseFontValueStore($font)
 	{
-		$result = array('uploaded' => microtime(true));
+		$result = array('uploaded' => microtime(true), 'licence' => API_LICENCE);
 		if (file_exists($font))
 		foreach(file($font) as $line)
 		{

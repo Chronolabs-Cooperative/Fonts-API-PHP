@@ -102,7 +102,11 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 		echo implode("\n", $output);
 		foreach(getCompleteFilesListAsArray($currently) as $file => $filz)
 			if (substr($file, strlen($file) - strlen(API_BASE), strlen(API_BASE)) == strlen(API_BASE) && !empty($data['Font']))
+			{
+				$fontdata = getBaseFontValueStore($file);
 				writeFontResourceHeader($currently . DIRECTORY_SEPARATOR . $file, $data['Font']['licence'], $data['Font']);
+				continue;
+			}
 		$numstarting = count(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"));
 		$totalmaking = count(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"))-1;
 		exec("cd $currently", $output, $return);
@@ -548,7 +552,7 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 				if (substr($file, strlen($file)-strlen(API_BASE), strlen(API_BASE)) == API_BASE)
 					writeFontRepositoryHeader($currently . DIRECTORY_SEPARATOR . $file, $data['Font']['licence'], $data['Font']);
 			if (!file_exists($currently . DIRECTORY_SEPARATOR . 'LICENCE'))
-				copy(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . $datastore['Font']['licence'] . DIRECTORY_SEPARATOR . 'LICENCE', $currently . DIRECTORY_SEPARATOR . 'LICENCE');
+				copy(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . $data['Font']['licence'] . DIRECTORY_SEPARATOR . 'LICENCE', $currently . DIRECTORY_SEPARATOR . 'LICENCE');
 			foreach(getCompleteFilesListAsArray($currently) as $file)
 				if (substr($file, strlen($file)-strlen(API_BASE), strlen(API_BASE)) == API_BASE)
 				{
@@ -564,7 +568,7 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 					exec($cmda, $output, $resolv);
 					if (isset($stamping['zip']))
 					{
-						$cmdb = str_replace("%pack", $packfile, str_replace("%comment", $comment, $stamping['zip']));
+						$cmdb = str_replace("%pack", $packfile, str_replace("%comment", './file.diz', $stamping['zip']));
 						echo "Executing: $cmdb\n";
 						exec($cmdb, $output, $resolve);
 						echo implode("\n", $output);
