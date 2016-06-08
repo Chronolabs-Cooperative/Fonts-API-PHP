@@ -3838,8 +3838,8 @@ if (!function_exists("deleteFilesNotListedByArray")) {
 					$found = true;
 			if ($found == false)
 			{
-				unlink($dirname.DIRECTORY_SEPARATOR.$file);
-				rmdir(dirname($dirname.DIRECTORY_SEPARATOR.$file));
+				unlink($file);
+				rmdir(dirname($file));
 			}
 		}
 			

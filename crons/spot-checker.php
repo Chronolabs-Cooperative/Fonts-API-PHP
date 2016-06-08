@@ -545,6 +545,7 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 		{
 			unlink($packfile);
 			deleteFilesNotListedByArray($currently, array(API_BASE, 'file.diz', 'resource.json', 'LICENCE'));
+			die(print_r(getCompleteFilesListAsArray($currently), true));
 			foreach(getCompleteFilesListAsArray($currently) as $file)
 				if (substr($file, strlen($file)-strlen(API_BASE), strlen(API_BASE)) == API_BASE)
 					writeFontRepositoryHeader($currently . DIRECTORY_SEPARATOR . $file, $data['Font']['licence'], $data['Font']);
