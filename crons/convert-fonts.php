@@ -26,7 +26,7 @@ error_reporting(E_ERROR);
 set_time_limit(1999);
 require_once dirname(__DIR__).'/functions.php';
 require_once dirname(__DIR__).'/class/fontages.php';
-
+$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 $result = $GLOBALS['FontsDB']->queryF("SELECT * from `uploads` WHERE `uploaded` > '0' AND `converted` = '0' AND `storaged` = 0 ORDER BY RAND() LIMIT 27");
 while($row = $GLOBALS['FontsDB']->fetchArray($result))
 {
@@ -202,3 +202,4 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 		$GLOBALS['FontsDB']->queryF("DELETE FROM `uploads` WHERE `id` = " . $row['id']);
 	}
 }
+$GLOBALS['FontsDB']->queryF($sql = "COMMIT");

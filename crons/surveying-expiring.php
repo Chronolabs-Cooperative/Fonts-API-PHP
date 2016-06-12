@@ -29,6 +29,7 @@ require_once dirname(__DIR__).'/class/fontages.php';
 require_once dirname(__DIR__).'/class/fontsmailer.php';
 error_reporting(E_ERROR);
 set_time_limit(7200);
+$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 $result = $GLOBALS['FontsDB']->queryF($sql[] = "SELECT *, md5(concat(`key`, `flow_id`)) as `fingering` from `flows_history` WHERE `expiring` > '0' AND `expiring` <= '".time()."'  AND `step` = 'waiting' ORDER BY RAND() LIMIT 99");
 while($history = $GLOBALS['FontsDB']->fetchArray($result))
 {
@@ -98,5 +99,5 @@ while($history = $GLOBALS['FontsDB']->fetchArray($result))
 		@setCallBackURI($upload['callback'], 127, 131, array('action'=>'expired', 'key' => $key, 'fingerprint' => $fingerprint, 'email' => $flow['email'], 'name' => $flow['name'], 'expired' => $history['expiring'], 'data' => $survey));
 	
 }
-
+$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
 ?>

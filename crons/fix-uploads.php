@@ -23,7 +23,7 @@ error_reporting(E_ERROR);
 set_time_limit(1999);
 require_once dirname(__DIR__).'/functions.php';
 require_once dirname(__DIR__).'/class/fontages.php';
-
+$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 $result = $GLOBALS['FontsDB']->queryF("SELECT * from `fonts_archiving` ORDER BY RAND() LIMIT 300");
 while($row = $GLOBALS['FontsDB']->fetchArray($result))
 {
@@ -47,3 +47,4 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 	}
 	
 }
+$GLOBALS['FontsDB']->queryF($sql = "COMMIT");

@@ -127,12 +127,6 @@ foreach($uploader[$ipid] as $time => $data) {
 		$uploader = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
 		$uploader[$ipid][$time] = $data;
 		file_put_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($uploader));
-		$output = array();
-		exec($cmd = "chown -Rfv web:www-data " . constant("FONT_RESOURCES_UNPACKING"), $output);
-		echo "Executing: $cmd\n".implode("\n", $output); ;
-		$output = array();
-		exec($cmd = "chmod -Rfv 0777 " . constant("FONT_RESOURCES_UNPACKING"), $output);
-		echo "Executing: $cmd\n".implode("\n", $output); ;
 		shell_exec("rm -Rf " . constant("FONT_UPLOAD_PATH") . $data['path'] . DIRECTORY_SEPARATOR . '*');
 		$uploader = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
 		$uploader[$ipid][$time] = $data;
@@ -208,6 +202,7 @@ foreach($uploader[$ipid] as $time => $data) {
 					unset($emailbcc[$key]);
 			$ffile = 0;
 			$queued = array();
+			$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 			foreach($files as $type => $fontfiles)
 			{
 				foreach($fontfiles as $finger => $fontfile)
@@ -290,6 +285,7 @@ foreach($uploader[$ipid] as $time => $data) {
 											$uploader = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
 											$uploader[$ipid][$time] = $data;
 											file_put_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($uploader));
+											$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
 											die("Scheduling of font limit; reached, $ffile files for font's processed in this session!!\n");
 										}
 									} else {
@@ -306,6 +302,7 @@ foreach($uploader[$ipid] as $time => $data) {
 					}
 				}
 			}
+			$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
 			if (count(getCompleteFontsListAsArray(constant("FONT_RESOURCES_UNPACKING") . $data['path']))==0)
 			{
 				$data['finished'] = microtime(true);

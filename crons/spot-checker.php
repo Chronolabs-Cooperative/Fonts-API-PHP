@@ -23,7 +23,7 @@
 use FontLib\Font;
 require_once dirname(__DIR__).'/class/FontLib/Autoloader.php';
 
-
+$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 ini_set('display_errors', true);
 ini_set('log_errors', true);
 error_reporting(E_ERROR);
@@ -652,7 +652,7 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 	else
 		echo 'x';
 }
-
+$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
 exit(0);
 
 

@@ -1,0 +1,42 @@
+php_value memory_limit 512M
+php_value upload_max_filesize 2096M
+php_value post_max_size 2096M
+php_value error_reporting 1
+php_value diaplay_errors 1
+
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+RewriteRule ^([a-z0-9]{2})/(font)/(.*?)/(preview)/image.(gif|jpg|png)$																								index.php?version=$1&mode=$2&clause=$3&state=$5&output=$4			[L]
+RewriteRule ^([a-z0-9]{2})/survey/(preview)/(.*?)/image.(jpg|png|gif)$																								survey-$2.php?version=$1&mode=$4&key=$3&output=$2			[L]
+RewriteRule ^([a-z0-9]{2})/(font)/(.*?)/(preview)/(gif|jpg|png).api$																								index.php?version=$1&mode=$2&clause=$3&state=$5&output=$4			[L]
+RewriteRule ^([a-z0-9]{2})/survey/(preview)/(.*?)/(jpg|png|gif).api$																								survey-$2.php?version=$1&mode=$4&key=$3&output=$2			[L]
+RewriteRule ^([a-z0-9]{2})/(font)/(.*?)/(ufo).api$																													index.php?version=$1&mode=$2&clause=$3&output=$4			[L]
+RewriteRule ^([a-z0-9]{2})/(font)/(.*?)/(ufo).api/(.*?)$																											index.php?version=$1&mode=$2&clause=$3&state=$5&output=$4		[L]
+RewriteRule ^([a-z0-9]{2})/(font)/(.*?)/(.*?).api$																													index.php?version=$1&mode=$2&clause=$3&state=$5&output=$4			[L]
+
+						
+RewriteRule ^([a-z0-9]{2})/survey/page-([0-9]+)/(.*?)/(.*?).api$																									survey-page-$2.php?version=$1&mode=$2&key=$3&output=$4&			[L]
+RewriteRule ^([a-z0-9]{2})/survey/(.*?)/(.*?)/(.*?).api?(.*?)$																										survey-$2.php?version=$1&mode=$2&key=$3&output=$4&$5			[L]	
+RewriteRule ^([a-z0-9]{2})/survey/(.*?)/(.*?)/(.*?).api$																											survey-$2.php?version=$1&mode=$2&key=$3&output=$4			[L]
+RewriteRule ^([a-z0-9]{2})/survey/(.*?)/(.*?).api$																													survey-$2.php?version=$1&key=$2&output=$3&				[L]
+		
+RewriteRule ^([a-z0-9]{2})/(.*?)/upload.api$																														upload.php?version=$1&field=$2						[L]
+RewriteRule ^([a-z0-9]{2})/(.*?)/releases.api$																														releases.php?version=$1&field=$2					[L]
+RewriteRule ^([a-z0-9]{2})/(uploads|releases)/(.*?)/(.*?).api?(.*?)$ 																								index.php?version=$1&mode=$2&clause=$3&state=&output=$4&$5		[L]	
+RewriteRule ^([a-z0-9]{2})/(uploads|releases)/(.*?)/(.*?).api$																										index.php?version=$1&mode=$2&clause=$3&state=&output=$4			[L]
+RewriteRule ^([a-z0-9]{2})/(uploads|releases)/(forms).api$																											index.php?version=$1&mode=$2&clause=&state=&output=$3			[L]
+
+RewriteRule ^([a-z0-9]{2})/(fonts|nodes|random|data|callbacks|names|contributors|downloads|files|peers|fonthit|archive)/(.*?)/(.*?)/(.*?)/(.*?).api?(.*?)$ 			index.php?version=$1&mode=$2&clause=$3&state=$4&output=$5&name=$6&$7	[L]
+RewriteRule ^([a-z0-9]{2})/(fonts|nodes|random|data|callbacks|names|contributors|downloads|files|peers|fonthit|archive)/(.*?)/(.*?)/(.*?)/(.*?).api$				index.php?version=$1&mode=$2&clause=$3&state=$4&output=$5&name=$6	[L]
+RewriteRule ^([a-z0-9]{2})/(fonts|nodes|random|data|callbacks|names|contributors|downloads|files|peers|fonthit|archive)/(.*?)/(.*?)/(.*?).api?(.*?)$ 				index.php?version=$1&mode=$2&clause=$3&state=$4&output=$5&$6		[L]
+RewriteRule ^([a-z0-9]{2})/(fonts|nodes|random|data|callbacks|names|contributors|downloads|files|peers|fonthit|archive)/(.*?)/(.*?)/(.*?).api$	 					index.php?version=$1&mode=$2&clause=$3&state=$4&output=$5		[L]
+RewriteRule ^([a-z0-9]{2})/(fonts|nodes|random|data|callbacks|names|contributors|downloads|files|peers|fonthit|archive)/(.*?)/(.*?).api?(.*?)$ 						index.php?version=$1&mode=$2&clause=$3&state=&output=$4&$5		[L]	
+RewriteRule ^([a-z0-9]{2})/(fonts|nodes|random|data|callbacks|names|contributors|downloads|files|peers|fonthit|archive)/(.*?)/(.*?).api$							index.php?version=$1&mode=$2&clause=$3&state=&output=$4			[L]	
+RewriteRule ^([a-z0-9]{2})/(fonts|nodes|random|data|callbacks|names|contributors|downloads|files|peers|fonthit|archive)/(.*?).api?(.*?)$ 							index.php?version=$1&mode=$2&clause=&state=&output=$3&$4		[L]
+RewriteRule ^([a-z0-9]{2})/(fonts|nodes|random|data|callbacks|names|contributors|downloads|files|peers|fonthit|archive)/(.*?).api$									index.php?version=$1&mode=$2&clause=&state=&output=$3&			[L]
+
+RewriteRule ^font-download-example.zip$																																examples/sample-font-api2-download.zip					[L]
+RewriteRule ^callback-example.php$																																	examples/callback-example.php.txt					[L]
+RewriteRule ^(.*?).(css|txt|php|jpg|png|gif|ico)$																													$1.$2									[L]

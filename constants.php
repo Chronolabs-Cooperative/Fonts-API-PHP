@@ -55,7 +55,7 @@
 	define('API_REPOSITORY', 'git'); // = git or svn or git,svn
 	define('API_BASE', 'eot');
 	define('API_LICENCE', 'gpl3');
-	define("API_SHORTENING_URL", "http://jump.labs.coop"); // URL for your shortener API see: https://github.com/Chronolabs-Cooperative/Jump-API-PHP
+	define("API_SHORTENING_URL", "http://d.slams.io/"); // URL for your shortener API see: https://github.com/Chronolabs-Cooperative/Jump-API-PHP
 	define("API_SHORTENING_TYPE", "random"); // can be either random, domain, short, original
 	
 	// Prefix for Identity Tags for Fonts..

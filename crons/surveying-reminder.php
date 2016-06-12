@@ -29,6 +29,7 @@ require_once dirname(__DIR__).'/class/fontages.php';
 require_once dirname(__DIR__).'/class/fontsmailer.php';
 error_reporting(E_ERROR);
 set_time_limit(7200);
+$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 $result = $GLOBALS['FontsDB']->queryF($sql[] = "SELECT * from `flows_history` WHERE `reminders` > 0 AND `reminding` > '0' AND `reminding` <= '".time()."'  AND `step` = 'waiting' ORDER BY RAND() LIMIT 99");
 while($row = $GLOBALS['FontsDB']->fetchArray($result))
 {
@@ -54,5 +55,5 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 		}
 	}
 }
-
+$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
 ?>

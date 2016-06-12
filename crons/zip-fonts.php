@@ -32,7 +32,7 @@ ini_set('memory_limit', '128M');
 include_once dirname(dirname(__FILE__)).'/functions.php';
 include_once dirname(dirname(__FILE__)).'/class/fontages.php';
 set_time_limit(7200);
-
+$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 $result = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `uploads` WHERE `uploaded` > '0' AND `converted` > '0' AND `quizing` > '0' AND `storaged` <= '0'  AND (`finished` >= `needing` OR `expired` < UNIX_TIMESTAMP()) ORDER BY RAND() LIMIT 7");
 while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 {
@@ -341,7 +341,7 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 		if (substr($file, strlen($file)-3) == API_BASE)
 			writeFontRepositoryHeader($currently . DIRECTORY_SEPARATOR . $file, $data['Font']['licence'], $data['Font']);
 	if (!file_exists($currently . DIRECTORY_SEPARATOR . 'LICENCE'))
-		copy(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . $datastore['Font']['licence'] . DIRECTORY_SEPARATOR . 'LICENCE', $currently . DIRECTORY_SEPARATOR . 'LICENCE');
+		copy(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . (!isset($datastore['Font']['licence'])?$fontdata['licence']:$datastore['Font']['licence']) . DIRECTORY_SEPARATOR . 'LICENCE', $currently . DIRECTORY_SEPARATOR . 'LICENCE');
 	$packing = getArchivingShellExec();
 	$stamping = getStampingShellExec();
 	if (!is_dir($sortpath))
@@ -489,6 +489,7 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 			{
 				$bash=array();
 				$bash[] = "#! bash";
+				$bash[] = "unlink ".FONT_RESOURCES_RESOURCE."/.git/index.lock";
 				$bash[] = "cd ".FONT_RESOURCES_RESOURCE;
 			} else {
 				echo "Setting Memory Limit To: " .(floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-add.sh')) / (1024) + 50 . "M") . "/n";
@@ -513,7 +514,7 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 		echo("Error: Failed generated archived pack font file!!\n");
 	
 }
-
+$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
 exit(0);
 
 

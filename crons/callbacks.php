@@ -37,6 +37,7 @@ define('MAXIMUM_QUERIES', 25);
 ini_set('memory_limit', '315M');
 include_once dirname(dirname(__FILE__)).'/functions.php';
 include_once dirname(dirname(__FILE__)).'/class/FontsDB.php';
+$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 $result = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `callbacks` WHERE `when` <= unix_timestamp() AND `fails` < 5 ORDER BY `when` ASC");
 while ($row = $GLOBALS['FontsDB']->fetchArray($result))
 {
@@ -100,7 +101,6 @@ while ($row = $GLOBALS['FontsDB']->fetchArray($result))
 	}
 }
 $GLOBALS['FontsDB']->queryF($sql = "DELETE FROM `callbacks` WHERE `fails` >= '5'");
+$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
 exit(0);
-
-
 ?>
