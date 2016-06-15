@@ -91,7 +91,8 @@ Once you have configured the above you will have to set up the cronjobs for all 
 You need to run the following command from root with sudo at the start unless you are doing user basis of cronjobs to set them below the command is the listing with 'suggested' not 'finited' schedules for tasks to operate; remember adjusting these could leave your system paralised with to much to do in one hit so execute the following and put these lines in: $ sudo crontab -e
 
     */3 * * * * chmod -Rf 0777 /fonts
-    */3 * * * * chown -Rf www-data:www-data /tmp/Font-*
+    */3 * * * * chown -Rf www-data:www-data /tmp/Font-Cache
+    */3 * * * * chown -Rf www-data:www-data /tmp/Font-Uploads
     */3 * * * * chmod -Rf 0777 /tmp
     */3 * * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/reboot-checker.php
     11 23 5 * * sh /var/www/fonts.labs.coop/crons/crawling-fonts.sh
