@@ -149,4 +149,3 @@ cd /fonts/Fonting
 git add ./*
 git commit -m "Updating Master Changed for all missed and changed fonts!"
 git push origin master
-git pull

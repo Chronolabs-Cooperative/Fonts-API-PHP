@@ -1,8 +1,8 @@
-CREATE DATABASE  IF NOT EXISTS `fonts` /*!40100 DEFAULT CHARACTER SET utf8 */;
-USE `fonts`;
+CREATE DATABASE  IF NOT EXISTS `fonts-labs-coop` /*!40100 DEFAULT CHARACTER SET utf8 */;
+USE `fonts-labs-coop`;
 -- MySQL dump 10.13  Distrib 5.6.30, for debian-linux-gnu (x86_64)
 --
--- Host: localhost    Database: fonts
+-- Host: localhost    Database: fonts-labs-coop
 -- ------------------------------------------------------
 -- Server version	5.6.30-0ubuntu0.15.10.1
 
@@ -18,23 +18,13 @@ USE `fonts`;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `callbacks`
+-- Dumping data for table `flows_history`
 --
 
-DROP TABLE IF EXISTS `callbacks`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `callbacks` (
-  `when` int(12) NOT NULL,
-  `uri` varchar(250) NOT NULL DEFAULT '',
-  `timeout` int(4) NOT NULL DEFAULT '0',
-  `connection` int(4) NOT NULL DEFAULT '0',
-  `data` mediumtext NOT NULL,
-  `queries` mediumtext NOT NULL,
-  `fails` int(3) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`when`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
+LOCK TABLES `flows_history` WRITE;
+/*!40000 ALTER TABLE `flows_history` DISABLE KEYS */;
+/*!40000 ALTER TABLE `flows_history` ENABLE KEYS */;
+UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -45,4 +35,4 @@ CREATE TABLE `callbacks` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-05-29 13:21:10
+-- Dump completed on 2016-06-19 20:26:37

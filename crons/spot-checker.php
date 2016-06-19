@@ -84,11 +84,17 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 	if ($skip != true)
 	{
 		echo "File: $file\n";
-		$data = json_decode(getArchivedZIPFile($file, 'font-resource.json'), true);	
+		try {
+			$data = json_decode(getArchivedZIPFile($file, 'font-resource.json'), true);
+		}
+		catch (Exception $e)
+		{
+			$data = array();
+		}
 		if (!isset($data['Files'])||!isset($data['Licences'])||!isset($data['Files']))
 			$updated=true;
 		$fingerprint = $archive['font_id'];
-		$naming = $data["FontName"];
+		$naming = (!isset($data["FontName"])?getRegionalFontName($archive['font_id']):$data["FontName"]);
 		if (!is_dir($currently = $unpackdir = FONT_RESOURCES_UNPACKING . DIRECTORY_SEPARATOR . sha1($file.$archive['font_id'])))
 			mkdir ($unpackdir, 0777, true);
 		chdir($unpackdir);
@@ -103,8 +109,8 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 		foreach(getCompleteFilesListAsArray($currently) as $file => $filz)
 			if (substr($file, strlen($file) - strlen(API_BASE), strlen(API_BASE)) == strlen(API_BASE) && !empty($data['Font']))
 			{
-				$fontdata = getBaseFontValueStore($file);
 				writeFontResourceHeader($currently . DIRECTORY_SEPARATOR . $file, $data['Font']['licence'], $data['Font']);
+				$fontdata = getBaseFontValueStore($currently . DIRECTORY_SEPARATOR . $file);
 				continue;
 			}
 		$numstarting = count(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"));
@@ -620,7 +626,6 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 						{
 							$bash=array();
 							$bash[] = "#! bash";
-							$bash[] = "rm -f ".FONT_RESOURCES_RESOURCE ."/.git/index.lock";
 							$bash[] = "cd ".FONT_RESOURCES_RESOURCE;
 						} else {
 							echo "Setting Memory Limit To: " .(floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-update.sh')) / (1024) + 50 . "M") . "/n";

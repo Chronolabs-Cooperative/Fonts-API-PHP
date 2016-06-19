@@ -1,8 +1,8 @@
-CREATE DATABASE  IF NOT EXISTS `fonts` /*!40100 DEFAULT CHARACTER SET utf8 */;
-USE `fonts`;
+CREATE DATABASE  IF NOT EXISTS `fonts-labs-coop` /*!40100 DEFAULT CHARACTER SET utf8 */;
+USE `fonts-labs-coop`;
 -- MySQL dump 10.13  Distrib 5.6.30, for debian-linux-gnu (x86_64)
 --
--- Host: localhost    Database: fonts
+-- Host: localhost    Database: fonts-labs-coop
 -- ------------------------------------------------------
 -- Server version	5.6.30-0ubuntu0.15.10.1
 
@@ -18,12 +18,13 @@ USE `fonts`;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Dumping events for database 'fonts'
+-- Dumping data for table `releases`
 --
 
---
--- Dumping routines for database 'fonts'
---
+LOCK TABLES `releases` WRITE;
+/*!40000 ALTER TABLE `releases` DISABLE KEYS */;
+/*!40000 ALTER TABLE `releases` ENABLE KEYS */;
+UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -34,4 +35,4 @@ USE `fonts`;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-05-29 13:21:11
+-- Dump completed on 2016-06-19 20:26:36

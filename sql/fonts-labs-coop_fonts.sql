@@ -1,8 +1,8 @@
-CREATE DATABASE  IF NOT EXISTS `fonts` /*!40100 DEFAULT CHARACTER SET utf8 */;
-USE `fonts`;
+CREATE DATABASE  IF NOT EXISTS `fonts-labs-coop` /*!40100 DEFAULT CHARACTER SET utf8 */;
+USE `fonts-labs-coop`;
 -- MySQL dump 10.13  Distrib 5.6.30, for debian-linux-gnu (x86_64)
 --
--- Host: localhost    Database: fonts
+-- Host: localhost    Database: fonts-labs-coop
 -- ------------------------------------------------------
 -- Server version	5.6.30-0ubuntu0.15.10.1
 
@@ -18,18 +18,13 @@ USE `fonts`;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `nodes_linking`
+-- Dumping data for table `fonts`
 --
 
-DROP TABLE IF EXISTS `nodes_linking`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `nodes_linking` (
-  `font_id` varchar(32) DEFAULT NULL,
-  `node_id` int(23) DEFAULT '0',
-  KEY `PINGERING` (`node_id`,`font_id`(11))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
+LOCK TABLES `fonts` WRITE;
+/*!40000 ALTER TABLE `fonts` DISABLE KEYS */;
+/*!40000 ALTER TABLE `fonts` ENABLE KEYS */;
+UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -40,4 +35,4 @@ CREATE TABLE `nodes_linking` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-05-29 13:21:10
+-- Dump completed on 2016-06-19 20:26:37

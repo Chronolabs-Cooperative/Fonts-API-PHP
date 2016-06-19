@@ -33,7 +33,7 @@ include_once dirname(dirname(__FILE__)).'/functions.php';
 include_once dirname(dirname(__FILE__)).'/class/fontages.php';
 set_time_limit(7200);
 $GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
-$result = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `uploads` WHERE `uploaded` > '0' AND `converted` > '0' AND `quizing` > '0' AND `storaged` <= '0'  AND (`finished` >= `needing` OR `expired` < UNIX_TIMESTAMP()) ORDER BY RAND() LIMIT 7");
+$result = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `uploads` WHERE `uploaded` > '0' AND `converted` > '0' AND `quizing` > '0' AND `storaged` <= '0'  AND (`finished` >= `needing` OR `expired` < UNIX_TIMESTAMP()) ORDER BY RAND() LIMIT " . mt_rand(6,41));
 while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 {
 	$GLOBALS['FontsDB']->queryF("START TRANSACTION");
@@ -425,7 +425,6 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 			{
 				$bash=array();
 				$bash[] = "#! bash";
-				$bash[] = "rm -f ".FONT_RESOURCES_RESOURCE ."/.git/index.lock";
 				$bash[] = "cd ".FONT_RESOURCES_RESOURCE;
 				$bash[] = "svn cleanup";
 				$bash[] = "svn update";
@@ -489,7 +488,6 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 			{
 				$bash=array();
 				$bash[] = "#! bash";
-				$bash[] = "unlink ".FONT_RESOURCES_RESOURCE."/.git/index.lock";
 				$bash[] = "cd ".FONT_RESOURCES_RESOURCE;
 			} else {
 				echo "Setting Memory Limit To: " .(floor(filesize(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-add.sh')) / (1024) + 50 . "M") . "/n";
