@@ -36,7 +36,7 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 	$sendmail = false;
 	if ($rrow = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql[] = "SELECT * from `flows` WHERE `flow_id` = '".$row['flow_id']."' AND `participate` = 'yes'")))
 	{
-		$mailer = new FontsMailer("wishcraft@users.sourceforge.net", "Fonting Repository Services");
+		$mailer = new FontsMailer(API_EMAIL_ADDY, API_EMAIL_FROM);
 		if (file_exists($file = dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "SMTPAuth.diz"))
 			$smtpauths = explode("\n", str_replace(array("\r\n", "\n\n", "\n\r"), "\n", file_get_contents($file)));
 		if (count($smtpauths)>=1)

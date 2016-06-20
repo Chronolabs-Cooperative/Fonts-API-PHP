@@ -29,513 +29,741 @@ use FontLib\Font;
 require_once __DIR__.'/class/FontLib/Autoloader.php';
 if (API_DEBUG==true) echo (basename(__FILE__) . "::"  . __LINE__ . "<br/>\n");
 
-/**
- *
- * @param string $fontfile path to font file (TTF, OTF or PFB).
- * @param string $fmfile font metrics file (UFM or AFM).
- * @param boolean $embedded Set to false to not embed the font, true otherwise (default).
- * @param string $enc Name of the encoding table to use. Omit this parameter for TrueType Unicode, OpenType Unicode and symbolic fonts like Symbol or ZapfDingBats.
- * @param array $patch Optional modification of the encoding
- */
-function MakePHPFont($fontfile, $fmfile, $path = "/tmp/", $embedded=true, $enc='cp1252', $patch=array()) {
-	//Generate a font definition file
-	ini_set('auto_detect_line_endings', '1');
-	if (!file_exists($fontfile)) {
-		die('Error: file not found: '.$fontfile);
-	}
-	if (!file_exists($fmfile)) {
-		die('Error: file not found: '.$fmfile);
-	}
-	$cidtogidmap = '';
-	$map = array();
-	$diff = '';
-	$dw = 0; // default width
-	$ffext = strtolower(substr($fontfile, -3));
-	$fmext = strtolower(substr($fmfile, -3));
-	if ($fmext == 'afm') {
-		if (($ffext == 'ttf') OR ($ffext == 'otf')) {
-			$type = 'TrueType';
-		} elseif ($ffext == 'pfb') {
-			$type = 'Type1';
-		} else {
-			die('Error: unrecognized font file extension: '.$ffext);
-		}
-		if ($enc) {
-			$map = ReadMap($enc);
-			foreach ($patch as $cc => $gn) {
-				$map[$cc] = $gn;
-			}
-		}
-		$fm = ReadAFM($fmfile, $map);
-		if (isset($widths['.notdef'])) {
-			$dw = $widths['.notdef'];
-		}
-		if ($enc) {
-			$diff = MakeFontEncoding($map);
-		}
-		$fd = MakeFontDescriptor($fm, empty($map));
-	} elseif ($fmext == 'ufm') {
-		$enc = '';
-		if (($ffext == 'ttf') OR ($ffext == 'otf')) {
-			$type = 'TrueTypeUnicode';
-		} else {
-			die('Error: not a TrueType font: '.$ffext);
-		}
-		$fm = ReadUFM($fmfile, $cidtogidmap);
-		$dw = $fm['MissingWidth'];
-		$fd = MakeFontDescriptor($fm, false);
-	}
-	//Start generation
-	$s = '<?php'."\n";
-	$s .= '$type=\''.$type."';\n";
-	$s .= '$name=\''.$fm['FontName']."';\n";
-	$s .= '$desc='.$fd.";\n";
-	if (!isset($fm['UnderlinePosition'])) {
-		$fm['UnderlinePosition'] = -100;
-	}
-	if (!isset($fm['UnderlineThickness'])) {
-		$fm['UnderlineThickness'] = 50;
-	}
-	$s .= '$up='.$fm['UnderlinePosition'].";\n";
-	$s .= '$ut='.$fm['UnderlineThickness'].";\n";
-	if ($dw <= 0) {
-		if (isset($fm['Widths'][32]) AND ($fm['Widths'][32] > 0)) {
-			// assign default space width
-			$dw = $fm['Widths'][32];
-		} else {
-			$dw = 600;
-		}
-	}
-	$s .= '$dw='.$dw.";\n";
-	$w = MakeWidthArray($fm);
-	$s .= '$cw='.$w.";\n";
-	$s .= '$enc=\''.$enc."';\n";
-	$s .= '$diff=\''.$diff."';\n";
-	$basename = substr(basename($fmfile), 0, -4);
-	if ($embedded) {
-		//Embedded font
-		$f = fopen($fontfile,'rb');
-		if (!$f) {
-			die('Error: Unable to open '.$fontfile);
-		}
-		$file = fread($f, filesize($fontfile));
-		fclose($f);
-		if ($type == 'Type1') {
-			//Find first two sections and discard third one
-			$header = (ord($file{0}) == 128);
-			if ($header) {
-				//Strip first binary header
-				$file = substr($file, 6);
-			}
-			$pos = strpos($file, 'eexec');
-			if (!$pos) {
-				die('Error: font file does not seem to be valid Type1');
-			}
-			$size1 = $pos + 6;
-			if ($header AND (ord($file{$size1}) == 128)) {
-				//Strip second binary header
-				$file = substr($file, 0, $size1).substr($file, $size1+6);
-			}
-			$pos = strpos($file, '00000000');
-			if (!$pos) {
-				die('Error: font file does not seem to be valid Type1');
-			}
-			$size2 = $pos - $size1;
-			$file = substr($file, 0, ($size1 + $size2));
-		}
-		$basename = strtolower($basename);
-		if (function_exists('gzcompress')) {
-			$cmp = $path . DIRECTORY_SEPARATOR . $basename.'.z';
-			SaveToFile($cmp, gzcompress($file, 9), 'b');
-			$s .= '$file=\''.$cmp."';\n";
-			//print "Font file compressed (".$cmp.")\n";
-			if (!empty($cidtogidmap)) {
-				$cmp = $basename.'.ctg.z';
-				SaveToFile($cmp, gzcompress($cidtogidmap, 9), 'b');
-				//print "CIDToGIDMap created and compressed (".$cmp.")\n";
-				$s .= '$ctg=\''.$cmp."';\n";
-			}
-		} else {
-			$s .= '$file=\''.basename($fontfile)."';\n";
-			//print "Notice: font file could not be compressed (zlib extension not available)\n";
-			if (!empty($cidtogidmap)) {
-				$cmp = $path . DIRECTORY_SEPARATOR . $basename.'.ctg';
-				$f = fopen($cmp, 'wb');
-				fwrite($f, $cidtogidmap);
-				fclose($f);
-				//print "CIDToGIDMap created (".$cmp.")\n";
-				$s .= '$ctg=\''.$cmp."';\n";
-			}
-		}
-		if($type == 'Type1') {
-			$s .= '$size1='.$size1.";\n";
-			$s .= '$size2='.$size2.";\n";
-		} else {
-			$s.='$originalsize='.filesize($fontfile).";\n";
-		}
-	} else {
-		//Not embedded font
-		$s .= '$file='."'';\n";
-	}
-	$s .= "?>";
-	SaveToFile($path . DIRECTORY_SEPARATOR . $basename.'.php',$s);
-	//print "Font definition file generated (".$basename.".php)\n";
-}
 
-/**
- * Read the specified encoding map.
- * @param string $enc map name (see /enc/ folder for valid names).
- */
-function ReadMap($enc) {
-	//Read a map file
-	$file = __DIR__.'/data/enc/'.strtolower($enc).'.map';
-	$a = file($file);
-	if (empty($a)) {
-		die('Error: encoding not found: '.$enc);
-	}
-	$cc2gn = array();
-	foreach ($a as $l) {
-		if ($l{0} == '!') {
-			$e = preg_split('/[ \\t]+/',rtrim($l));
-			$cc = hexdec(substr($e[0],1));
-			$gn = $e[2];
-			$cc2gn[$cc] = $gn;
-		}
-	}
-	for($i = 0; $i <= 255; $i++) {
-		if(!isset($cc2gn[$i])) {
-			$cc2gn[$i] = '.notdef';
-		}
-	}
-	return $cc2gn;
-}
+if (!function_exists("xml2array")) {
+	/**
+	 * Function to convert XML to Array in PHP
+	 * 
+	 * @param unknown $contents
+	 * @param number $get_attributes
+	 * @param string $priority
+	 */
+	function xml2array($contents, $get_attributes=1, $priority = 'tag') {
+		if(!$contents) return array();
 
-/**
- * Read UFM file
- */
-function ReadUFM($file, &$cidtogidmap) {
-	//Prepare empty CIDToGIDMap
-	$cidtogidmap = str_pad('', (256 * 256 * 2), "\x00");
-	//Read a font metric file
-	$a = file($file);
-	if (empty($a)) {
-		die('File not found');
-	}
-	$widths = array();
-	$fm = array();
-	foreach($a as $l) {
-		$e = explode(' ',chop($l));
-		if(count($e) < 2) {
-			continue;
+		if(!function_exists('xml_parser_create')) {
+			return array();
 		}
-		$code = $e[0];
-		$param = $e[1];
-		if($code == 'U') {
-			// U 827 ; WX 0 ; N squaresubnosp ; G 675 ;
-			//Character metrics
-			$cc = (int)$e[1];
-			if ($cc != -1) {
-				$gn = $e[7];
-				$w = $e[4];
-				$glyph = $e[10];
-				$widths[$cc] = $w;
-				if($cc == ord('X')) {
-					$fm['CapXHeight'] = $e[13];
-				}
-				// Set GID
-				if (($cc >= 0) AND ($cc < 0xFFFF) AND $glyph) {
-					$cidtogidmap{($cc * 2)} = chr($glyph >> 8);
-					$cidtogidmap{(($cc * 2) + 1)} = chr($glyph & 0xFF);
+
+		//Get the XML parser of PHP - PHP must have this module for the parser to work
+		$parser = xml_parser_create('');
+		xml_parser_set_option($parser, XML_OPTION_TARGET_ENCODING, "UTF-8"); # http://minutillo.com/steve/weblog/2004/6/17/php-xml-and-character-encodings-a-tale-of-sadness-rage-and-data-loss
+		xml_parser_set_option($parser, XML_OPTION_CASE_FOLDING, 0);
+		xml_parser_set_option($parser, XML_OPTION_SKIP_WHITE, 1);
+		xml_parse_into_struct($parser, trim($contents), $xml_values);
+		xml_parser_free($parser);
+
+		if(!$xml_values) return;//Hmm...
+
+		//Initializations
+		$xml_array = array();
+		$parents = array();
+		$opened_tags = array();
+		$arr = array();
+
+		$current = &$xml_array; //Refference
+
+		//Go through the tags.
+		$repeated_tag_index = array();//Multiple tags with same name will be turned into an array
+		foreach($xml_values as $data) {
+			unset($attributes,$value);//Remove existing values, or there will be trouble
+
+			//This command will extract these variables into the foreach scope
+			// tag(string), type(string), level(int), attributes(array).
+			extract($data);//We could use the array by itself, but this cooler.
+
+			$result = array();
+			$attributes_data = array();
+
+			if(isset($value)) {
+				if($priority == 'tag') $result = $value;
+				else $result['value'] = $value; //Put the value in a assoc array if we are in the 'Attribute' mode
+			}
+
+			//Set the attributes too.
+			if(isset($attributes) and $get_attributes) {
+				foreach($attributes as $attr => $val) {
+					if($priority == 'tag') $attributes_data[$attr] = $val;
+					else $result['attr'][$attr] = $val; //Set all the attributes in a array called 'attr'
 				}
 			}
-			if(($gn == '.notdef') AND (!isset($fm['MissingWidth']))) {
-				$fm['MissingWidth'] = $w;
-			}
-		} elseif($code == 'FontName') {
-			$fm['FontName'] = $param;
-		} elseif($code == 'Weight') {
-			$fm['Weight'] = $param;
-		} elseif($code == 'ItalicAngle') {
-			$fm['ItalicAngle'] = (double)$param;
-		} elseif($code == 'Ascender') {
-			$fm['Ascender'] = (int)$param;
-		} elseif($code == 'Descender') {
-			$fm['Descender'] = (int)$param;
-		} elseif($code == 'UnderlineThickness') {
-			$fm['UnderlineThickness'] = (int)$param;
-		} elseif($code == 'UnderlinePosition') {
-			$fm['UnderlinePosition'] = (int)$param;
-		} elseif($code == 'IsFixedPitch') {
-			$fm['IsFixedPitch'] = ($param == 'true');
-		} elseif($code == 'FontBBox') {
-			$fm['FontBBox'] = array($e[1], $e[2], $e[3], $e[4]);
-		} elseif($code == 'CapHeight') {
-			$fm['CapHeight'] = (int)$param;
-		} elseif($code == 'StdVW') {
-			$fm['StdVW'] = (int)$param;
-		}
-	}
-	if(!isset($fm['MissingWidth'])) {
-		$fm['MissingWidth'] = 600;
-	}
-	if(!isset($fm['FontName'])) {
-		die('FontName not found');
-	}
-	$fm['Widths'] = $widths;
-	return $fm;
-}
 
-/**
- * Read AFM file
- */
-function ReadAFM($file,&$map) {
-	//Read a font metric file
-	$a = file($file);
-	if(empty($a)) {
-		die('File not found');
-	}
-	$widths = array();
-	$fm = array();
-	$fix = array(
-			'Edot'=>'Edotaccent',
-			'edot'=>'edotaccent',
-			'Idot'=>'Idotaccent',
-			'Zdot'=>'Zdotaccent',
-			'zdot'=>'zdotaccent',
-			'Odblacute' => 'Ohungarumlaut',
-			'odblacute' => 'ohungarumlaut',
-			'Udblacute'=>'Uhungarumlaut',
-			'udblacute'=>'uhungarumlaut',
-			'Gcedilla'=>'Gcommaaccent'
-			,'gcedilla'=>'gcommaaccent',
-			'Kcedilla'=>'Kcommaaccent',
-			'kcedilla'=>'kcommaaccent',
-			'Lcedilla'=>'Lcommaaccent',
-			'lcedilla'=>'lcommaaccent',
-			'Ncedilla'=>'Ncommaaccent',
-			'ncedilla'=>'ncommaaccent',
-			'Rcedilla'=>'Rcommaaccent',
-			'rcedilla'=>'rcommaaccent',
-			'Scedilla'=>'Scommaaccent',
-			'scedilla'=>'scommaaccent',
-			'Tcedilla'=>'Tcommaaccent',
-			'tcedilla'=>'tcommaaccent',
-			'Dslash'=>'Dcroat',
-			'dslash'=>'dcroat',
-			'Dmacron'=>'Dcroat',
-			'dmacron'=>'dcroat',
-			'combininggraveaccent'=>'gravecomb',
-			'combininghookabove'=>'hookabovecomb',
-			'combiningtildeaccent'=>'tildecomb',
-			'combiningacuteaccent'=>'acutecomb',
-			'combiningdotbelow'=>'dotbelowcomb',
-			'dongsign'=>'dong'
-	);
-	foreach($a as $l) {
-		$e = explode(' ', rtrim($l));
-		if (count($e) < 2) {
-			continue;
-		}
-		$code = $e[0];
-		$param = $e[1];
-		if ($code == 'C') {
-			//Character metrics
-			$cc = (int)$e[1];
-			$w = $e[4];
-			$gn = $e[7];
-			if (substr($gn, -4) == '20AC') {
-				$gn = 'Euro';
-			}
-			if (isset($fix[$gn])) {
-				//Fix incorrect glyph name
-				foreach ($map as $c => $n) {
-					if ($n == $fix[$gn]) {
-						$map[$c] = $gn;
+			//See tag status and do the needed.
+			if($type == "open") {//The starting of the tag '<tag>'
+				$parent[$level-1] = &$current;
+				if(!is_array($current) or (!in_array($tag, array_keys($current)))) { //Insert New tag
+					$current[$tag] = $result;
+					if($attributes_data) $current[$tag. '_attr'] = $attributes_data;
+					$repeated_tag_index[$tag.'_'.$level] = 1;
+
+					$current = &$current[$tag];
+
+				} else { //There was another element with the same tag name
+
+				if(isset($current[$tag][0])) {//If there is a 0th element it is already an array
+					$current[$tag][$repeated_tag_index[$tag.'_'.$level]] = $result;
+					$repeated_tag_index[$tag.'_'.$level]++;
+				} else {//This section will make the value an array if multiple tags with the same name appear together
+					$current[$tag] = array($current[$tag],$result);//This will combine the existing item and the new item together to make an array
+					$repeated_tag_index[$tag.'_'.$level] = 2;
+
+					if(isset($current[$tag.'_attr'])) { //The attribute of the last(0th) tag must be moved as well
+						$current[$tag]['0_attr'] = $current[$tag.'_attr'];
+						unset($current[$tag.'_attr']);
+					}
+
+				}
+				$last_item_index = $repeated_tag_index[$tag.'_'.$level]-1;
+				$current = &$current[$tag][$last_item_index];
+				}
+
+			} elseif($type == "complete") { //Tags that ends in 1 line '<tag />'
+				//See if the key is already taken.
+				if(!isset($current[$tag])) { //New Key
+					$current[$tag] = $result;
+					$repeated_tag_index[$tag.'_'.$level] = 1;
+					if($priority == 'tag' and $attributes_data) $current[$tag. '_attr'] = $attributes_data;
+
+				} else { //If taken, put all things inside a list(array)
+					if(isset($current[$tag][0]) and is_array($current[$tag])) {//If it is already an array...
+
+						// ...push the new element into that array.
+						$current[$tag][$repeated_tag_index[$tag.'_'.$level]] = $result;
+						 
+						if($priority == 'tag' and $get_attributes and $attributes_data) {
+							$current[$tag][$repeated_tag_index[$tag.'_'.$level] . '_attr'] = $attributes_data;
+						}
+						$repeated_tag_index[$tag.'_'.$level]++;
+
+					} else { //If it is not an array...
+						$current[$tag] = array($current[$tag],$result); //...Make it an array using using the existing value and the new value
+						$repeated_tag_index[$tag.'_'.$level] = 1;
+						if($priority == 'tag' and $get_attributes) {
+							if(isset($current[$tag.'_attr'])) { //The attribute of the last(0th) tag must be moved as well
+								 
+								$current[$tag]['0_attr'] = $current[$tag.'_attr'];
+								unset($current[$tag.'_attr']);
+							}
+
+							if($attributes_data) {
+								$current[$tag][$repeated_tag_index[$tag.'_'.$level] . '_attr'] = $attributes_data;
+							}
+						}
+						$repeated_tag_index[$tag.'_'.$level]++; //0 and 1 index is already taken
 					}
 				}
+
+			} elseif($type == 'close') { //End of tag '</tag>'
+				$current = &$parent[$level-1];
 			}
-			if (empty($map)) {
-				//Symbolic font: use built-in encoding
-				$widths[$cc] = $w;
+		}
+
+		return($xml_array);
+	}
+}
+
+if (!function_exists("MakePHPFont")) {
+	/**
+	 * Function for making PHP font for TCPDF and similar applications
+	 * 
+	 * @param string $fontfile path to font file (TTF, OTF or PFB).
+	 * @param string $fmfile font metrics file (UFM or AFM).
+	 * @param boolean $embedded Set to false to not embed the font, true otherwise (default).
+	 * @param string $enc Name of the encoding table to use. Omit this parameter for TrueType Unicode, OpenType Unicode and symbolic fonts like Symbol or ZapfDingBats.
+	 * @param array $patch Optional modification of the encoding
+	 */
+	function MakePHPFont($fontfile, $fmfile, $path = "/tmp/", $embedded=true, $enc='cp1252', $patch=array()) {
+		//Generate a font definition file
+		ini_set('auto_detect_line_endings', '1');
+		if (!file_exists($fontfile)) {
+			die('Error: file not found: '.$fontfile);
+		}
+		if (!file_exists($fmfile)) {
+			die('Error: file not found: '.$fmfile);
+		}
+		$cidtogidmap = '';
+		$map = array();
+		$diff = '';
+		$dw = 0; // default width
+		$ffext = strtolower(substr($fontfile, -3));
+		$fmext = strtolower(substr($fmfile, -3));
+		if ($fmext == 'afm') {
+			if (($ffext == 'ttf') OR ($ffext == 'otf')) {
+				$type = 'TrueType';
+			} elseif ($ffext == 'pfb') {
+				$type = 'Type1';
 			} else {
-				$widths[$gn] = $w;
-				if($gn == 'X') {
-					$fm['CapXHeight'] = $e[13];
+				die('Error: unrecognized font file extension: '.$ffext);
+			}
+			if ($enc) {
+				$map = ReadMap($enc);
+				foreach ($patch as $cc => $gn) {
+					$map[$cc] = $gn;
 				}
 			}
-			if($gn == '.notdef') {
-				$fm['MissingWidth'] = $w;
+			$fm = ReadAFM($fmfile, $map);
+			if (isset($widths['.notdef'])) {
+				$dw = $widths['.notdef'];
 			}
-		} elseif($code == 'FontName') {
-			$fm['FontName'] = $param;
-		} elseif($code == 'Weight') {
-			$fm['Weight'] = $param;
-		} elseif($code == 'ItalicAngle') {
-			$fm['ItalicAngle'] = (double)$param;
-		} elseif($code == 'Ascender') {
-			$fm['Ascender'] = (int)$param;
-		} elseif($code == 'Descender') {
-			$fm['Descender'] = (int)$param;
-		} elseif($code == 'UnderlineThickness') {
-			$fm['UnderlineThickness'] = (int)$param;
-		} elseif($code == 'UnderlinePosition') {
-			$fm['UnderlinePosition'] = (int)$param;
-		} elseif($code == 'IsFixedPitch') {
-			$fm['IsFixedPitch'] = ($param == 'true');
-		} elseif($code == 'FontBBox') {
-			$fm['FontBBox'] = array($e[1], $e[2], $e[3], $e[4]);
-		} elseif($code == 'CapHeight') {
-			$fm['CapHeight'] = (int)$param;
-		} elseif($code == 'StdVW') {
-			$fm['StdVW'] = (int)$param;
-		}
-	}
-	if (!isset($fm['FontName'])) {
-		die('FontName not found');
-	}
-	if (!empty($map)) {
-		if (!isset($widths['.notdef'])) {
-			$widths['.notdef'] = 600;
-		}
-		if (!isset($widths['Delta']) AND isset($widths['increment'])) {
-			$widths['Delta'] = $widths['increment'];
-		}
-		//Order widths according to map
-		for ($i = 0; $i <= 255; $i++) {
-			if (!isset($widths[$map[$i]])) {
-				//print "Warning: character ".$map[$i]." is missing\n";
-				$widths[$i] = $widths['.notdef'];
+			if ($enc) {
+				$diff = MakeFontEncoding($map);
+			}
+			$fd = MakeFontDescriptor($fm, empty($map));
+		} elseif ($fmext == 'ufm') {
+			$enc = '';
+			if (($ffext == 'ttf') OR ($ffext == 'otf')) {
+				$type = 'TrueTypeUnicode';
 			} else {
-				$widths[$i] = $widths[$map[$i]];
+				die('Error: not a TrueType font: '.$ffext);
+			}
+			$fm = ReadUFM($fmfile, $cidtogidmap);
+			$dw = $fm['MissingWidth'];
+			$fd = MakeFontDescriptor($fm, false);
+		}
+		//Start generation
+		$s = '<?php'."\n";
+		$s .= '$type=\''.$type."';\n";
+		$s .= '$name=\''.$fm['FontName']."';\n";
+		$s .= '$desc='.$fd.";\n";
+		if (!isset($fm['UnderlinePosition'])) {
+			$fm['UnderlinePosition'] = -100;
+		}
+		if (!isset($fm['UnderlineThickness'])) {
+			$fm['UnderlineThickness'] = 50;
+		}
+		$s .= '$up='.$fm['UnderlinePosition'].";\n";
+		$s .= '$ut='.$fm['UnderlineThickness'].";\n";
+		if ($dw <= 0) {
+			if (isset($fm['Widths'][32]) AND ($fm['Widths'][32] > 0)) {
+				// assign default space width
+				$dw = $fm['Widths'][32];
+			} else {
+				$dw = 600;
 			}
 		}
-	}
-	$fm['Widths'] = $widths;
-	return $fm;
-}
-
-function MakeFontDescriptor($fm, $symbolic=false) {
-	//Ascent
-	$asc = (isset($fm['Ascender']) ? $fm['Ascender'] : 1000);
-	$fd = "array('Ascent'=>".$asc;
-	//Descent
-	$desc = (isset($fm['Descender']) ? $fm['Descender'] : -200);
-	$fd .= ",'Descent'=>".$desc;
-	//CapHeight
-	if (isset($fm['CapHeight'])) {
-		$ch = $fm['CapHeight'];
-	} elseif (isset($fm['CapXHeight'])) {
-		$ch = $fm['CapXHeight'];
-	} else {
-		$ch = $asc;
-	}
-	$fd .= ",'CapHeight'=>".$ch;
-	//Flags
-	$flags = 0;
-	if (isset($fm['IsFixedPitch']) AND $fm['IsFixedPitch']) {
-		$flags += 1<<0;
-	}
-	if ($symbolic) {
-		$flags += 1<<2;
-	} else {
-		$flags += 1<<5;
-	}
-	if (isset($fm['ItalicAngle']) AND ($fm['ItalicAngle'] != 0)) {
-		$flags += 1<<6;
-	}
-	$fd .= ",'Flags'=>".$flags;
-	//FontBBox
-	if (isset($fm['FontBBox'])) {
-		$fbb = $fm['FontBBox'];
-	} else {
-		$fbb = array(0, ($desc - 100), 1000, ($asc + 100));
-	}
-	$fd .= ",'FontBBox'=>'[".$fbb[0].' '.$fbb[1].' '.$fbb[2].' '.$fbb[3]."]'";
-	//ItalicAngle
-	$ia = (isset($fm['ItalicAngle']) ? $fm['ItalicAngle'] : 0);
-	$fd .= ",'ItalicAngle'=>".$ia;
-	//StemV
-	if (isset($fm['StdVW'])) {
-		$stemv = $fm['StdVW'];
-	} elseif (isset($fm['Weight']) && preg_match('(bold|black)', $fm['Weight'])) {
-		$stemv = 120;
-	} else {
-		$stemv = 70;
-	}
-	$fd .= ",'StemV'=>".$stemv;
-	//MissingWidth
-	if(isset($fm['MissingWidth'])) {
-		$fd .= ",'MissingWidth'=>".$fm['MissingWidth'];
-	}
-	$fd .= ')';
-	return $fd;
-}
-
-function MakeWidthArray($fm) {
-	//Make character width array
-	$s = 'array(';
-	$cw = $fm['Widths'];
-	$els = array();
-	$c = 0;
-	foreach ($cw as $i => $w) {
-		if (is_numeric($i)) {
-			$els[] = (((($c++)%10) == 0) ? "\n" : '').$i.'=>'.$w;
-		}
-	}
-	$s .= implode(',', $els);
-	$s .= ')';
-	return $s;
-}
-
-function MakeFontEncoding($map) {
-	//Build differences from reference encoding
-	$ref = ReadMap('cp1252');
-	$s = '';
-	$last = 0;
-	for ($i = 32; $i <= 255; $i++) {
-		if ($map[$i] != $ref[$i]) {
-			if ($i != $last+1) {
-				$s .= $i.' ';
+		$s .= '$dw='.$dw.";\n";
+		$w = MakeWidthArray($fm);
+		$s .= '$cw='.$w.";\n";
+		$s .= '$enc=\''.$enc."';\n";
+		$s .= '$diff=\''.$diff."';\n";
+		$basename = substr(basename($fmfile), 0, -4);
+		if ($embedded) {
+			//Embedded font
+			$f = fopen($fontfile,'rb');
+			if (!$f) {
+				die('Error: Unable to open '.$fontfile);
 			}
-			$last = $i;
-			$s .= '/'.$map[$i].' ';
+			$file = fread($f, filesize($fontfile));
+			fclose($f);
+			if ($type == 'Type1') {
+				//Find first two sections and discard third one
+				$header = (ord($file{0}) == 128);
+				if ($header) {
+					//Strip first binary header
+					$file = substr($file, 6);
+				}
+				$pos = strpos($file, 'eexec');
+				if (!$pos) {
+					die('Error: font file does not seem to be valid Type1');
+				}
+				$size1 = $pos + 6;
+				if ($header AND (ord($file{$size1}) == 128)) {
+					//Strip second binary header
+					$file = substr($file, 0, $size1).substr($file, $size1+6);
+				}
+				$pos = strpos($file, '00000000');
+				if (!$pos) {
+					die('Error: font file does not seem to be valid Type1');
+				}
+				$size2 = $pos - $size1;
+				$file = substr($file, 0, ($size1 + $size2));
+			}
+			$basename = strtolower($basename);
+			if (function_exists('gzcompress')) {
+				$cmp = $path . DIRECTORY_SEPARATOR . $basename.'.z';
+				SaveToFile($cmp, gzcompress($file, 9), 'b');
+				$s .= '$file=\''.$cmp."';\n";
+				//print "Font file compressed (".$cmp.")\n";
+				if (!empty($cidtogidmap)) {
+					$cmp = $basename.'.ctg.z';
+					SaveToFile($cmp, gzcompress($cidtogidmap, 9), 'b');
+					//print "CIDToGIDMap created and compressed (".$cmp.")\n";
+					$s .= '$ctg=\''.$cmp."';\n";
+				}
+			} else {
+				$s .= '$file=\''.basename($fontfile)."';\n";
+				//print "Notice: font file could not be compressed (zlib extension not available)\n";
+				if (!empty($cidtogidmap)) {
+					$cmp = $path . DIRECTORY_SEPARATOR . $basename.'.ctg';
+					$f = fopen($cmp, 'wb');
+					fwrite($f, $cidtogidmap);
+					fclose($f);
+					//print "CIDToGIDMap created (".$cmp.")\n";
+					$s .= '$ctg=\''.$cmp."';\n";
+				}
+			}
+			if($type == 'Type1') {
+				$s .= '$size1='.$size1.";\n";
+				$s .= '$size2='.$size2.";\n";
+			} else {
+				$s.='$originalsize='.filesize($fontfile).";\n";
+			}
+		} else {
+			//Not embedded font
+			$s .= '$file='."'';\n";
 		}
+		$s .= "?>";
+		SaveToFile($path . DIRECTORY_SEPARATOR . $basename.'.php',$s);
+		//print "Font definition file generated (".$basename.".php)\n";
 	}
-	return rtrim($s);
 }
 
-function SaveToFile($file, $s, $mode='t') {
-	$f = fopen($file, 'w'.$mode);
-	if(!$f) {
-		die('Can\'t write to file '.$file);
+if (!function_exists("ReadMap")) {
+	/**
+	 * Read the specified encoding map.
+	 * @param string $enc map name (see /enc/ folder for valid names).
+	 */
+	function ReadMap($enc) {
+		//Read a map file
+		$file = __DIR__.'/data/enc/'.strtolower($enc).'.map';
+		$a = file($file);
+		if (empty($a)) {
+			die('Error: encoding not found: '.$enc);
+		}
+		$cc2gn = array();
+		foreach ($a as $l) {
+			if ($l{0} == '!') {
+				$e = preg_split('/[ \\t]+/',rtrim($l));
+				$cc = hexdec(substr($e[0],1));
+				$gn = $e[2];
+				$cc2gn[$cc] = $gn;
+			}
+		}
+		for($i = 0; $i <= 255; $i++) {
+			if(!isset($cc2gn[$i])) {
+				$cc2gn[$i] = '.notdef';
+			}
+		}
+		return $cc2gn;
 	}
-	fwrite($f, $s, strlen($s));
-	fclose($f);
 }
 
-function ReadShort($f) {
-	$a = unpack('n1n', fread($f, 2));
-	return $a['n'];
+if (!function_exists("ReadUFM")) {
+	/**
+	 * Read UFM file
+	 * 
+	 * @param $file string
+	 * @param $cidtogidmap array
+	 */
+	function ReadUFM($file, &$cidtogidmap) {
+		//Prepare empty CIDToGIDMap
+		$cidtogidmap = str_pad('', (256 * 256 * 2), "\x00");
+		//Read a font metric file
+		$a = file($file);
+		if (empty($a)) {
+			die('File not found');
+		}
+		$widths = array();
+		$fm = array();
+		foreach($a as $l) {
+			$e = explode(' ',chop($l));
+			if(count($e) < 2) {
+				continue;
+			}
+			$code = $e[0];
+			$param = $e[1];
+			if($code == 'U') {
+				// U 827 ; WX 0 ; N squaresubnosp ; G 675 ;
+				//Character metrics
+				$cc = (int)$e[1];
+				if ($cc != -1) {
+					$gn = $e[7];
+					$w = $e[4];
+					$glyph = $e[10];
+					$widths[$cc] = $w;
+					if($cc == ord('X')) {
+						$fm['CapXHeight'] = $e[13];
+					}
+					// Set GID
+					if (($cc >= 0) AND ($cc < 0xFFFF) AND $glyph) {
+						$cidtogidmap{($cc * 2)} = chr($glyph >> 8);
+						$cidtogidmap{(($cc * 2) + 1)} = chr($glyph & 0xFF);
+					}
+				}
+				if(($gn == '.notdef') AND (!isset($fm['MissingWidth']))) {
+					$fm['MissingWidth'] = $w;
+				}
+			} elseif($code == 'FontName') {
+				$fm['FontName'] = $param;
+			} elseif($code == 'Weight') {
+				$fm['Weight'] = $param;
+			} elseif($code == 'ItalicAngle') {
+				$fm['ItalicAngle'] = (double)$param;
+			} elseif($code == 'Ascender') {
+				$fm['Ascender'] = (int)$param;
+			} elseif($code == 'Descender') {
+				$fm['Descender'] = (int)$param;
+			} elseif($code == 'UnderlineThickness') {
+				$fm['UnderlineThickness'] = (int)$param;
+			} elseif($code == 'UnderlinePosition') {
+				$fm['UnderlinePosition'] = (int)$param;
+			} elseif($code == 'IsFixedPitch') {
+				$fm['IsFixedPitch'] = ($param == 'true');
+			} elseif($code == 'FontBBox') {
+				$fm['FontBBox'] = array($e[1], $e[2], $e[3], $e[4]);
+			} elseif($code == 'CapHeight') {
+				$fm['CapHeight'] = (int)$param;
+			} elseif($code == 'StdVW') {
+				$fm['StdVW'] = (int)$param;
+			}
+		}
+		if(!isset($fm['MissingWidth'])) {
+			$fm['MissingWidth'] = 600;
+		}
+		if(!isset($fm['FontName'])) {
+			die('FontName not found');
+		}
+		$fm['Widths'] = $widths;
+		return $fm;
+	}
 }
 
-function ReadLong($f) {
-	$a = unpack('N1N', fread($f, 4));
-	return $a['N'];
+if (!function_exists("ReadAFM")) {
+	/**
+	 * Read AFM file
+	 * 
+	 * @param $file string
+	 * @param $map array
+	 */
+	function ReadAFM($file,&$map) {
+		//Read a font metric file
+		$a = file($file);
+		if(empty($a)) {
+			die('File not found');
+		}
+		$widths = array();
+		$fm = array();
+		$fix = array(
+				'Edot'=>'Edotaccent',
+				'edot'=>'edotaccent',
+				'Idot'=>'Idotaccent',
+				'Zdot'=>'Zdotaccent',
+				'zdot'=>'zdotaccent',
+				'Odblacute' => 'Ohungarumlaut',
+				'odblacute' => 'ohungarumlaut',
+				'Udblacute'=>'Uhungarumlaut',
+				'udblacute'=>'uhungarumlaut',
+				'Gcedilla'=>'Gcommaaccent'
+				,'gcedilla'=>'gcommaaccent',
+				'Kcedilla'=>'Kcommaaccent',
+				'kcedilla'=>'kcommaaccent',
+				'Lcedilla'=>'Lcommaaccent',
+				'lcedilla'=>'lcommaaccent',
+				'Ncedilla'=>'Ncommaaccent',
+				'ncedilla'=>'ncommaaccent',
+				'Rcedilla'=>'Rcommaaccent',
+				'rcedilla'=>'rcommaaccent',
+				'Scedilla'=>'Scommaaccent',
+				'scedilla'=>'scommaaccent',
+				'Tcedilla'=>'Tcommaaccent',
+				'tcedilla'=>'tcommaaccent',
+				'Dslash'=>'Dcroat',
+				'dslash'=>'dcroat',
+				'Dmacron'=>'Dcroat',
+				'dmacron'=>'dcroat',
+				'combininggraveaccent'=>'gravecomb',
+				'combininghookabove'=>'hookabovecomb',
+				'combiningtildeaccent'=>'tildecomb',
+				'combiningacuteaccent'=>'acutecomb',
+				'combiningdotbelow'=>'dotbelowcomb',
+				'dongsign'=>'dong'
+		);
+		foreach($a as $l) {
+			$e = explode(' ', rtrim($l));
+			if (count($e) < 2) {
+				continue;
+			}
+			$code = $e[0];
+			$param = $e[1];
+			if ($code == 'C') {
+				//Character metrics
+				$cc = (int)$e[1];
+				$w = $e[4];
+				$gn = $e[7];
+				if (substr($gn, -4) == '20AC') {
+					$gn = 'Euro';
+				}
+				if (isset($fix[$gn])) {
+					//Fix incorrect glyph name
+					foreach ($map as $c => $n) {
+						if ($n == $fix[$gn]) {
+							$map[$c] = $gn;
+						}
+					}
+				}
+				if (empty($map)) {
+					//Symbolic font: use built-in encoding
+					$widths[$cc] = $w;
+				} else {
+					$widths[$gn] = $w;
+					if($gn == 'X') {
+						$fm['CapXHeight'] = $e[13];
+					}
+				}
+				if($gn == '.notdef') {
+					$fm['MissingWidth'] = $w;
+				}
+			} elseif($code == 'FontName') {
+				$fm['FontName'] = $param;
+			} elseif($code == 'Weight') {
+				$fm['Weight'] = $param;
+			} elseif($code == 'ItalicAngle') {
+				$fm['ItalicAngle'] = (double)$param;
+			} elseif($code == 'Ascender') {
+				$fm['Ascender'] = (int)$param;
+			} elseif($code == 'Descender') {
+				$fm['Descender'] = (int)$param;
+			} elseif($code == 'UnderlineThickness') {
+				$fm['UnderlineThickness'] = (int)$param;
+			} elseif($code == 'UnderlinePosition') {
+				$fm['UnderlinePosition'] = (int)$param;
+			} elseif($code == 'IsFixedPitch') {
+				$fm['IsFixedPitch'] = ($param == 'true');
+			} elseif($code == 'FontBBox') {
+				$fm['FontBBox'] = array($e[1], $e[2], $e[3], $e[4]);
+			} elseif($code == 'CapHeight') {
+				$fm['CapHeight'] = (int)$param;
+			} elseif($code == 'StdVW') {
+				$fm['StdVW'] = (int)$param;
+			}
+		}
+		if (!isset($fm['FontName'])) {
+			die('FontName not found');
+		}
+		if (!empty($map)) {
+			if (!isset($widths['.notdef'])) {
+				$widths['.notdef'] = 600;
+			}
+			if (!isset($widths['Delta']) AND isset($widths['increment'])) {
+				$widths['Delta'] = $widths['increment'];
+			}
+			//Order widths according to map
+			for ($i = 0; $i <= 255; $i++) {
+				if (!isset($widths[$map[$i]])) {
+					//print "Warning: character ".$map[$i]." is missing\n";
+					$widths[$i] = $widths['.notdef'];
+				} else {
+					$widths[$i] = $widths[$map[$i]];
+				}
+			}
+		}
+		$fm['Widths'] = $widths;
+		return $fm;
+	}
+}
+
+if (!function_exists("MakeFontDescriptor")) {
+	/**
+	 * Makes font description header
+	 * 
+	 * @param $fm array
+	 * @param $symbolic boolean
+	 */
+	function MakeFontDescriptor($fm, $symbolic=false) {
+		//Ascent
+		$asc = (isset($fm['Ascender']) ? $fm['Ascender'] : 1000);
+		$fd = "array('Ascent'=>".$asc;
+		//Descent
+		$desc = (isset($fm['Descender']) ? $fm['Descender'] : -200);
+		$fd .= ",'Descent'=>".$desc;
+		//CapHeight
+		if (isset($fm['CapHeight'])) {
+			$ch = $fm['CapHeight'];
+		} elseif (isset($fm['CapXHeight'])) {
+			$ch = $fm['CapXHeight'];
+		} else {
+			$ch = $asc;
+		}
+		$fd .= ",'CapHeight'=>".$ch;
+		//Flags
+		$flags = 0;
+		if (isset($fm['IsFixedPitch']) AND $fm['IsFixedPitch']) {
+			$flags += 1<<0;
+		}
+		if ($symbolic) {
+			$flags += 1<<2;
+		} else {
+			$flags += 1<<5;
+		}
+		if (isset($fm['ItalicAngle']) AND ($fm['ItalicAngle'] != 0)) {
+			$flags += 1<<6;
+		}
+		$fd .= ",'Flags'=>".$flags;
+		//FontBBox
+		if (isset($fm['FontBBox'])) {
+			$fbb = $fm['FontBBox'];
+		} else {
+			$fbb = array(0, ($desc - 100), 1000, ($asc + 100));
+		}
+		$fd .= ",'FontBBox'=>'[".$fbb[0].' '.$fbb[1].' '.$fbb[2].' '.$fbb[3]."]'";
+		//ItalicAngle
+		$ia = (isset($fm['ItalicAngle']) ? $fm['ItalicAngle'] : 0);
+		$fd .= ",'ItalicAngle'=>".$ia;
+		//StemV
+		if (isset($fm['StdVW'])) {
+			$stemv = $fm['StdVW'];
+		} elseif (isset($fm['Weight']) && preg_match('(bold|black)', $fm['Weight'])) {
+			$stemv = 120;
+		} else {
+			$stemv = 70;
+		}
+		$fd .= ",'StemV'=>".$stemv;
+		//MissingWidth
+		if(isset($fm['MissingWidth'])) {
+			$fd .= ",'MissingWidth'=>".$fm['MissingWidth'];
+		}
+		$fd .= ')';
+		return $fd;
+	}
+}
+
+if (!function_exists("MakeWidthArray")) {
+	/**
+	 * Makes Widths Array for Font
+	 * 
+	 * @param array $fm
+	 */
+	function MakeWidthArray($fm) {
+		//Make character width array
+		$s = 'array(';
+		$cw = $fm['Widths'];
+		$els = array();
+		$c = 0;
+		foreach ($cw as $i => $w) {
+			if (is_numeric($i)) {
+				$els[] = (((($c++)%10) == 0) ? "\n" : '').$i.'=>'.$w;
+			}
+		}
+		$s .= implode(',', $els);
+		$s .= ')';
+		return $s;
+	}
+}
+
+if (!function_exists("MakeFontEncoding")) {
+	/**
+	 * Makes a Font Encoding Mapping References
+	 * 
+	 * @param array $map
+	 */
+	function MakeFontEncoding($map) {
+		//Build differences from reference encoding
+		$ref = ReadMap('cp1252');
+		$s = '';
+		$last = 0;
+		for ($i = 32; $i <= 255; $i++) {
+			if ($map[$i] != $ref[$i]) {
+				if ($i != $last+1) {
+					$s .= $i.' ';
+				}
+				$last = $i;
+				$s .= '/'.$map[$i].' ';
+			}
+		}
+		return rtrim($s);
+	}
+}
+
+if (!function_exists("SaveToFile")) {
+	/**
+	 * Writes a file to the filebase
+	 * 
+	 * @param string $file
+	 * @param string $s
+	 * @param string $mode
+	 */
+	function SaveToFile($file, $s, $mode='t') {
+		$f = fopen($file, 'w'.$mode);
+		if(!$f) {
+			die('Can\'t write to file '.$file);
+		}
+		fwrite($f, $s, strlen($s));
+		fclose($f);
+	}
+}
+
+if (!function_exists("ReadShort")) {
+	/**
+	 * Read's Short Data from File Via Unpack
+	 * 
+	 * @param string $f
+	 */
+	function ReadShort($f) {
+		$a = unpack('n1n', fread($f, 2));
+		return $a['n'];
+	}
+}
+
+if (!function_exists("ReadLong")) {
+	/**
+	 * Reads Long Data from File
+	 * 
+	 * @param string $f
+	 */
+	function ReadLong($f) {
+		$a = unpack('N1N', fread($f, 4));
+		return $a['N'];
+	}
+}
+
+if (!function_exists("getGlyphArrayFromXML")) {
+	/**
+	 * Gets Glyph Array from XML Array for *.glif files
+	 *
+	 * @param array $glyph
+	 *
+	 * @return array
+	 */
+	function getGlyphArrayFromXML( $glyph = array() ) {
+		$ret = array();
+		$ret['width'] = $glyph['glyph']['advance_attr']['width'];
+		$ret['unicode'] = $glyph['glyph']['unicode_attr']['hex'];
+		$ret['name'] = $glyph['glyph_attr']['name'];
+		$ret['format'] = $glyph['glyph_attr']['format'];
+		$ret['contours'] = array();
+		foreach($glyph['glyph']['outline']['contour'] as $index => $contour)
+			foreach($contour['point'] as $weight => $values)
+			{
+				if (is_string($weight) && !is_numeric($weight))
+				{
+					$weight = (integer)str_replace('_attr', '', $weight);
+					$ret['contours'][$index][$weight] = array("x"=>$values['x'], "y"=>$values['y'], 'type'=>(!isset($values['type'])?'-----':$values['type']), 'smooth'=>(!isset($values['smooth'])?'-----':$values['smooth']));
+				}
+			}
+		$ret['fingerprint'] = sha1(json_encode($ret['contours']));
+		return $ret;
+	}
 }
 
 if (!function_exists("getPeerIdentity")) {
 	/**
-	 *
+	 * Gets API Fonting Peering Identity Hash
+	 * 
 	 * @param string $uri
 	 * @param string $version
 	 * @param string $callback
 	 * @param string $polinating
 	 * @param string $root
+	 * 
+	 * @return string
 	 */
 	function getPeerIdentity( $uri, $callback, $zip, $fonts, $version, $polinating = true, $root = "http://fonts.labs.coop" ) {
 
 		$sql = "SELECT * FROM `peers` WHERE `api-uri` LIKE '%s'";
-		if ($GLOBALS['FontsDB']->getRowsNum($results = $GLOBALS['FontsDB']->queryF(sprintf($sql, $GLOBALS['FontsDB']->escape($uri))))==1)
+		if (!is_object($GLOBALS['FontsDB']))
+		{
+			return md5($uri.$version.$callback.$zip.$fonts.$polinating.$root.microtime(true));
+		} elseif ($GLOBALS['FontsDB']->getRowsNum($results = $GLOBALS['FontsDB']->queryF(sprintf($sql, $GLOBALS['FontsDB']->escape($uri))))==1)
 		{
 			$peer = $GLOBALS['FontsDB']->fetchArray($results);
 			return $peer['peer-id'];
@@ -557,6 +785,11 @@ if (!function_exists("getPeerIdentity")) {
 }
 
 if (!function_exists("fontsUseragentSupportedArray")) {
+	/**
+	 * Returns supported fonting formats with HTTP User-Agent
+	 * 
+	 * @return array;
+	 */
 	function fontsUseragentSupportedArray()
 	{
 		$return = array();
@@ -586,13 +819,16 @@ if (!function_exists("fontsUseragentSupportedArray")) {
 
 
 if (!function_exists("setCallBackURI")) {
-
-	/* function getURIData()
-	 *
-	 * 	cURL Routine
-	 * @author 		Simon Roberts (Chronolabs) simon@labs.coop
-	 *
-	 * @return 		float()
+	/* 
+	 * set's a callback to be called in the database reference for the cronjob
+	 * 
+	 * @param string $uri
+	 * @param integer $timeout
+	 * @param integer $connectout
+	 * @param array $data
+	 * @param array $queries
+	 * 
+	 * @return boolean
 	 */
 	function setCallBackURI($uri = '', $timeout = 65, $connectout = 65, $data = array(), $queries = array())
 	{
@@ -606,9 +842,9 @@ if (!function_exists("setCallBackURI")) {
 
 if (!function_exists("getFontsWaitingQueuing")) {
 	/**
-	 *
-	 * @param string $file
-	 * @param string $data
+	 * Counts Periodically how many fonts are still in the upload queue to be put in database and sorting folder
+	 * 
+	 * @return integer
 	 */
 	function getFontsWaitingQueuing()
 	{
@@ -638,9 +874,9 @@ if (!function_exists("getFontsWaitingQueuing")) {
 
 if (!function_exists("getFontsReleased")) {
 	/**
-	 *
-	 * @param string $file
-	 * @param string $data
+	 * Counts in the database the number of fonts available on the API
+	 * 
+	 * @return integer
 	 */
 	function getFontsReleased()
 	{
@@ -651,9 +887,9 @@ if (!function_exists("getFontsReleased")) {
 
 if (!function_exists("getFontsWaitingConvertions")) {
 	/**
-	 *
-	 * @param string $file
-	 * @param string $data
+	 * Counts in the database the number of fonts waiting for conversion and glyphications
+	 * 
+	 * @return integer
 	 */
 	function getFontsWaitingConvertions()
 	{
@@ -664,9 +900,9 @@ if (!function_exists("getFontsWaitingConvertions")) {
 
 if (!function_exists("getFontsWaitingConverted")) {
 	/**
-	 *
-	 * @param string $file
-	 * @param string $data
+	 * Counts in the database the number of fonts waiting to be packaged onto the git/svn repository
+	 * 
+	 * @return integer
 	 */
 	function getFontsWaitingConverted()
 	{
@@ -677,9 +913,9 @@ if (!function_exists("getFontsWaitingConverted")) {
 
 if (!function_exists("getSurveysWaiting")) {
 	/**
-	 *
-	 * @param string $file
-	 * @param string $data
+	 * Counts in the database the number of fonts waiting to be surveyed
+	 * 
+	 * @return integer
 	 */
 	function getSurveysWaiting()
 	{
@@ -690,9 +926,9 @@ if (!function_exists("getSurveysWaiting")) {
 
 if (!function_exists("getSurveysQueued")) {
 	/**
-	 *
-	 * @param string $file
-	 * @param string $data
+	 * Counts in the database the number of fonts surveys in progress!
+	 * 
+	 * @return integer
 	 */
 	function getSurveysQueued()
 	{
@@ -703,9 +939,9 @@ if (!function_exists("getSurveysQueued")) {
 
 if (!function_exists("getSurveysExpiring")) {
 	/**
-	 *
-	 * @param string $file
-	 * @param string $data
+	 * Counts in the database the number of fonts survey expirying in the next 2 days
+	 * 
+	 * @return integer
 	 */
 	function getSurveysExpiring($start  = 0, $end = 0)
 	{
@@ -716,9 +952,12 @@ if (!function_exists("getSurveysExpiring")) {
 
 if (!function_exists("putRawFile")) {
 	/**
-	 *
+	 * Saves a Raw File to the Filebase
+	 * 
 	 * @param string $file
 	 * @param string $data
+	 * 
+	 * @return boolean
 	 */
 	function putRawFile($file = '', $data = '')
 	{
@@ -732,21 +971,21 @@ if (!function_exists("putRawFile")) {
 			else
 				mkdir(dirname($file), 0777, true);
 		elseif (strpos(' '.$file, FONTS_CACHE) && !file_exists(FONTS_CACHE . DIRECTORY_SEPARATOR . '.htaccess'))
-			putRawFile(FONTS_CACHE . DIRECTORY_SEPARATOR . '.htaccess', "<Files ~ \"^.*$\">\n\tdeny from all\n</Files>");
+			SaveToFile(FONTS_CACHE . DIRECTORY_SEPARATOR . '.htaccess', "<Files ~ \"^.*$\">\n\tdeny from all\n</Files>");
 		if (is_file($file))
 			unlink($file);
-		$data = str_replace("\n", $lineBreak, $data);
-		$ff = fopen($file, 'w');
-		fwrite($ff, $data, strlen($data));
-		fclose($ff);
+		return SaveToFile($file, $data);
 	}
 }
 
 
 if (!function_exists("removeIdentities")) {
 	/**
+	 * Removes Identities from Array
 	 * 
 	 * @param array $array
+	 * 
+	 * @return array
 	 */
 	function removeIdentities($array = array())
 	{
@@ -763,6 +1002,7 @@ if (!function_exists("removeIdentities")) {
 
 if (!function_exists("getFileDIZ")) {
 	/**
+	 * Generates the DIZ file template from the template in /data
 	 * 
 	 * @param integer $font_id
 	 * @param integer $upload_id
@@ -770,6 +1010,7 @@ if (!function_exists("getFileDIZ")) {
 	 * @param string $filename
 	 * @param integer $bytes
 	 * @param array $filez
+	 * 
 	 * @return string
 	 */
 	function getFileDIZ($font_id = 0, $upload_id = 0, $fingerprint = '', $filename = '', $bytes = 0, $filez = array()) {
@@ -875,11 +1116,13 @@ if (!function_exists("getFileDIZ")) {
 
 if (!function_exists("getHTMLForm")) {
 	/**
-	 *
+	 * Get the HTML Forms for the API
+	 * 
 	 * @param unknown_type $mode
 	 * @param unknown_type $clause
 	 * @param unknown_type $output
 	 * @param unknown_type $version
+	 * 
 	 * @return string
 	 */
 	function getHTMLForm($mode = '', $clause = '', $callback = '', $output = '', $version = 'v2')
@@ -1044,14 +1287,13 @@ if (!function_exists("getHTMLForm")) {
 }
 
 if (!function_exists("getReserves")) {
-
-	/* function getResevers()
+	/**
+	 * This function get the Reserver CSS Headers for Font Embedding
+	 * 
+	 * @param string $fontname
 	 *
-	* 	provides an associative array of whitelisted IP Addresses
-	* @author 		Simon Roberts (Chronolabs) simon@labs.coop
-	*
-	* @return 		array
-	*/
+	 * @return array
+	 */
 	function getReserves($fontname = '') {
 		$return = array('fontname'=>$fontname);
 		$result = $GLOBALS["FontsDB"]->queryF("SELECT * FROM `reserves` ORDER BY `parent` DESC, `child` ASC");
@@ -1096,28 +1338,22 @@ if (!function_exists("getReserves")) {
 }
 
 if (!function_exists("whitelistGetIP")) {
-
-	/* function whitelistGetIPAddy()
+	/**
+	 * Provides an associative array of whitelisted IP Addresses
 	 *
-	* 	provides an associative array of whitelisted IP Addresses
-	* @author 		Simon Roberts (Chronolabs) simon@labs.coop
-	*
-	* @return 		array
-	*/
+	 * @return array
+ 	 */
 	function whitelistGetIPAddy() {
 		return array_merge(whitelistGetNetBIOSIP(), file(dirname(dirname(dirname(dirname(__FILE__)))) . DIRECTORY_SEPARATOR . 'whitelist.txt'));
 	}
 }
 
 if (!function_exists("whitelistGetNetBIOSIP")) {
-
-	/* function whitelistGetNetBIOSIP()
+	/**
+	 * provides an associative array of whitelisted IP Addresses base on TLD and NetBIOS Addresses
 	 *
-	* 	provides an associative array of whitelisted IP Addresses base on TLD and NetBIOS Addresses
-	* @author 		Simon Roberts (Chronolabs) simon@labs.coop
-	*
-	* @return 		array
-	*/
+	 * @return array
+ 	 */
 	function whitelistGetNetBIOSIP() {
 		$ret = array();
 		foreach(file(dirname(dirname(dirname(dirname(__FILE__)))) . DIRECTORY_SEPARATOR . 'whitelist-domains.txt') as $domain) {
@@ -1129,16 +1365,13 @@ if (!function_exists("whitelistGetNetBIOSIP")) {
 }
 
 if (!function_exists("whitelistGetIP")) {
-
-	/* function whitelistGetIP()
+	/**
+	 * get the True IPv4/IPv6 address of the client using the API
+	 * 
+	 * @param boolean $asString
 	 *
-	* 	get the True IPv4/IPv6 address of the client using the API
-	* @author 		Simon Roberts (Chronolabs) simon@labs.coop
-	*
-	* @param		$asString	boolean		Whether to return an address or network long integer
-	*
-	* @return 		mixed
-	*/
+	 * @return mixed
+	 */
 	function whitelistGetIP($asString = true){
 		
 		// Gets the proxy ip sent by the user
@@ -1182,9 +1415,12 @@ if (!function_exists("whitelistGetIP")) {
 
 if (!function_exists("getIPIdentity")) {
 	/**
+	 * Gets the networking IP Identity Hash and Sets User Identity Session Variables
 	 *
 	 * @param string $ip
-	 * @return string
+	 * @param boolean $sarray
+	 *
+	 * @return mixed
 	 */
 	function getIPIdentity($ip = '', $sarray = false)
 	{
@@ -1314,12 +1550,13 @@ if (!function_exists("getIPIdentity")) {
 
 if (!function_exists("getBaseDomain")) {
 	/**
-	 * getBaseDomain
+	 * Gets the base domain of a tld with subdomains, that is the root domain header for the network rout
 	 *
-	 * @param string $uri
-	 * @return string|unknown
+	 * @param string $url
+	 *
+	 * @return string
 	 */
-	function getBaseDomain($uri)
+	function getBaseDomain($uri = '')
 	{
 
 		static $fallout, $stratauris, $classes;
@@ -1376,14 +1613,13 @@ if (!function_exists("getBaseDomain")) {
 }
 
 if (!function_exists("getUploadHTML")) {
-
-	/* function getPeersSupporting()
+	/**
+	 * Gets the Upload form HTML
 	 *
-	* 	Get a supporting domain system for the API
-	* @author 		Simon Roberts (Chronolabs) simon@labs.coop
-	*
-	* @return 		array()
-	*/
+	 * @param string $return
+	 *
+	 * @return string
+	 */
 	function getUploadHTML($return = '')
 	{
 		$forms = array();
@@ -1396,6 +1632,18 @@ if (!function_exists("getUploadHTML")) {
 }
 
 if (!function_exists("generateCSS")) {
+	/**
+	 * Generates CSS from fonting source listing
+	 *
+	 * @param array $fonts
+	 * @param string $name
+	 * @param string $normal
+	 * @param string $bold
+	 * @param string $italic
+	 * @param string $version
+	 *
+	 * @return string
+	 */
 	function generateCSS($fonts = array(), $name = '', $normal = 'no', $bold = 'no', $italic = 'no', $version = "v2")
 	{
 		if ($bold == 'yes')
@@ -1426,6 +1674,18 @@ if (!function_exists("generateCSS")) {
 
 
 if (!function_exists("getPreviewHTML")) {
+	/**
+	 * Generates Font Preview as an Image or output preview HTML for a font
+	 *
+	 * @param string $mode
+	 * @param string $clause
+	 * @param string $state
+	 * @param string $name
+	 * @param string $output
+	 * @param string $version
+	 *
+	 * @return mixed
+	 */
 	function getPreviewHTML($mode = '', $clause = '', $state = '', $name = '', $output = '', $version = "v2")
 	{
 		$styles = array();
@@ -1553,6 +1813,17 @@ if (!function_exists("getPreviewHTML")) {
 }
 
 if (!function_exists("getNamingImage")) {
+	/**
+	 * Generates Font naming Card as an Image for a font
+	 *
+	 * @param string $mode
+	 * @param string $clause
+	 * @param string $state
+	 * @param string $output
+	 * @param string $version
+	 *
+	 * @return image/png
+	 */
 	function getNamingImage($mode = '', $clause = '', $state = '', $output = '', $version = "v2")
 	{
 
@@ -1596,6 +1867,18 @@ if (!function_exists("getNamingImage")) {
 }
 
 if (!function_exists("getFontIdentitiesArray")) {
+	/**
+	 * Generates All Fonts Identity Array
+	 *
+	 * @param string $mode
+	 * @param string $clause
+	 * @param string $state
+	 * @param string $name
+	 * @param string $output
+	 * @param string $version
+	 *
+	 * @return array
+	 */
 	function getFontIdentitiesArray($mode = '', $clause = '', $state = '', $name = '', $output = '', $version = "v2")
 	{
 		$ret=array();
@@ -1610,6 +1893,19 @@ if (!function_exists("getFontIdentitiesArray")) {
 }
 
 if (!function_exists("getGlyphPreview")) {
+	/**
+	 * Generates Font Single Glyph Preview as an Image for a font specified in clause
+	 *
+	 * @param string $mode
+	 * @param string $clause
+	 * @param string $state
+	 * @param string $name
+	 * @param string $output
+	 * @param string $char
+	 * @param string $version
+	 *
+	 * @return image/png
+	 */
 	function getGlyphPreview($mode = '', $clause = '', $state = '', $name = '', $output = '', $char = '0', $version = "v2")
 	{
 
@@ -1647,10 +1943,14 @@ if (!function_exists("getGlyphPreview")) {
 
 if (!function_exists("getRegionalFontName")) {
 	/**
+	 * Get the closest name to the font based on longitude/latitude
 	 *
-	 * @param unknown_type $path
-	 * @param unknown_type $perm
-	 * @param unknown_type $secure
+	 * @param string $fontid
+	 * @param float $latitude
+	 * @param float $longitude
+	 * @param boolean $getGistance
+	 *
+	 * @return string
 	 */
 	function getRegionalFontName($fontid = '', $latitude = 0, $longitude = 0, $getGistance = false)
 	{
@@ -1674,10 +1974,11 @@ if (!function_exists("getRegionalFontName")) {
 
 if (!function_exists("getMimetype")) {
 	/**
+	 * Get the mime type for a file extension
 	 *
-	 * @param unknown_type $path
-	 * @param unknown_type $perm
-	 * @param unknown_type $secure
+	 * @param string $extension
+	 *
+	 * @return string
 	 */
 	function getMimetype($extension = '-=-')
 	{
@@ -1696,10 +1997,13 @@ if (!function_exists("getMimetype")) {
 
 if (!function_exists("mkdirSecure")) {
 	/**
+	 * Make a folder and secure's it with .htaccess mod-rewrite with apache2
 	 *
-	 * @param unknown_type $path
-	 * @param unknown_type $perm
-	 * @param unknown_type $secure
+	 * @param string $path
+	 * @param integer $perm
+	 * @param boolean $secure
+	 *
+	 * @return boolean
 	 */
 	function mkdirSecure($path = '', $perm = 0777, $secure = true)
 	{
@@ -1708,7 +2012,7 @@ if (!function_exists("mkdirSecure")) {
 			mkdir($path, $perm, true);
 			if ($secure == true)
 			{
-				writeRawFile($path . DIRECTORY_SEPARATOR . '.htaccess', "<Files ~ \"^.*$\">\n\tdeny from all\n</Files>");
+				SaveToFile($path . DIRECTORY_SEPARATOR . '.htaccess', "<Files ~ \"^.*$\">\n\tdeny from all\n</Files>");
 			}
 			return true;
 		}
@@ -1718,8 +2022,11 @@ if (!function_exists("mkdirSecure")) {
 
 if (!function_exists("cleanWhitespaces")) {
 	/**
+	 * Clean's an array of \n, \r, \t when importing for example with file() and includes carriage returns in array
 	 *
 	 * @param array $array
+	 *
+	 * @return array
 	 */
 	function cleanWhitespaces($array = array())
 	{
@@ -1735,99 +2042,17 @@ if (!function_exists("cleanWhitespaces")) {
 	}
 }
 
-if (!function_exists("getDomainSupportism")) {
-
-	/* function getDomainSupportism()
-	 *
-	* 	Get a supporting domain system for the API
-	* @author 		Simon Roberts (Chronolabs) simon@labs.coop
-	*
-	* @return 		string
-	*/
-	function getDomainSupportism($variable = 'array', $realm = '')
-	{
-		static $ret = array();
-		if (empty($ret))
-		{
-			$supporters = (file(API_FILE_IO_DOMAINS));
-			foreach($supporters as $supporter)
-			{
-				$parts = explode("||", str_replace("\n", "", $supporter));
-				if (strpos(' '.strtolower($realm), strtolower($parts[0]))>0)
-				{
-					$ret['domain'] = $parts[0];
-					$ret['protocol'] = $parts[1];
-					$ret['business'] = $parts[2];
-					$ret['entity'] = $parts[3];
-					$ret['contact'] = $parts[4];
-					$ret['referee'] = $parts[5];
-					continue;
-				}
-			}
-		}
-		if (isset($ret[$variable]))
-			return $ret[$variable];
-		return $ret;
-	}
-}
-
-
-if (!function_exists("getPingTiming")) {
-
-	/* function getPingTiming()
-	 *
-	* 	Get a ping timing for a URL
-	* @author 		Simon Roberts (Chronolabs) simon@labs.coop
-	*
-	* @return 		float()
-	*/
-	function getPingTiming($uri = '', $timeout = 14, $connectout = 13)
-	{
-		$pings = array();
-		if (file_exists(FONTS_CACHE . DIRECTORY_SEPARATOR . 'pings-list.serial'))
-			$pings = unserialize(file_get_contents(FONTS_CACHE . DIRECTORY_SEPARATOR . 'pings-list.serial'));
-		foreach($pings as $key => $values)
-			if ($values['timeout'] <= microtime(true))
-			unset($pings[$key]);
-		if (!isset($pings[md5($uri)]))
-		{
-			$start = microtime(true);
-			ob_start();
-			if (!$btt = curl_init($uri)) {
-				$pings[md5($uri)]['ping'] = 0;
-				$pings[md5($uri)]['timeout'] = time() + mt_rand(23,97);
-				@writeRawFile(FONTS_CACHE . DIRECTORY_SEPARATOR . 'pings-list.serial', serialize($pings));
-			} else {
-				curl_setopt($btt, CURLOPT_HEADER, 0);
-				curl_setopt($btt, CURLOPT_POST, 0);
-				curl_setopt($btt, CURLOPT_CONNECTTIMEOUT, $connectout);
-				curl_setopt($btt, CURLOPT_TIMEOUT, $timeout);
-				curl_setopt($btt, CURLOPT_RETURNTRANSFER, true);
-				curl_setopt($btt, CURLOPT_VERBOSE, false);
-				curl_setopt($btt, CURLOPT_SSL_VERIFYHOST, false);
-				curl_setopt($btt, CURLOPT_SSL_VERIFYPEER, false);
-				@curl_exec($btt);
-				curl_close($btt);
-				ob_end_clean();
-				$pings[md5($uri)]['ping'] = microtime(true) - $start * 1000;
-				$pings[md5($uri)]['timeout'] = time() + mt_rand(23,97);
-				@writeRawFile(FONTS_CACHE . DIRECTORY_SEPARATOR . 'pings-list.serial', serialize($pings));
-			}
-		}
-		return $pings[md5($uri)]['ping'];
-	}
-}
-
-
 if (!function_exists("getURIData")) {
-
-	/* function getURIData()
+	/**
+	 * uses cURL to return data from the URL/URI with POST Data if required
 	 *
-	* 	cURL Routine
-	* @author 		Simon Roberts (Chronolabs) simon@labs.coop
-   	*
-	* @return 		float()
-	*/
+	 * @param string $urt
+	 * @param integer $timeout
+	 * @param integer $connectout
+	 * @param array $post_data
+	 *
+	 * @return string
+	 */
 	function getURIData($uri = '', $timeout = 65, $connectout = 65, $post_data = array())
 	{
 		if (!function_exists("curl_init"))
@@ -1853,52 +2078,19 @@ if (!function_exists("getURIData")) {
 	}
 }
 
-if (!function_exists("getPeersSupporting")) {
-
-	/* function getPeersSupporting()
-	 *
-	* 	Get a supporting domain system for the API
-	* @author 		Simon Roberts (Chronolabs) simon@labs.coop
-	*
-	* @return 		array()
-	*/
-	function getPeersSupporting()
-	{
-		if (filectime(API_FILE_IO_PEERS) + 3600 * 24 * 3.75 <= time())
-		{
-			if (getPingTiming("http://peers.labs.coop/v2/" . basename(__DIR__) . "/json.api")>1
-					&& $peerise = json_decode(getURIData("http://peers.labs.coop/v2/" . basename(__DIR__) . "/json.api"), true))
-			{
-				$ioout = array();
-				foreach($peerise as $ll => $values)
-					$ioout[] = implode("||", $values);
-				if (count($ioout)>1)
-					writeRawFile(API_FILE_IO_PEERS, implode("\n", $ioout));
-			}
-		}
-		static $ret = array();
-		if (empty($ret))
-		{
-			$peerings = file(API_FILE_IO_PEERS);
-			foreach($peerings as $peer)
-			{
-				$parts = explode("||", $peer);
-				$realm = $parts[0];
-				$ret[$realm]['domain'] = $parts[0];
-				$ret[$realm]['protocol'] = $parts[1];
-				$ret[$realm]['business'] = $parts[2];
-				$ret[$realm]['search'] = $parts[3];
-				$ret[$realm]['mirror'] = $parts[4];
-				$ret[$realm]['contact'] = $parts[5];
-				$ret[$realm]['ping'] = getPingTiming($parts[1].$parts[0]);
-			}
-		}
-		return $ret;
-	}
-}
-
-
 if (!function_exists("getCSSListArray")) {
+	/**
+	 * generates an array for CSS file inclusion into scripted html5/4/3
+	 *
+	 * @param string $mode
+	 * @param string $clause
+	 * @param string $state
+	 * @param string $name
+	 * @param string $output
+	 * @param string $version
+	 *
+	 * @return array
+	 */
 	function getCSSListArray($mode = '', $clause = '', $state = '', $name = '', $output = '', $version = "v2")
 	{
 	$styles = array();
@@ -2004,6 +2196,17 @@ if (!function_exists("getCSSListArray")) {
 
 
 if (!function_exists("getFontsRssData")) {
+	/**
+	 * generates an string containing an RSS Feed for a font in Zeroday releases or Popularity
+	 *
+	 * @param string $mode
+	 * @param string $clause
+	 * @param string $state
+	 * @param string $output
+	 * @param string $version
+	 *
+	 * @return string
+	 */
 	function getFontsRssData($mode = '', $clause = '', $state = '', $output = '', $version = "v2")
 	{
 		$xml = "<?xml version='1.0' encoding='utf-8' ?>";
@@ -2071,6 +2274,18 @@ if (!function_exists("getFontsRssData")) {
 }
 
 if (!function_exists("getSurveyCSSListArray")) {
+	/**
+	 * generates an array for CSS inclusion of a font with a survey preview
+	 *
+	 * @param string $mode
+	 * @param string $clause
+	 * @param string $state
+	 * @param string $name
+	 * @param string $output
+	 * @param string $version
+	 *
+	 * @return string
+	 */
 	function getSurveyCSSListArray($mode = '', $clause = '', $state = '', $name = '', $output = '', $version = "v2")
 	{
 		$row = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF("SELECT * FROM `uploads` WHERE `key` = '$clause'"));
@@ -2102,6 +2317,16 @@ if (!function_exists("getSurveyCSSListArray")) {
 }
 
 if (!function_exists("getFontRawData")) {
+	/**
+	 * get's the raw data for a font file or resource from the repository or local cache
+	 *
+	 * @param string $mode
+	 * @param string $clause
+	 * @param string $output
+	 * @param string $ufofile
+	 *
+	 * @return string
+	 */
 	function getFontRawData($mode = '', $clause = '', $output = '', $ufofile = '')
 	{
 		global $ipid;
@@ -2261,6 +2486,17 @@ if (!function_exists("getFontRawData")) {
 
 
 if (!function_exists("getFontFileDiz")) {
+	/**
+	 * generates or gets the file.diz for a font
+	 *
+	 * @param string $mode
+	 * @param string $clause
+	 * @param string $state
+	 * @param string $output
+	 * @param string $version
+	 *
+	 * @return string
+	 */
 	function getFontFileDiz($mode = '', $clause = '', $state = '', $output = '', $version = '')
 	{
 		$sql = "SELECT * from `fonts_archiving` WHERE (`font_id` = '$clause' OR `fingerprint` = '$clause')";
@@ -2324,6 +2560,16 @@ if (!function_exists("getFontFileDiz")) {
 }
 
 if (!function_exists("setFontCallback")) {
+	/**
+	 * Inserts into the database a callback for a font
+	 *
+	 * @param string $mode
+	 * @param string $clause
+	 * @param string $state
+	 * @param string $output
+	 * @param string $version
+	 *
+	 */
 	function setFontCallback($mode = '', $clause = '', $state = '', $output = '', $version = '')
 	{
 		$string = parse_url(API_URL.$_SERVER["REQUEST_URI"], PHP_URL_QUERY);
@@ -2366,6 +2612,16 @@ if (!function_exists("setFontCallback")) {
 }
 
 if (!function_exists("getFontsCallbacksArray")) {
+	/**
+	 * generates an array for font callbacks to be included for calling
+	 *
+	 * @param string $clause
+	 * @param string $state
+	 * @param string $output
+	 * @param string $version
+	 *
+	 * @return array
+	 */
 	function getFontsCallbacksArray($clause = '', $state = '', $output = '', $version = '')
 	{
 		$return = array();
@@ -2382,6 +2638,16 @@ if (!function_exists("getFontsCallbacksArray")) {
 }
 
 if (!function_exists("getFontsDataArray")) {
+	/**
+	 * get font data from font-resource.json from fonting resources
+	 *
+	 * @param string $clause
+	 * @param string $state
+	 * @param string $output
+	 * @param string $version
+	 *
+	 * @return array
+	 */
 	function getFontsDataArray($clause = '', $state = '', $output = '', $version = '')
 	{
 		$sql = "SELECT * from `fonts_archiving` WHERE (`font_id` = '$clause' OR `fingerprint` = '$clause')";
@@ -2447,6 +2713,16 @@ if (!function_exists("getFontsDataArray")) {
 
 
 if (!function_exists("getFontDownload")) {
+	/**
+	 * generates and pushes the download requested via HTTP
+	 *
+	 * @param string $mode
+	 * @param string $clause
+	 * @param string $state
+	 * @param string $output
+	 * @param string $version
+	 *
+	 */
 	function getFontDownload($mode = '', $clause = '', $state = '', $output = '', $version = '')
 	{
 
@@ -2683,6 +2959,17 @@ if (!function_exists("getFontDownload")) {
 }
 
 if (!function_exists("getFontUFORawData")) {
+	/**
+	 * Get font *.ufo/glyphs/data.glyph data from resource
+	 *
+	 * @param string $mode
+	 * @param string $clause
+	 * @param string $state
+	 * @param string $output
+	 * @param string $version
+	 *
+	 * @return string
+	 */
 	function getFontUFORawData($mode = '', $clause = '', $state = '', $output = '', $ufofile = '')
 	{
 		$sql = "SELECT * from `fonts_archiving` WHERE (`font_id` = '$clause' OR `fingerprint` = '$clause')";
@@ -2818,6 +3105,16 @@ if (!function_exists("getFontUFORawData")) {
 
 
 if (!function_exists("getSurveyFontRawData")) {
+	/**
+	 * get survey raw data for a font
+	 *
+	 * @param string $mode
+	 * @param string $clause
+	 * @param string $output
+	 * @param string $ufofile
+	 *
+	 * @return string
+	 */
 	function getSurveyFontRawData($mode = '', $clause = '', $output = '', $ufofile = '')
 	{
 		$row = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF("SELECT * FROM `uploads` WHERE `key` = '$clause'"));
@@ -2840,6 +3137,11 @@ if (!function_exists("getSurveyFontRawData")) {
 }
 
 if (!function_exists("cleanResourcesCache")) {
+	/**
+	 * cleans the resource/repository file cache based on indexes
+	 *
+	 * @return boolean
+	 */
 	function cleanResourcesCache()
 	{
 		$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
@@ -2863,33 +3165,56 @@ if (!function_exists("cleanResourcesCache")) {
 }
 
 if (!function_exists("getFontsByNodeListArray")) {
-	function getFontsByNodeListArray($node_id = 0)
+	/**
+	 * generates an array for fonts based on the nodes being passed to the function
+	 *
+	 * @param integer $node_id
+	 * @param boolean $nochain
+	 *
+	 * @return array
+	 */
+	function getFontsByNodeListArray($node_id = 0, $nochain = false)
 	{
-		$fonts = array();
+		$file = $archive = $fontsid = $fonts = array();
 		$sql = "SELECT * from `nodes_linking` WHERE `node_id` = '$node_id'";
 		$result = $GLOBALS['FontsDB']->queryF($sql);
 		while($row = $GLOBALS['FontsDB']->fetchArray($result))
 		{
-			$sql = "SELECT * from `fonts` WHERE `font_id` = '".$row['font_id']."'";
+			$fontsids[$row['font_id']] = $row['font_id'];
+		}
+		if (count($fontsid))
+		{
+			$sql = "SELECT * from `fonts_archiving` WHERE `font_id` IN ('".implode("', '", $fontsid) ."') ORDER BY `font_id` ASC";
+			$archives = $GLOBALS['FontsDB']->queryF($sql);
+			while($data = $GLOBALS['FontsDB']->fetchArray($archives))
+			{
+				$archive[$data['font_id']] = $data;
+				unset($archive[$data['font_id']]['font_id']);
+			}
+			$sql = "SELECT * from `fonts_files` WHERE `font_id` IN ('".implode("', '", $fontsid) ."') ORDER BY `font_id` ASC, `path` ASC, `filename` ASC";
+			$files = $GLOBALS['FontsDB']->queryF($sql);
+			while($data = $GLOBALS['FontsDB']->fetchArray($files))
+			{
+				$file[$data['font_id']][md5($data['id'].$data['font_id'])] = $data;
+				unset($file[$data['font_id']][md5($data['id'].$data['font_id'])]['font_id']);
+				
+			}
+			$sql = "SELECT * from `fonts_names` WHERE `font_id` IN ('".implode("', '", $fontsid) ."') ORDER BY `font_id` ASC, `name` ASC";
+			$names = $GLOBALS['FontsDB']->queryF($sql);
+			while($data = $GLOBALS['FontsDB']->fetchArray($names))
+			{
+				$name[$data['font_id']][md5($data['name'].$data['font_id'])] = $data;
+				unset($file[$data['font_id']][md5($data['name'].$data['font_id'])]['font_id']);
+			
+			}			
+			$sql = "SELECT * from `fonts` WHERE `font_id` IN ('".implode("', '", $fontsid) ."') ORDER BY `font_id` ASC";
 			$fontages = $GLOBALS['FontsDB']->queryF($sql);
 			while($font = $GLOBALS['FontsDB']->fetchArray($fontages))
 			{
-				$sql = "SELECT * from `fonts_archiving` WHERE (`font_id` = '%s')";
-				$archive = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF(sprintf($sql, $row['font_id'])));
-				$files = array();
-				$sql = "SELECT * from `fonts_files` WHERE (`font_id` = '%s')";
-				$fresult = $GLOBALS['FontsDB']->queryF(sprintf($sql, $row['font_id']));
-				while($row = $GLOBALS['FontsDB']->fetchArray($fresult))
-					$files[$row['id']] = $row;
-				$names = array();
-				$sql = "SELECT * from `fonts_names` WHERE (`font_id` = '%s')";
-				$nresult = $GLOBALS['FontsDB']->queryF(sprintf($sql, $row['font_id']));
-				while($row = $GLOBALS['FontsDB']->fetchArray($nresult))
-				{
-					unset($row['upload_id']);
-					$names[] = $row;
-				}
-				$fonts[$font['id']] = array('key' => $font['id'], 'peer-id' => $font['peer_id'], 'names' => $names, 'normal' => $font['normal'], 'italic' => $font['italic'], 'bold' => $font['bold'], 'condensed' => $font['condensed'], 'light' => $font['light'], 'semi' => $font['semi'], 'book' => $font['book'], 'body' => $font['body'], 'header' => $font['header'], 'heading' => $font['heading'], 'footer' => $font['footer'], 'graphic' => $font['graphic'], 'system' => $font['system'], 'block' => $font['block'], 'quote' => $font['quote'], 'message' => $font['message'], 'admin' => $font['admin'], 'logo' => $font['logo'], 'slogon' => $font['slogon'], 'legal' => $font['legal'], 'script' => $font['script'], 'medium' => $font['medium'], 'archive' => $archive, 'files'=> $files);
+				if ($nochain==true)
+					$fonts[$font['id']] = array('key' => $font['id'], 'peer-id' => $font['peer_id'], 'names' => $name[$font['id']], 'normal' => $font['normal'], 'italic' => $font['italic'], 'bold' => $font['bold'], 'condensed' => $font['condensed'], 'light' => $font['light'], 'semi' => $font['semi'], 'book' => $font['book'], 'body' => $font['body'], 'header' => $font['header'], 'heading' => $font['heading'], 'footer' => $font['footer'], 'graphic' => $font['graphic'], 'system' => $font['system'], 'block' => $font['block'], 'quote' => $font['quote'], 'message' => $font['message'], 'admin' => $font['admin'], 'logo' => $font['logo'], 'slogon' => $font['slogon'], 'legal' => $font['legal'], 'script' => $font['script'], 'medium' => $font['medium'], 'archive' => $archive[$font['id']], 'files'=> $file[$font['id']]);
+				else 
+					$fonts[$font['id']] = array('key' => $font['id'], 'peer-id' => $font['peer_id'], 'names' => $name[$font['id']], 'normal' => $font['normal'], 'italic' => $font['italic'], 'bold' => $font['bold'], 'condensed' => $font['condensed'], 'light' => $font['light'], 'semi' => $font['semi'], 'book' => $font['book'], 'body' => $font['body'], 'header' => $font['header'], 'heading' => $font['heading'], 'footer' => $font['footer'], 'graphic' => $font['graphic'], 'system' => $font['system'], 'block' => $font['block'], 'quote' => $font['quote'], 'message' => $font['message'], 'admin' => $font['admin'], 'logo' => $font['logo'], 'slogon' => $font['slogon'], 'legal' => $font['legal'], 'script' => $font['script'], 'medium' => $font['medium'], 'archive' => $archive[$font['id']], 'files'=> $file[$font['id']]);
 			}			
 		}
 		return $fonts;
@@ -2897,7 +3222,14 @@ if (!function_exists("getFontsByNodeListArray")) {
 }
 
 if (!function_exists("getNodesByFontListArray")) {
-	function getNodesByFontListArray($font_id = '')
+	/**
+	 * generates an array for nodes for a font
+	 *
+	 * @param string $font_id
+	 *
+	 * @return array
+	 */
+	function getNodesByFontListArray($font_id = '', $nochain = false)
 	{
 		$nodes = array();
 		$sql = "SELECT * from `nodes_linking` WHERE `font_id` = '$font_id'";
@@ -2907,7 +3239,7 @@ if (!function_exists("getNodesByFontListArray")) {
 			$ncity = $GLOBALS['FontsDB']->queryF("SELECT * from `nodes` WHERE `id` = '".$row['node_id']."'");
 			while($node = $GLOBALS['FontsDB']->fetchArray($ncity))
 			{
-				$nodes[$node['type']][$node['node']] = array('node' => $node['node'], 'type' => $node['type'], 'usage' => $node['usage'], 'weight' => $node['weight'], 'fonts' => getFontsByNodeListArray($row['node_id']));
+				$nodes[$node['type']][$node['node']] = array('node' => $node['node'], 'type' => $node['type'], 'usage' => $node['usage'], 'weight' => $node['weight'], 'fonts' => getFontsByNodeListArray($row['node_id'], $nochain));
 			}
 		}
 		return $nodes;
@@ -2915,13 +3247,18 @@ if (!function_exists("getNodesByFontListArray")) {
 }
 
 if (!function_exists("getFontsIDsNodeStringArray")) {
+	/**
+	 * generates an array for font identity hashes based on nodes
+	 *
+	 * @return array
+	 */
 	function getFontsIDsNodeStringArray()
 	{
 		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . $GLOBALS['hourprev'] . '--' . date('d-M-Y') . '---font-identities.serial'))
 			unlink($unlink);
 		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . $GLOBALS['hourindx'] . '--' . date('d-M-Y') . '---font-identities.serial'))
 		{
-			$ncity = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `fonts`");
+			$ncity = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `fonts` ORDER BY `created` ASC");
 			while($font = $GLOBALS['FontsDB']->fetchArray($ncity))
 			{
 				$fonts[getNodesByFontString($font['id'])] = $font['id'];
@@ -2934,6 +3271,13 @@ if (!function_exists("getFontsIDsNodeStringArray")) {
 }
 
 if (!function_exists("getFontsByNodesListArray")) {
+	/**
+	 * generates an array fonts that drills down by nodes
+	 *
+	 * @param integer $node_id
+	 * 
+	 * @return array
+	 */
 	function getFontsByNodesListArray($node_id = '')
 	{
 		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . $GLOBALS['hourprev'] . '--' . date('d-M-Y') . '---font-noding-'.$node_id.'.serial'))
@@ -2941,13 +3285,35 @@ if (!function_exists("getFontsByNodesListArray")) {
 		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . $GLOBALS['hourindx'] . '--' . date('d-M-Y') . '---font-noding-'.$node_id.'.serial'))
 		{
 			try {
-			
-				$font_ids = $fonts = array();
-				$sql = "SELECT * from `nodes_linking` WHERE `node_id` = '$node_id'";
+				$name = $file = $archive = $font_ids = $fonts = array();
+				$sql = "SELECT * from `nodes_linking` WHERE `node_id` = '$node_id' ORDER BY `font_id` ASC";
 				$result = $GLOBALS['FontsDB']->queryF($sql);
 				while($row = $GLOBALS['FontsDB']->fetchArray($result))
 				{
 					$font_ids[$row['font_id']] = $row['font_id'];
+				}				
+				$sql = "SELECT * from `fonts_archiving` WHERE `font_id` IN ('".implode("', '", $font_ids) ."') ORDER BY `font_id` ASC";
+				$archives = $GLOBALS['FontsDB']->queryF($sql);
+				while($data = $GLOBALS['FontsDB']->fetchArray($archives))
+				{
+					$archive[$data['font_id']] = $data;
+					unset($archive[$data['font_id']]['font_id']);
+				}
+				$sql = "SELECT * from `fonts_files` WHERE `font_id` IN ('".implode("', '", $font_ids) ."') ORDER BY `font_id` ASC, `path` ASC, `filename` ASC";
+				$files = $GLOBALS['FontsDB']->queryF($sql);
+				while($data = $GLOBALS['FontsDB']->fetchArray($files))
+				{
+					$file[$data['font_id']][md5($data['id'].$data['font_id'])] = $data;
+					unset($file[$data['font_id']][md5($data['id'].$data['font_id'])]['font_id']);
+				
+				}
+				$sql = "SELECT * from `fonts_names` WHERE `font_id` IN ('".implode("', '", $font_ids) ."') ORDER BY `font_id` ASC, `name` ASC";
+				$names = $GLOBALS['FontsDB']->queryF($sql);
+				while($data = $GLOBALS['FontsDB']->fetchArray($names))
+				{
+					$name[$data['font_id']][md5($data['name'].$data['font_id'])] = $data;
+					unset($file[$data['font_id']][md5($data['name'].$data['font_id'])]['font_id']);
+						
 				}
 				$ncity = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `fonts` WHERE `id` IN ('".implode("','", $font_ids)."')");
 				while($font = $GLOBALS['FontsDB']->fetchArray($ncity))
@@ -2956,21 +3322,7 @@ if (!function_exists("getFontsByNodesListArray")) {
 						$downloads = array();
 						foreach(getArchivingShellExec() as $type => $exec)
 							$downloads[$type] = API_URL ."/v2/data/".$font['id']."/".$type."/download.api";
-						$sql = "SELECT * from `fonts_archiving` WHERE (`font_id` = '%s')";
-						$archive = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF(sprintf($sql, $font['id'])));
-						$names = $files = array();
-						$sql = "SELECT * from `fonts_files` WHERE (`font_id` = '%s')";
-						$fresult = $GLOBALS['FontsDB']->queryF(sprintf($sql, $font['id']));
-						while($row = $GLOBALS['FontsDB']->fetchArray($fresult))
-							$files[$row['id']] = $row;
-						$sql = "SELECT * from `fonts_names` WHERE (`font_id` = '%s')";
-						$nresult = $GLOBALS['FontsDB']->queryF(sprintf($sql, $font['id']));
-						while($row = $GLOBALS['FontsDB']->fetchArray($nresult))
-						{
-							unset($row['upload_id']);
-							$names[] = $row;
-						}
-						$fonts[$font['id']] = array('key' => $font['id'], 'peer-id' => $font['peer_id'], 'names' => $names, 'normal' => $font['normal'], 'italic' => $font['italic'], 'bold' => $font['bold'], 'condensed' => $font['condensed'], 'light' => $font['light'], 'semi' => $font['semi'], 'book' => $font['book'], 'body' => $font['body'], 'header' => $font['header'], 'heading' => $font['heading'], 'footer' => $font['footer'], 'graphic' => $font['graphic'], 'system' => $font['system'], 'quote' => $font['quote'], 'block' => $font['block'], 'message' => $font['message'], 'admin' => $font['admin'], 'logo' => $font['logo'], 'slogon' => $font['slogon'], 'legal' => $font['legal'], 'script' => $font['script'], 'medium' => $font['medium'], 'node-string' => getNodesByFontString($font['id']), 'download-urls' => $downloads, 'archive' => $archive, 'files' => $files);
+						$fonts[$font['id']] = array('key' => $font['id'], 'peer-id' => $font['peer_id'], 'names' => $name[$font['id']], 'normal' => $font['normal'], 'italic' => $font['italic'], 'bold' => $font['bold'], 'condensed' => $font['condensed'], 'light' => $font['light'], 'semi' => $font['semi'], 'book' => $font['book'], 'body' => $font['body'], 'header' => $font['header'], 'heading' => $font['heading'], 'footer' => $font['footer'], 'graphic' => $font['graphic'], 'system' => $font['system'], 'quote' => $font['quote'], 'block' => $font['block'], 'message' => $font['message'], 'admin' => $font['admin'], 'logo' => $font['logo'], 'slogon' => $font['slogon'], 'legal' => $font['legal'], 'script' => $font['script'], 'medium' => $font['medium'], 'node-string' => getNodesByFontString($font['id']), 'download-urls' => $downloads, 'archive' => $archive[$font['id']], 'files' => $file[$font['id']]);
 					}
 					catch (Exception $error)
 					{
@@ -2991,84 +3343,27 @@ if (!function_exists("getFontsByNodesListArray")) {
 }
 
 if (!function_exists("getRandomFontsFromStringList")) {
+	/**
+	 * get a random font by node string passed to the routine
+	 *
+	 * @param string $nodestring
+	 * @param string $normal
+	 * @param string $bold
+	 * @param string $italic
+	 * @param string $condensed
+	 *
+	 * @return array
+	 */
 	function getRandomFontsFromStringList($nodestring = '', $normal = '', $bold = '', $italic = '', $condensed = '')
 	{
 		$fonts_id = $nodes_id = array();
-		foreach(getFontsIDsNodeStringArray() as $nodestr => $key)
+		if (substr(strtolower($nodestring),0,3)!='any')
 		{
-			if (strpos(' '.$nodestring, $nodestr))
-			{
-				$fonts_id[$key] = $key;
-				$nodestring = sef(str_replace($nodestr, '', $nodestring));
-			}
-		}
-		$sql = "SELECT * from `nodes` WHERE `node` IN ('".str_replace("-", "','", $nodestring). "')";
-		$result = $GLOBALS['FontsDB']->queryF($sql);
-		while($row = $GLOBALS['FontsDB']->fetchArray($result))
-		{
-			$nodes_id[$row['id']] = $row['id'];
-		}
-		$sql = "SELECT * from `nodes_linking` WHERE `node_id` IN ('".implode("','", $nodes_id)."') ORDER BY RAND()";
-		$nodocity = $GLOBALS['FontsDB']->queryF($sql);
-		while($font = $GLOBALS['FontsDB']->fetchArray($nodocity))
-		{
-			$fonts_id[$font['font_id']] = $font['font_id'];
-		}
-		$sql = "SELECT * from `fonts` WHERE `id` IN ('".implode("','", $fonts_id)."') " . (!empty($normal)?" AND `normal` = $normal":"") . (!empty($normal)?" AND `bold` = $bold":"") . (!empty($italic)?" AND `italic` = $italic":"") . (!empty($condensed)?" AND `condensed` = $condensed":"") . " ORDER BY RAND() LIMIT 1";
-		$fonteo = $GLOBALS['FontsDB']->queryF($sql);
-		while($fontee = $GLOBALS['FontsDB']->fetchArray($fonteo))
-		{
-			return $fontee;
-		}
-		return false;
-	}
-}
-
-if (!function_exists("getRandomFontsIDFromNodesList")) {
-	function getRandomFontsIDFromNodesList($nodestring = '', $toponly = false)
-	{
-		$fonts_id = $node_id = array();
-		foreach(getFontsIDsNodeStringArray() as $nodestr => $key)
-		{
-			if (strpos(' '.$nodestring, $nodestr))
-			{
-				foreach(getNodesByFontString($key) as $nod_id => $string)
-					$node_id[$nod_id] = $row[$nod_id];
-				$nodestring = sef(str_replace($nodestr, '', $nodestring));
-			}
-		}
-		$sql = "SELECT * from `nodes` WHERE `node` IN ('".str_replace("-", "','", $nodestring). "')";
-		$result = $GLOBALS['FontsDB']->queryF($sql);
-		while($row = $GLOBALS['FontsDB']->fetchArray($result))
-		{
-			$node_id[$row['node_id']] = $row['node_id'];
-		}
-		$sql = "SELECT * from `nodes_linking` WHERE `node_id` IN ('".implode("','", $node_id)."') ORDER BY RAND() LIMIT 1";
-		$nodocity = $GLOBALS['FontsDB']->queryF($sql);
-		while($node = $GLOBALS['FontsDB']->fetchArray($nodocity))
-		{
-			return $node['font_id'];
-		}
-		return '';
-	}
-}
-
-if (!function_exists("getFontsIDsFromNodesList")) {
-	function getFontsIDsFromNodesList($nodestring = '', $toponly = false)
-	{
-		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H", time() - 3600 *24 * 7) . 'fonts-identities-by-string--' . sha1($nodestring).'.serial'))
-			unlink($unlink);
-		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H") . 'fonts-identities-by-string--' . sha1($nodestring).'.serial'))
-		{
-			$node_ids = $ids = array();
 			foreach(getFontsIDsNodeStringArray() as $nodestr => $key)
 			{
 				if (strpos(' '.$nodestring, $nodestr))
 				{
-					if (!isset($ids[$key]))
-						$ids[$key] = array('key' => $key, 'count' => 1);
-					else
-						$ids[$key]['count']++;
+					$fonts_id[$key] = $key;
 					$nodestring = sef(str_replace($nodestr, '', $nodestring));
 				}
 			}
@@ -3076,16 +3371,134 @@ if (!function_exists("getFontsIDsFromNodesList")) {
 			$result = $GLOBALS['FontsDB']->queryF($sql);
 			while($row = $GLOBALS['FontsDB']->fetchArray($result))
 			{
-				$node_ids[$row['id']] = $row['id'];
+				$nodes_id[$row['id']] = $row['id'];
 			}
-			$sql = "SELECT * from `nodes_linking` WHERE `node_id` IN ('".implode( "','", $node_ids). "')";
+			$sql = "SELECT * from `nodes_linking` WHERE `node_id` IN ('".implode("','", $nodes_id)."') ORDER BY RAND()";
+			$nodocity = $GLOBALS['FontsDB']->queryF($sql);
+			while($font = $GLOBALS['FontsDB']->fetchArray($nodocity))
+			{
+				$fonts_id[$font['font_id']] = $font['font_id'];
+			}
+			$sql = "SELECT * from `fonts` WHERE `id` IN ('".implode("','", $fonts_id)."') " . (!empty($normal)?" AND `normal` = $normal":"") . (!empty($normal)?" AND `bold` = $bold":"") . (!empty($italic)?" AND `italic` = $italic":"") . (!empty($condensed)?" AND `condensed` = $condensed":"") . " ORDER BY RAND() LIMIT 1";
+			$fonteo = $GLOBALS['FontsDB']->queryF($sql);
+			while($fontee = $GLOBALS['FontsDB']->fetchArray($fonteo))
+			{
+				return $fontee;
+			}
+		} else {
+			$sql = "SELECT * from `fonts` WHERE 1 = 1 ". (!empty($normal)?" AND `normal` = $normal":"") . (!empty($normal)?" AND `bold` = $bold":"") . (!empty($italic)?" AND `italic` = $italic":"") . (!empty($condensed)?" AND `condensed` = $condensed":"") . " ORDER BY RAND() LIMIT 1";
+			$fonteo = $GLOBALS['FontsDB']->queryF($sql);
+			while($fontee = $GLOBALS['FontsDB']->fetchArray($fonteo))
+			{
+				return $fontee;
+			}
+		}
+		
+		return false;
+	}
+}
+
+if (!function_exists("getRandomFontsIDFromNodesList")) {
+	/**
+	 * get a random font identity by node string passed to the routine
+	 *
+	 * @param string $nodestring
+	 * @param boolean $toponly
+	 *
+	 * @return string
+	 */
+	function getRandomFontsIDFromNodesList($nodestring = '', $toponly = false)
+	{
+		if (substr(strtolower($nodestring),0,3)!='any')
+		{
+			$fonts_id = $node_id = array();
+			foreach(getFontsIDsNodeStringArray() as $nodestr => $key)
+			{
+				if (strpos(' '.$nodestring, $nodestr))
+				{
+					foreach(getNodesByFontString($key) as $nod_id => $string)
+						$node_id[$nod_id] = $row[$nod_id];
+					$nodestring = sef(str_replace($nodestr, '', $nodestring));
+				}
+			}
+			$sql = "SELECT * from `nodes` WHERE `node` IN ('".str_replace("-", "','", $nodestring). "')";
+			$result = $GLOBALS['FontsDB']->queryF($sql);
+			while($row = $GLOBALS['FontsDB']->fetchArray($result))
+			{
+				$node_id[$row['node_id']] = $row['node_id'];
+			}
+			$sql = "SELECT * from `nodes_linking` WHERE `node_id` IN ('".implode("','", $node_id)."') ORDER BY RAND() LIMIT 1";
 			$nodocity = $GLOBALS['FontsDB']->queryF($sql);
 			while($node = $GLOBALS['FontsDB']->fetchArray($nodocity))
 			{
-				if (!isset($ids[$node['font_id']]))
-					$ids[$node['font_id']] = array('key' => $node['font_id'], 'count' => 1);
-				else
-					$ids[$node['font_id']]['count']++;
+				return $node['font_id'];
+			}
+		} else {
+			$sql = "SELECT * from `nodes_linking` ORDER BY RAND() LIMIT 1";
+			$nodocity = $GLOBALS['FontsDB']->queryF($sql);
+			while($node = $GLOBALS['FontsDB']->fetchArray($nodocity))
+			{
+				return $node['font_id'];
+			}
+		}
+		return false;
+	}
+}
+
+if (!function_exists("getFontsIDsFromNodesList")) {
+	/**
+	 * get a font identity by node string passed to the routine
+	 *
+	 * @param string $nodestring
+	 * @param boolean $toponly
+	 *
+	 * @return string
+	 */
+	function getFontsIDsFromNodesList($nodestring = '', $toponly = false)
+	{
+		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H", time() - 3600 *24 * 7) . 'fonts-identities-by-string--' . sha1($nodestring).'.serial'))
+			unlink($unlink);
+		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H") . 'fonts-identities-by-string--' . sha1($nodestring).'.serial'))
+		{
+			if (substr(strtolower($nodestring),0,3)!='any')
+			{
+				$node_ids = $ids = array();
+				foreach(getFontsIDsNodeStringArray() as $nodestr => $key)
+				{
+					if (strpos(' '.$nodestring, $nodestr))
+					{
+						if (!isset($ids[$key]))
+							$ids[$key] = array('key' => $key, 'count' => 1);
+						else
+							$ids[$key]['count']++;
+						$nodestring = sef(str_replace($nodestr, '', $nodestring));
+					}
+				}
+				$sql = "SELECT * from `nodes` WHERE `node` IN ('".str_replace("-", "','", $nodestring). "')";
+				$result = $GLOBALS['FontsDB']->queryF($sql);
+				while($row = $GLOBALS['FontsDB']->fetchArray($result))
+				{
+					$node_ids[$row['id']] = $row['id'];
+				}
+				$sql = "SELECT * from `nodes_linking` WHERE `node_id` IN ('".implode( "','", $node_ids). "')";
+				$nodocity = $GLOBALS['FontsDB']->queryF($sql);
+				while($node = $GLOBALS['FontsDB']->fetchArray($nodocity))
+				{
+					if (!isset($ids[$node['font_id']]))
+						$ids[$node['font_id']] = array('key' => $node['font_id'], 'count' => 1);
+					else
+						$ids[$node['font_id']]['count']++;
+				}
+			} else {
+				$sql = "SELECT * from `nodes_linking` ORDER BY RAND() LIMIT " . mt_rand(1,27);
+				$nodocity = $GLOBALS['FontsDB']->queryF($sql);
+				while($node = $GLOBALS['FontsDB']->fetchArray($nodocity))
+				{
+					if (!isset($ids[$node['font_id']]))
+						$ids[$node['font_id']] = array('key' => $node['font_id'], 'count' => 1);
+						else
+							$ids[$node['font_id']]['count']++;
+				}
 			}
 			@writeRawFile($cache, serialize($ids));
 		}
@@ -3108,25 +3521,33 @@ if (!function_exists("getFontsIDsFromNodesList")) {
 }
 
 if (!function_exists("getNodesByFontString")) {
+	/**
+	 * get a font nodes by Font Identity Hash
+	 *
+	 * @param string $font_id
+	 *
+	 * @return array
+	 */
 	function getNodesByFontString($font_id = '')
 	{
 		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H", time() - 3600 *24 * 7) . 'nodes-by-font--' . sha1($font_id).'.serial'))
 			unlink($unlink);
 		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H") . 'nodes-by-font--' . sha1($font_id).'.serial'))
 		{
-			$nodes = array();
+			$nodes = $nodesid = array();
 			try 
 			{
 				$sql = "SELECT * from `nodes_linking` WHERE `font_id` = '$font_id'";
 				$result = $GLOBALS['FontsDB']->queryF($sql);
 				while($row = $GLOBALS['FontsDB']->fetchArray($result))
 				{
-					$sql = "SELECT * from `nodes` WHERE `id` = '".$row['node_id']."' AND `type` = 'keys'";
-					$nodocity = $GLOBALS['FontsDB']->queryF($sql);
-					while($node = $GLOBALS['FontsDB']->fetchArray($nodocity))
-					{
-						$nodes[$node['id']] = $node['node'];
-					}
+					$nodesid[$row['node_id']] = $row['node_id'];
+				}
+				$sql = "SELECT * from `nodes` WHERE `id` IN ('".implode("','", $nodesid) ."') AND `type` = 'keys' ORDER BY `node` DESC";
+				$nodocity = $GLOBALS['FontsDB']->queryF($sql);
+				while($node = $GLOBALS['FontsDB']->fetchArray($nodocity))
+				{
+					$nodes[$node['id']] = $node['node'];
 				}
 				sort($nodes);
 				@writeRawFile($cache, serialize($nodes));
@@ -3142,6 +3563,15 @@ if (!function_exists("getNodesByFontString")) {
 }
 
 if (!function_exists("getFontsListArray")) {
+	/**
+	 * get a fonts listing by array
+	 *
+	 * @param string $clause
+	 * @param string $output
+	 * @param string $state
+	 *
+	 * @return array
+	 */
 	function getFontsListArray($clause = 'all', $output = '', $state = '')
 	{
 
@@ -3164,7 +3594,7 @@ if (!function_exists("getFontsListArray")) {
 				$limits = " LIMIT " . $parts[0] . ", " . $parts[1];
 			}
 			$local = '';
-			$fonts = array();
+			$name = $file = $archive = $fontids = $fonts = array();
 			switch ($clause)
 			{
 				case "all":
@@ -3178,35 +3608,52 @@ if (!function_exists("getFontsListArray")) {
 					$sql = "SELECT * from `fonts` WHERE `id` IN ('".implode("','", @getFontsIDsFromNodesList($clause, false))."')$local ORDER BY `nodes` DESC$limits";
 					break;
 			}
-			$timelimit = 120;
 			$result = $GLOBALS['FontsDB']->queryF($sql);
 			while($font = $GLOBALS['FontsDB']->fetchArray($result))
 			{
-				
-				set_time_limit($timelimit=$timelimit+6);
-				try {
-					$downloads = array();
-					foreach(getArchivingShellExec() as $type => $exec)
-						$downloads[$type] = API_URL ."/v2/data/".$font['id']."/".$type."/download.api";
-					$sql = "SELECT * from `fonts_archiving` WHERE (`font_id` = '%s')";
-					$archive = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF(sprintf($sql, $font['id'])));
-					$names = $files = array();
-					$sql = "SELECT * from `fonts_files` WHERE (`font_id` = '%s')";
-					$fresult = $GLOBALS['FontsDB']->queryF(sprintf($sql, $font['id']));
-					while($row = $GLOBALS['FontsDB']->fetchArray($fresult))
-						$files[$row['id']] = $row;
-					$sql = "SELECT * from `fonts_names` WHERE (`font_id` = '%s')";
-					$nresult = $GLOBALS['FontsDB']->queryF(sprintf($sql, $font['id']));
-					while($row = $GLOBALS['FontsDB']->fetchArray($nresult))
-					{
-						unset($row['upload_id']);
-						$names[] = $row;
-					}
-					$fonts[$font['id']] = array('key'=> $font['id'], 'peer-id' => $font['peer_id'], 'names' => $names, 'normal' => $font['normal'], 'italic' => $font['italic'], 'bold' => $font['bold'], 'condensed' => $font['condensed'], 'light' => $font['light'], 'semi' => $font['semi'], 'book' => $font['book'], 'body' => $font['body'], 'header' => $font['header'], 'heading' => $font['heading'], 'footer' => $font['footer'], 'graphic' => $font['graphic'], 'system' => $font['system'], 'quote' => $font['quote'], 'block' => $font['block'], 'message' => $font['message'], 'admin' => $font['admin'], 'logo' => $font['logo'], 'slogon' => $font['slogon'], 'legal' => $font['legal'], 'script' => $font['script'], 'medium' => $font['medium'], 'nodes' => getNodesByFontListArray($font['id']), 'node-string' => getNodesByFontString($font['id']), 'download-urls' => $downloads, 'archive' => $archive, 'files' => $files);
-				}
-				catch (Exception $error)
+				$fontids[$row['id']] = $row['id'];
+			}
+			if (count($fontids))
+			{
+				$sql = "SELECT * from `fonts_archiving` WHERE `font_id` IN ('".implode("', '", $fontids) ."') ORDER BY `font_id` ASC";
+				$archives = $GLOBALS['FontsDB']->queryF($sql);
+				while($data = $GLOBALS['FontsDB']->fetchArray($archives))
 				{
-					trigger_error($error, E_RECOVERABLE_ERROR);
+					$archive[$data['font_id']] = $data;
+					unset($archive[$data['font_id']]['font_id']);
+				}
+				$sql = "SELECT * from `fonts_files` WHERE `font_id` IN ('".implode("', '", $fontids) ."') ORDER BY `font_id` ASC, `path` ASC, `filename` ASC";
+				$files = $GLOBALS['FontsDB']->queryF($sql);
+				while($data = $GLOBALS['FontsDB']->fetchArray($files))
+				{
+					$file[$data['font_id']][md5($data['id'].$data['font_id'])] = $data;
+					unset($file[$data['font_id']][md5($data['id'].$data['font_id'])]['font_id']);
+				
+				}
+				$sql = "SELECT * from `fonts_names` WHERE `font_id` IN ('".implode("', '", $fontids) ."') ORDER BY `font_id` ASC, `name` ASC";
+				$names = $GLOBALS['FontsDB']->queryF($sql);
+				while($data = $GLOBALS['FontsDB']->fetchArray($names))
+				{
+					$name[$data['font_id']][md5($data['name'].$data['font_id'])] = $data;
+					unset($file[$data['font_id']][md5($data['name'].$data['font_id'])]['font_id']);
+				
+				}
+				$sql = "SELECT * from `fonts` WHERE `id` IN ('".implode("', '", $fontids) ."') ORDER BY `id` ASC";
+				$result = $GLOBALS['FontsDB']->queryF($sql);
+				while($font = $GLOBALS['FontsDB']->fetchArray($result))
+				{
+					
+					set_time_limit($timelimit=$timelimit+6);
+					try {
+						$downloads = array();
+						foreach(getArchivingShellExec() as $type => $exec)
+							$downloads[$type] = API_URL ."/v2/data/".$font['id']."/".$type."/download.api";
+						$fonts[$font['id']] = array('key'=> $font['id'], 'peer-id' => $font['peer_id'], 'names' => $name[$font['id']], 'normal' => $font['normal'], 'italic' => $font['italic'], 'bold' => $font['bold'], 'condensed' => $font['condensed'], 'light' => $font['light'], 'semi' => $font['semi'], 'book' => $font['book'], 'body' => $font['body'], 'header' => $font['header'], 'heading' => $font['heading'], 'footer' => $font['footer'], 'graphic' => $font['graphic'], 'system' => $font['system'], 'quote' => $font['quote'], 'block' => $font['block'], 'message' => $font['message'], 'admin' => $font['admin'], 'logo' => $font['logo'], 'slogon' => $font['slogon'], 'legal' => $font['legal'], 'script' => $font['script'], 'medium' => $font['medium'], 'nodes' => getNodesByFontListArray($font['id'], false), 'node-string' => getNodesByFontString($font['id']), 'download-urls' => $downloads, 'archive' => $archive[$font['id']], 'files' => $file[$font['id']]);
+					}
+					catch (Exception $error)
+					{
+						trigger_error($error, E_RECOVERABLE_ERROR);
+					}
 				}
 			}
 			@writeRawFile($cache, serialize($fonts));
@@ -3217,6 +3664,15 @@ if (!function_exists("getFontsListArray")) {
 }
 
 if (!function_exists("getNodesListArray")) {
+	/**
+	 * get a nodes listing by array
+	 *
+	 * @param string $clause
+	 * @param string $output
+	 * @param string $state
+	 *
+	 * @return array
+	 */
 	function getNodesListArray($clause = 'all', $output = '', $state = '')
 	{
 	
@@ -3254,7 +3710,7 @@ if (!function_exists("getNodesListArray")) {
 			{
 				set_time_limit($timelimit=$timelimit+6);
 				try {
-					$nodes[$row['node']] = array('node'=> $row['node'], 'usage' => $row['usage'], 'fonts' => getFontsByNodesListArray($row['id']));
+					$nodes[$row['node']] = array('node'=> $row['node'], 'usage' => $row['usage'], 'fonts' => getFontsByNodesListArray($row['id'], false));
 				}
 				catch (Exception $error)
 				{
@@ -3269,17 +3725,12 @@ if (!function_exists("getNodesListArray")) {
 	}
 }
 
-if (!function_exists("getMimetype")) {
-	function getMimetype($type = '')
-	{
-		$result = $GLOBALS['FontsDB']->queryF("SELECT * from `mimetypes` WHERE `type` LIKE '$type'");
-		while($row = $GLOBALS['FontsDB']->fetchArray($result))
-			return $row['mimetype'];
-		return 'text/html';
-	}
-}
-
 if (!function_exists("getExampleNodes")) {
+	/**
+	 * get a fonts example for help html output by string
+	 *
+	 * @return string
+	 */	
 	function getExampleNodes()
 	{
 		$nodes = array();
@@ -3292,6 +3743,11 @@ if (!function_exists("getExampleNodes")) {
 }
 
 if (!function_exists("getExampleFingerprint")) {
+	/**
+	 * get a fonts example hashing fingerprint help html output by string
+	 *
+	 * @return string
+	 */
 	function getExampleFingerprint()
 	{
 		$nodes = array();
@@ -3304,6 +3760,11 @@ if (!function_exists("getExampleFingerprint")) {
 }
 
 if (!function_exists("getExampleFontFiles")) {
+	/**
+	 * get a font file example for help html output by string
+	 *
+	 * @return string
+	 */
 	function getExampleFontFiles($md5 = '')
 	{
 		$fonts = array();
@@ -3316,6 +3777,11 @@ if (!function_exists("getExampleFontFiles")) {
 }
 
 if (!function_exists("getArchivedZIPFile")) {
+	/**
+	 * get a file from a zip archive based in files
+	 *
+	 * @return string
+	 */
 	function getArchivedZIPFile($zip_resource = '', $zip_file = '', $fontid = '')
 	{
 		if (!empty($fontid))
@@ -3341,12 +3807,12 @@ if (!function_exists("getArchivedZIPFile")) {
 
 if (!function_exists('sef'))
 {
-
 	/**
 	 * Safe encoded paths elements
 	 *
 	 * @param unknown $datab
 	 * @param string $char
+	 * 
 	 * @return string
 	 */
 	function sef($value = '', $stripe ='-')
@@ -3371,7 +3837,14 @@ if (!function_exists('sef'))
 	}
 }
 
-if (!function_exists("getSubPaths")) {
+if (!function_exists("cleanPath")) {
+	/**
+	 * get a clean path
+	 *
+	 * @paran string $path
+	 * 
+	 * @return string
+	 */
 	function cleanPath($path = '')
 	{
 		$folders = array();
@@ -3382,6 +3855,14 @@ if (!function_exists("getSubPaths")) {
 }
 
 if (!function_exists("getSubPaths")) {
+	/**
+	 * get a sub pathing of folders from a path
+	 *
+	 * @paran string $path
+	 * @param array $paths
+	 *
+	 * @return array
+	 */
 	function getSubPaths($path = '', $paths = array())
 	{
 		foreach(getDirListAsArray($path) as $dir)
@@ -3398,10 +3879,11 @@ if (!function_exists("getSubPaths")) {
 
 if (!function_exists("spacerName")) {
 	/**
-	 * checkEmail()
+	 * Formats font name to correct definition textualisation without typed precisioning
 	 *
-	 * @param mixed $email
-	 * @return bool|mixed
+	 * @param string $name
+	 * 
+	 * @return string
 	 */
 	function spacerName($name = '')
 	{
@@ -3425,10 +3907,12 @@ if (!function_exists("spacerName")) {
 
 if (!function_exists("redirect")) {
 	/**
-	 * checkEmail()
+	 * Redirect HTML Display
 	 *
-	 * @param mixed $email
-	 * @return bool|mixed
+	 * @param string $uri
+	 * @param integer $seconds
+	 * @param string $message
+	 * 
 	 */
 	function redirect($uri = '', $seconds = 9, $message = '')
 	{
@@ -3442,9 +3926,10 @@ if (!function_exists("redirect")) {
 
 if (!function_exists("checkEmail")) {
 	/**
-	 * checkEmail()
+	 * checks if a data element is an email address
 	 *
 	 * @param mixed $email
+	 * 
 	 * @return bool|mixed
 	 */
 	function checkEmail($email)
@@ -3475,13 +3960,21 @@ if (!function_exists("checkEmail")) {
 }
 
 if (!function_exists("writeRawFile")) {
+	/**
+	 * Writes RAW File Data
+	 *
+	 * @param string $file
+	 * @param string $data
+	 *
+	 * @return boolean
+	 */
 	function writeRawFile($file = '', $data = '')
 	{
 		if (!is_dir(dirname($file)))
 			mkdir(dirname($file), 0777, true);
 		if (is_file($file))
 			unlink($file);
-		file_put_contents($file, $data);
+		SaveToFile($file, $data);
 		if (!strpos($file, 'caches-files-sessioning.serial') && strpos($file, '.serial'))
 		{
 			
@@ -3498,12 +3991,19 @@ if (!function_exists("writeRawFile")) {
 						unlink($values['file'])	;
 					unset($sessions[$file]);
 				}
-			file_put_contents(FONTS_CACHE . DIRECTORY_SEPARATOR . 'caches-files-sessioning.serial', serialize($sessions));
+			SaveToFile(FONTS_CACHE . DIRECTORY_SEPARATOR . 'caches-files-sessioning.serial', serialize($sessions));
 		}
 	}
 }
 
 if (!function_exists("getArchivedZIPContentsArray")) {
+	/**
+	 * gets the contents of a zip archive in file listing
+	 *
+	 * @param string $zip_file
+	 *
+	 * @return array
+	 */
 	function getArchivedZIPContentsArray($zip_file = '')
 	{
 		$zip = zip_open($zip_file);
@@ -3526,6 +4026,14 @@ if (!function_exists("getArchivedZIPContentsArray")) {
 }
 
 if (!function_exists("compileNodesArray")) {
+	/**
+	 * compiles nodes array pathing
+	 *
+	 * @param string $dirname
+	 * @param integer $weight
+	 *
+	 * @return array
+	 */
 	function compileNodesArray($dirname, $weight = 2)
 	{
 		static $nodes = array();
@@ -3574,6 +4082,14 @@ if (!function_exists("compileNodesArray")) {
 }
 
 if (!function_exists("getNodesArray")) {
+	/**
+	 * compiles nodes array partnering
+	 *
+	 * @param array $parters
+	 * @param array $fixes
+	 *
+	 * @return array
+	 */
 	function getNodesArray($parters = array(), $fixes = array())
 	{
 		$ret = array();
@@ -3651,6 +4167,15 @@ if (!function_exists("getNodesArray")) {
 
 
 if (!function_exists("writeFontResourceHeader")) {
+	/**
+	 * Writes the resources for Font Base EOT files
+	 *
+	 * @param string $font
+	 * @param string $licence
+	 * @param array $values
+	 *
+	 * @return boolean
+	 */
 	function writeFontResourceHeader($font, $licence = 'gpl3', $values = array())
 	{
 		$baseheader = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . $licence . DIRECTORY_SEPARATOR . strtoupper(API_BASE) . '-HEADER'));
@@ -3756,7 +4281,7 @@ if (!function_exists("writeFontResourceHeader")) {
 						break;
 				}
 			}				
-			writeRawFile($font, $data);
+			putRawFile($font, $data);
 		}
 	}
 }
@@ -3764,6 +4289,15 @@ if (!function_exists("writeFontResourceHeader")) {
 
 
 if (!function_exists("writeFontRepositoryHeader")) {
+	/**
+	 * Writes the repository store cold file store for Font Base EOT files
+	 *
+	 * @param string $font
+	 * @param string $licence
+	 * @param array $values
+	 *
+	 * @return boolean
+	 */
 	function writeFontRepositoryHeader($font, $licence = 'gpl3', $values = array())
 	{
 		$baseheader = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . $licence . DIRECTORY_SEPARATOR . strtoupper(API_BASE) . '-HEADER'));
@@ -3790,6 +4324,11 @@ if (!function_exists("writeFontRepositoryHeader")) {
 }
 
 if (!function_exists("getFontPreviewText")) {
+	/**
+	 * gets random preview text for font preview
+	 *
+	 * @return string
+	 */
 	function getFontPreviewText()
 	{
 		static $text = '';
@@ -3805,9 +4344,16 @@ if (!function_exists("getFontPreviewText")) {
 }
 
 if (!function_exists("getBaseFontValueStore")) {
+	/**
+	 * gets base font EOT Value Store
+	 * 
+	 * @param string $font
+	 *
+	 * @return array
+	 */
 	function getBaseFontValueStore($font)
 	{
-		$result = array('uploaded' => microtime(true), 'licence' => API_LICENCE);
+		$result = array('uploaded' => microtime(true), 'licence' => API_LICENCE, 'company' => API_DEFAULT_BIZO);
 		if (file_exists($font))
 		foreach(cleanWhitespaces(file($font)) as $line)
 		{
@@ -3878,8 +4424,17 @@ if (!function_exists("getBaseFontValueStore")) {
 
 
 if (!function_exists("deleteFilesNotListedByArray")) {
+	/**
+	 * deletes all files and folders contained within the path passed which do not match the array for file skipping
+	 *
+	 * @param string $dirname
+	 * @param array $skipped
+	 *
+	 * @return array
+	 */
 	function deleteFilesNotListedByArray($dirname, $skipped = array())
 	{
+		$deleted = array();
 		foreach(array_reverse(getCompleteFilesListAsArray($dirname)) as $file)
 		{
 			$found = false;
@@ -3888,15 +4443,27 @@ if (!function_exists("deleteFilesNotListedByArray")) {
 					$found = true;
 			if ($found == false)
 			{
-				unlink($file);
-				rmdir(dirname($file));
+				if (unlink($file))
+				{
+					$deleted[str_replace($dirname, "", dirname($file))][] = basename($file);
+					rmdir(dirname($file));
+				}
 			}
 		}
+		return $deleted;
 	}
 
 }
 
 if (!function_exists("getCompleteFilesListAsArray")) {
+	/**
+	 * Get a complete file listing for a folder and sub-folder
+	 *
+	 * @param string $dirname
+	 * @param string $remove
+	 *
+	 * @return array
+	 */
 	function getCompleteFilesListAsArray($dirname, $remove = '')
 	{
 		foreach(getCompleteDirListAsArray($dirname) as $path)
@@ -3909,6 +4476,14 @@ if (!function_exists("getCompleteFilesListAsArray")) {
 
 
 if (!function_exists("getCompleteDirListAsArray")) {
+	/**
+	 * Get a complete folder/directory listing for a folder and sub-folder
+	 *
+	 * @param string $dirname
+	 * @param array $result
+	 *
+	 * @return array
+	 */
 	function getCompleteDirListAsArray($dirname, $result = array())
 	{
 		$result[$dirname] = $dirname;
@@ -3923,6 +4498,14 @@ if (!function_exists("getCompleteDirListAsArray")) {
 }
 
 if (!function_exists("getCompleteZipListAsArray")) {
+	/**
+	 * Get a complete zip archive for a folder and sub-folder
+	 *
+	 * @param string $dirname
+	 * @param array $result
+	 *
+	 * @return array
+	 */
 	function getCompleteZipListAsArray($dirname, $result = array())
 	{
 		foreach(getCompleteDirListAsArray($dirname) as $path)
@@ -3936,6 +4519,14 @@ if (!function_exists("getCompleteZipListAsArray")) {
 
 
 if (!function_exists("getCompletePacksListAsArray")) {
+	/**
+	 * Get a complete all packed archive supported for a folder and sub-folder
+	 *
+	 * @param string $dirname
+	 * @param array $result
+	 *
+	 * @return array
+	 */
 	function getCompletePacksListAsArray($dirname, $result = array())
 	{
 		foreach(getCompleteDirListAsArray($dirname) as $path)
@@ -3948,6 +4539,14 @@ if (!function_exists("getCompletePacksListAsArray")) {
 }
 
 if (!function_exists("getCompleteFontsListAsArray")) {
+	/**
+	 * Get a complete all font files supported for a folder and sub-folder
+	 *
+	 * @param string $dirname
+	 * @param array $result
+	 *
+	 * @return array
+	 */
 	function getCompleteFontsListAsArray($dirname, $result = array())
 	{
 		foreach(getCompleteDirListAsArray($dirname) as $path)
@@ -3960,77 +4559,105 @@ if (!function_exists("getCompleteFontsListAsArray")) {
 }
 
 if (!function_exists("getDirListAsArray")) {
-        function getDirListAsArray($dirname)
-        {
-            $ignored = array(
-                'cvs' ,
-                '_darcs');
-            $list = array();
-            if (substr($dirname, - 1) != '/') {
-                $dirname .= '/';
-            }
-            if ($handle = opendir($dirname)) {
-                while ($file = readdir($handle)) {
-                    if (substr($file, 0, 1) == '.' || in_array(strtolower($file), $ignored))
-                        continue;
-                    if (is_dir($dirname . $file)) {
-                        $list[$file] = $file;
-                    }
-                }
-                closedir($handle);
-                asort($list);
-                reset($list);
-            }
-
-            return $list;
+	/**
+	 * Get a folder listing for a single path no recursive
+	 *
+	 * @param string $dirname
+	 *
+	 * @return array
+	 */
+    function getDirListAsArray($dirname)
+    {
+        $ignored = array(
+            'cvs' ,
+            '_darcs', '.git', '.svn');
+        $list = array();
+        if (substr($dirname, - 1) != '/') {
+            $dirname .= '/';
         }
+        if ($handle = opendir($dirname)) {
+            while ($file = readdir($handle)) {
+                if (substr($file, 0, 1) == '.' || in_array(strtolower($file), $ignored))
+                    continue;
+                if (is_dir($dirname . $file)) {
+                    $list[$file] = $file;
+                }
+            }
+            closedir($handle);
+            asort($list);
+            reset($list);
+        }
+		return $list;
+    }
 }
 
 if (!function_exists("getFileListAsArray")) {
-        function getFileListAsArray($dirname, $prefix = '')
-        {
-            $filelist = array();
-            if (substr($dirname, - 1) == '/') {
-                $dirname = substr($dirname, 0, - 1);
-            }
-            if (is_dir($dirname) && $handle = opendir($dirname)) {
-                while (false !== ($file = readdir($handle))) {
-                    if (! preg_match('/^[\.]{1,2}$/', $file) && is_file($dirname . '/' . $file)) {
-                        $file = $prefix . $file;
-                        $filelist[$file] = $file;
-                    }
-                }
-                closedir($handle);
-                asort($filelist);
-                reset($filelist);
-            }
-
-            return $filelist;
+	/**
+	 * Get a file listing for a single path no recursive
+	 *
+	 * @param string $dirname
+	 * @param string $prefix
+	 *
+	 * @return array
+	 */
+    function getFileListAsArray($dirname, $prefix = '')
+    {
+        $filelist = array();
+        if (substr($dirname, - 1) == '/') {
+            $dirname = substr($dirname, 0, - 1);
         }
+        if (is_dir($dirname) && $handle = opendir($dirname)) {
+            while (false !== ($file = readdir($handle))) {
+                if (! preg_match('/^[\.]{1,2}$/', $file) && is_file($dirname . '/' . $file)) {
+                    $file = $prefix . $file;
+                    $filelist[$file] = $file;
+                }
+            }
+            closedir($handle);
+            asort($filelist);
+            reset($filelist);
+        }
+		return $filelist;
+    }
 }
 
 if (!function_exists("getZipListAsArray")) {
-        function getZipListAsArray($dirname, $prefix = '')
-        {
-            $filelist = array();
-            if ($handle = opendir($dirname)) {
-                while (false !== ($file = readdir($handle))) {
-                    if (preg_match('/(\.zip)$/i', $file)) {
-                        $file = $prefix . $file;
-                        $filelist[$file] = $file;
-                    }
-                }
-                closedir($handle);
-                asort($filelist);
-                reset($filelist);
-            }
-
-            return $filelist;
-        }
+	/**
+	 * Get a zip file listing for a single path no recursive
+	 *
+	 * @param string $dirname
+	 * @param string $prefix
+	 *
+	 * @return array
+	 */
+    function getZipListAsArray($dirname, $prefix = '')
+    {
+        $filelist = array();
+        if ($handle = opendir($dirname)) {
+           while (false !== ($file = readdir($handle))) {
+               if (preg_match('/(\.zip)$/i', $file)) {
+                   $file = $prefix . $file;
+                   $filelist[$file] = $file;
+               }
+           }
+           closedir($handle);
+           asort($filelist);
+           reset($filelist);
+       }
+       return $filelist;
+    }
 }
 
 
 if (!function_exists("getPacksListAsArray")) {
+	/**
+	 * Get a compressed archives file listing for a single path no recursive
+	 *
+	 * @param string $dirname
+	 * @param string $prefix
+	 *
+	 * @return array
+	 */
 	function getPacksListAsArray($dirname, $prefix = '')
 	{
 		$packs = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'packs-converted.diz'));
@@ -4051,6 +4678,14 @@ if (!function_exists("getPacksListAsArray")) {
 
 
 if (!function_exists("getFontsListAsArray")) {
+	/**
+	 * Get a font files listing for a single path no recursive
+	 *
+	 * @param string $dirname
+	 * @param string $prefix
+	 *
+	 * @return array
+	 */
 	function getFontsListAsArray($dirname, $prefix = '')
 	{
 		$formats = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'font-converted.diz'));
@@ -4071,6 +4706,11 @@ if (!function_exists("getFontsListAsArray")) {
 }
 
 if (!function_exists("getStampingShellExec")) {
+	/**
+	 * Get a bash shell execution command for stamping archives
+	 *
+	 * @return array
+	 */
 	function getStampingShellExec()
 	{
 		$ret = array();
@@ -4084,6 +4724,11 @@ if (!function_exists("getStampingShellExec")) {
 }
 
 if (!function_exists("getArchivingShellExec")) {
+	/**
+	 * Get a bash shell execution command for creating archives
+	 *
+	 * @return array
+	 */
 	function getArchivingShellExec()
 	{
 		$ret = array();
@@ -4097,6 +4742,11 @@ if (!function_exists("getArchivingShellExec")) {
 }
 
 if (!function_exists("getExtractionShellExec")) {
+	/**
+	 * Get a bash shell execution command for extracting archives
+	 *
+	 * @return array
+	 */
 	function getExtractionShellExec()
 	{
 		$ret = array();
@@ -4111,6 +4761,13 @@ if (!function_exists("getExtractionShellExec")) {
 
 
 if (!function_exists("getFontsCullList")) {
+	/**
+	 * Get a array of font files that match existing archived fingerprints
+	 *
+	 * @param array $files
+	 * 
+	 * @return array
+	 */
 	function getFontsCullList($files = array())
 	{
 		$handlers = $ret = array();

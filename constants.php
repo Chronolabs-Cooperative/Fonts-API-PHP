@@ -27,7 +27,7 @@
 	 */
 	if (!defined('API_DEBUG'))
 		define('API_DEBUG', true);
-	define('API_VERSION', '2.3.1');
+	define('API_VERSION', '2.3.2');
 	define('MAXIMUM_QUERIES', 2600);
 	
 	/**
@@ -36,10 +36,10 @@
 	 */
 	// Twitter API oAuth Details
 	$GLOBALS['twitter'] = array(
-			'consumer_key' => "NLFAz4ZfgzrVal08ZovIkPyVx",
-			'consumer_secret' => "oSsfeitrUv7Jo1eK0ULV3geL5I1F0u66HtvEjADLH1pzPmHJU5",
-			'oauth_access_token' => "2916941286-w2hKqu2obzyVM9VkF2FmUedEgmKdEWtosbfb6IM",
-			'oauth_access_token_secret' => "6CRttMfnudkWhparEtWI5CEF9TOR13KKPICLDKix0I3Fl"
+			'consumer_key' => "-------------------------------",
+			'consumer_secret' => "----------------------------------------------",
+			'oauth_access_token' => "---------------------------------------------",
+			'oauth_access_token_secret' => "-----------------------------------------"
 	);
 	
 	// Twitter Responses
@@ -55,11 +55,20 @@
 	define('API_REPOSITORY', 'git'); // = git or svn or git,svn
 	define('API_BASE', 'eot');
 	define('API_LICENCE', 'gpl3');
-	define("API_SHORTENING_URL", "http://d.slams.io/"); // URL for your shortener API see: https://github.com/Chronolabs-Cooperative/Jump-API-PHP
+	define("API_SHORTENING_URL", "http://jump.labs.coop/"); // URL for your shortener API see: https://github.com/Chronolabs-Cooperative/Jump-API-PHP
 	define("API_SHORTENING_TYPE", "random"); // can be either random, domain, short, original
 	
+	// Email Default Definitions
+	define("API_EMAIL_ADDY", 'wishcraft@users.sourceforge.net');
+	define("API_EMAIL_FROM", 'Fonting Repository Services');
+	
+	// Crawler Robot's Definitions
+	define('API_CRAWLERS_ROBOTS', 60);
+	define('API_CRAWLERS_LEVELS', 11);
+	
 	// Prefix for Identity Tags for Fonts..
-	define('API_IDENTITY_TAG', 'labscoop-');
+	define('API_IDENTITY_TAG', 'labscoop:');
+	define('API_DEFAULT_BIZO', 'Chronolabs Cooperative');
 	
 	/**
 	 * 
@@ -69,7 +78,7 @@
 	define('FONT_RESOURCES_SORTING', '/fonts/Sorting');
 	define('FONT_RESOURCES_CONVERTING', '/fonts/Converting');
 	define('FONT_RESOURCES_RESOURCE', '/fonts/Fonting');
-	define('FONT_RESOURCES_CACHE', '/fonts/Cache');
+	define('FONT_RESOURCES_CACHE', '/tmp/Fonts-Cache');
 	define('FONT_RESOURCES_STORE', 'https://sourceforge.net/p/chronolabsapis/Fonting/HEAD/tree/%s?format=raw');
 	define('FONT_RESOURCES_PEERS', 'https://sourceforge.net/p/chronolabsapis/Fonting/HEAD/tree/peers.json?format=raw');
 	define('FONT_RESOURCES_REPOMAP', 'https://sourceforge.net/p/chronolabsapis/Fonting/HEAD/tree/%s/%s--repository-mapping.json?format=raw');
@@ -77,7 +86,7 @@
 	define('FONT_RESOURCES_PEERS_GIT', 'https://github.com/Chronolabs-Cooperative/Fonting-Repository/raw/master/peers.json');
 	define('FONT_RESOURCES_REPOMAP_GIT', 'https://github.com/Chronolabs-Cooperative/Fonting-Repository/raw/master/%s/%s--repository-mapping.json');
 	define('FONT_UPLOAD_PATH', '/tmp/Fonts-Uploads');
-	define('FONTS_CACHE', '/tmp/Fonts-Cache');
+	define('FONTS_CACHE', FONT_RESOURCES_CACHE);
 	
 
 	/******* DO NOT CHANGE THIS VARIABLE ****
@@ -89,7 +98,7 @@
 	/**
 	 * Connects Global Database Objectivity
 	 */
-	require_once __DIR__ . DIRECTORY_SEPARATOR . 'class'. DIRECTORY_SEPARATOR . 'fontages.php';
+	@include_once __DIR__ . DIRECTORY_SEPARATOR . 'class'. DIRECTORY_SEPARATOR . 'fontages.php';
 	
 	/**
 	 * Cache Indexing Meter

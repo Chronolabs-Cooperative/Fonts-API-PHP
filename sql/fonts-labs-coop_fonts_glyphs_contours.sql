@@ -18,12 +18,12 @@ USE `fonts-labs-coop`;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Dumping data for table `fonts_callbacks`
+-- Dumping data for table `fonts_glyphs_contours`
 --
 
-LOCK TABLES `fonts_callbacks` WRITE;
-/*!40000 ALTER TABLE `fonts_callbacks` DISABLE KEYS */;
-/*!40000 ALTER TABLE `fonts_callbacks` ENABLE KEYS */;
+LOCK TABLES `fonts_glyphs_contours` WRITE;
+/*!40000 ALTER TABLE `fonts_glyphs_contours` DISABLE KEYS */;
+/*!40000 ALTER TABLE `fonts_glyphs_contours` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 

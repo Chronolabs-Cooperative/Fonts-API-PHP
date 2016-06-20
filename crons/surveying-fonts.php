@@ -76,15 +76,9 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 		$fingerprint = $upload['font_id'];
 	$datastore = json_decode($row['datastore'], true);
 	list($emails) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql = "SELECT `emails` from `emails` WHERE `id` = '".$row['cc']."'"));
-	if (substr($emails, strlen($emails)-1, 1) != "}")
-		$cc = json_decode(stripslashes(file_get_contents('/home/web/emails-jsoned.txt')), true);
-	else
-		$cc = json_decode($emails, true);
+	$cc = array_merge(json_decode($emails['emails'], true), cleanWhitespaces(file(dirname(__DIR__) . '/data/emails-default-cc.diz')));
 	list($emails) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql = "SELECT `emails` from `emails` WHERE `id` = '".$row['bcc']."'"));
-	if (substr($emails, strlen($emails)-1, 1) != "}")
-		$bcc = json_decode(stripslashes(file_get_contents('/home/web/emails-jsoned.txt')), true);
-	else
-		$bcc = json_decode($emails, true);
+	$bcc = array_merge(json_decode($emails['emails'], true), cleanWhitespaces(file(dirname(__DIR__) . '/data/emails-default-bcc.diz')));
 	$nopass = -1;
 	$tos = array();
 	while(count($tos['to'])+count($tos['cc'])+count($tos['bcc'])==0 && $nopass < 5)
@@ -176,7 +170,7 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 		}
 	if ($sendmail == true)
 	{
-		$mailer = new FontsMailer("wishcraft@users.sourceforge.net", "Fonting Repository Services");
+		$mailer = new FontsMailer(API_EMAIL_ADDY, API_EMAIL_FROM);
 		if (file_exists($file = dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "SMTPAuth.diz"))
 			$smtpauths = explode("\n", str_replace(array("\r\n", "\n\n", "\n\r"), "\n", file_get_contents($file)));
 		if (count($smtpauths)>=1)

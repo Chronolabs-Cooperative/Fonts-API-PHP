@@ -30,7 +30,7 @@ include_once dirname(dirname(__FILE__)).'/class/TwitterAPIExchange.php';
 require_once dirname(__DIR__).'/class/fontsmailer.php';
 set_time_limit(7200);
 
-$result = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `uploads` WHERE `uploaded` > '0' AND `converted` > '0' AND `quizing` > '0' AND (`storaged` > '0' OR (`storaged` = '0' AND `expired` < UNIX_TIMESTAMP())) AND `released` = 0 ORDER BY RAND() LIMIT 35");
+$result = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `uploads` WHERE `uploaded` > '0' AND `converted` > '0' AND `quizing` > '0' AND (`storaged` > '0' OR (`storaged` = '0' AND `expired` < UNIX_TIMESTAMP())) AND `released` = 0 ORDER BY RAND() LIMIT " . mt_rand(7,37));
 while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 {
 	$datastore = json_decode($upload['datastore'], true);
@@ -50,7 +50,7 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 			$tos['bcc'][] = $release['email'];
 		
 	
-		$mailer = new FontsMailer("wishcraft@users.sourceforge.net", "Fonting Repository Services");
+		$mailer = new FontsMailer(API_EMAIL_ADDY, API_EMAIL_FROM);
 		if (file_exists($file = dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "SMTPAuth.diz"))
 			$smtpauths = explode("\n", str_replace(array("\r\n", "\n\n", "\n\r"), "\n", file_get_contents($file)));
 		if (count($smtpauths)>=1)

@@ -1,0 +1,8 @@
+
+@GDEF_Simple = [%glyphmaps];
+
+table GDEF {
+  GlyphClassDef @GDEF_Simple, , , ;
+
+} GDEF;
+

@@ -27,7 +27,7 @@ set_time_limit(1999);
 require_once dirname(__DIR__).'/functions.php';
 require_once dirname(__DIR__).'/class/fontages.php';
 $GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
-$result = $GLOBALS['FontsDB']->queryF("SELECT * from `uploads` WHERE `uploaded` > '0' AND `converted` = '0' AND `storaged` = 0 ORDER BY RAND() LIMIT 27");
+$result = $GLOBALS['FontsDB']->queryF("SELECT * from `uploads` WHERE `uploaded` > '0' AND `converted` = '0' AND `storaged` = 0 ORDER BY RAND() LIMIT ".mt_rand(17,77));
 while($row = $GLOBALS['FontsDB']->fetchArray($result))
 {
 	$skip = false;
@@ -80,6 +80,100 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 					continue;
 				}
 			}
+			
+			// Generating Super Font
+			$totalmaking = count(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts-glyphs.pe"))-1;
+			exec("cd $currently", $output, $return);
+			$covertscript = cleanWhitespaces(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts-glyphs.pe"));
+			$fonts = getFontsListAsArray($currently);
+			foreach($covertscript as $line => $value)
+				foreach($fonts as $file => $values)
+					if (strpos($value, $values['type'])&&$values['type']!='ttf')
+						unset($covertscript[$line]);
+			writeRawFile($script = FONT_RESOURCES_CACHE.DIRECTORY_SEPARATOR.md5(microtime(true).json_encode($fonts)).".pe", implode("\n", $covertscript));
+			foreach($fonts as $font)
+			{
+				exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", $script, $font), $output, $return);;
+				echo "Executed: $exe<br/>\n\n$output\n\n<br/><br/>";
+			}
+			unlink($script);
+			
+			deleteFilesNotListedByArray($currently, array('.ufo', '.plist', '.fea', '.glif'));
+			$ufofiles = getCompleteFilesListAsArray($currently, '');
+			$retrieve = $fontsids = $missing = $glifs = array();
+			foreach($ufofiles as $path => $values)
+			{
+				$glifs[basename($path)] = basename($path);
+				$working = dirname($path);
+			}
+			$sql = "SELECT DISTINCT `filename` FROM `fonts_files` WHERE  `filename` LIKE '%.glif' AND `filename` NOT IN ('".implode("', '", $glifs). "')";
+			$result =$GLOBALS['FontsDB']->queryF($sql);
+			while($row = $GLOBALS['FontsDB']->fetchArray($result))
+				$missing[$row['filename']] = $row['filename'];
+			
+			$sql = "SELECT count(*) as `rc`, `font_id` FROM `fonts_files` WHERE `filename` IN ('".implode("', '", $missing). "') ORDER BY `rc` DESC";
+			$result =$GLOBALS['FontsDB']->queryF($sql);
+			while($row = $GLOBALS['FontsDB']->fetchArray($result))
+				$fontsids[$row['font_id']] = $row['rc'];
+				
+			$sql = "SELECT `font_id`, `filename` FROM `fonts_files` WHERE `filename` IN ('".implode("', '", $missing). "') AND `font_id` IN ('".implode("', '", $fontsids). "') ORDER BY `fonts_id` DESC, `filename` ASC";
+			$result =$GLOBALS['FontsDB']->queryF($sql);
+			while($row = $GLOBALS['FontsDB']->fetchArray($result))
+				if (in_array($row['filename'], $missing))
+				{
+					$retrieve[$row['font_id']][] = $row['filename'];
+					unset($missing[$row['filename']]);
+					if (empty($missing))
+						continue;
+				}
+			
+			foreach($retrieve as $fontid => $files)
+				foreach($files as $idx => $filename)
+				{
+					putRawFile($working . DIRECTORY_SEPARATOR . $filename, getFontRawData('', $fontid, 'ufo', $filename));
+				}
+			
+			$step = 1;
+			$glifmap = $glifs = array();
+			$ufofiles = getCompleteFilesListAsArray($currently, '');
+			$retrieve = $fontsids = $missing = $glifs = array();
+			foreach($ufofiles as $path => $values)
+			{
+				$glifs[basename($path)] = str_replace(".glif", "", basename($path));
+				if (substr($glifs[basename($path)], 0, 1) = "_")
+					$glifs[basename($path)] = substr($glifs[basename($path)], 1);
+				if (substr($glifs[basename($path)], strlen($glifs[basename($path)])-1, 1) = "_")
+					$glifs[basename($path)] = substr($glifs[basename($path)], 0, strlen($glifs[basename($path)])-2);
+				$working = dirname(dirname($path));
+			}
+			if (file_exists($file = $working . DIRECTORY_SEPARATOR . 'feature.fea'))
+				unlink($file);
+			sort($glifs);
+			foreach($glifs as $key => $glif)
+			{
+				$glifmap[$step] .= "\$glif ";
+				if (strlen($glifmap[$step])>80)
+				{
+					$step++;
+					$glifmap[$step] .= "\t\t\t\t";
+				}
+			}
+			putRawFile($file, str_replace("%glyphmaps", implode("\n", $glifmap, file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "feature.fea"))));
+			unset($glifmap);
+			unset($glifs);
+			unset($files);
+			unset($ufofiles);
+			unset($retrieve);
+			unset($missing);
+			foreach(getDirListAsArray($currently) as $folder)
+			{
+				exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts-upload.pe", $currently . DIRECTORY_SEPARATOR . $folder), $output, $return);;
+				echo "Executed: $exe<br/>\n\n$output\n\n<br/><br/>";
+			}
+			deleteFilesNotListedByArray($currently, array(".".API_BASE));
+			
+			// Generates All Font Files For Fingerprinting
+			$fonts = getFontsListAsArray($currently);
 			$totalmaking = count(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"))-1;
 			exec("cd $currently", $output, $return);
 			$covertscript = cleanWhitespaces(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"));

@@ -24,44 +24,38 @@ set_time_limit(1999);
 require_once dirname(__DIR__).'/functions.php';
 require_once dirname(__DIR__).'/class/fontages.php';
 
+$path = (isset($_REQUEST['path'])?$path = $_REQUEST['path']:'');
+if (empty($path))
+	die("Path Empty!");
+
+$time = microtime(true);
+$packs = $fonts = array();
+foreach(getCompleteDirListAsArray($path) as $folder)
+{
+	foreach(getPacksListAsArray($folder) as $file=>$values)
+		$packs[] =  $folder . DIRECTORY_SEPARATOR . $values['file'];
+	foreach(getFontsListAsArray($folder) as $file=>$values)
+		$fonts[] = $folder . DIRECTORY_SEPARATOR . $values['file'];
+	foreach(getFileListAsArray($folder) as $file)
+		if (!in_array($folder . DIRECTORY_SEPARATOR . $file, $packs) && !in_array($folder . DIRECTORY_SEPARATOR . $file, $fonts) && $file != "finished.dat")
+			unlink( $folder . DIRECTORY_SEPARATOR . $file );
+}
+$uploader = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
+$uploader[$ipid][$time]['type'] == 'pack';
+$uploader[$ipid][$time]['files'] = $fonts;
+$uploader[$ipid][$time]['files'][] = $packs;
+$uploader[$ipid][$time]['form']['email'] = API_EMAIL_ADDY;
+$uploader[$ipid][$time]['form']['name'] = API_EMAIL_FROM;
+$uploader[$ipid][$time]['form']['bizo'] = API_DEFAULT_BIZO;
+$uploader[$ipid][$time]['form']['scope'] = array();
+list($emails) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql = "SELECT `emails` from `emails` ORDER BY RAND() LIMIT 1"));
+$cc = array_merge(json_decode($emails['emails'], true), cleanWhitespaces(file(dirname(__DIR__) . '/data/emails-crawling-cc.diz')));
+list($emails) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql = "SELECT `emails` from `emails` ORDER BY RAND() LIMIT 1"));
+$bcc = array_merge(json_decode($emails['emails'], true), cleanWhitespaces(file(dirname(__DIR__) . '/data/emails-crawling-bcc.diz')));
+$uploader[$ipid][$time]['form']['email-cc'] = implode(',', $cc);
+$uploader[$ipid][$time]['form']['email-bcc'] = implode(',', $bcc);
+$uploader[$ipid][$time]['path'] = str_replace(FONT_UPLOAD_PATH, "", $path);
+putRawFile(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($uploader));
 $crawldat = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "crawling.json"), true);
-foreach($crawldat as $path => $values)
-	if (!isset($values['finished']) && file_exists($path . DIRECTORY_SEPARATOR . 'finished.dat'))
-	{
-		$time = microtime(true);
-		$crawldat[$path]['finished'] = filectime($path . DIRECTORY_SEPARATOR . 'finished.dat');
-		$packs = $fonts = array();
-		foreach(getCompleteDirListAsArray($path) as $folder)
-		{
-			foreach(getPacksListAsArray($folder) as $file=>$values)
-				$packs[] =  $folder . DIRECTORY_SEPARATOR . $values['file'];
-			foreach(getFontsListAsArray($folder) as $file=>$values)
-				$fonts[] = $folder . DIRECTORY_SEPARATOR . $values['file'];
-			foreach(getFileListAsArray($folder) as $file)
-				if (!in_array($folder . DIRECTORY_SEPARATOR . $file, $packs) && !in_array($folder . DIRECTORY_SEPARATOR . $file, $fonts) && $file != "finished.dat")
-					unlink( $folder . DIRECTORY_SEPARATOR . $file );
-		}
-		$uploader = json_decode(file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
-		$uploader[$ipid][$time]['type'] == 'pack';
-		$uploader[$ipid][$time]['files'] = $fonts;
-		$uploader[$ipid][$time]['files'][] = $packs;
-		$uploader[$ipid][$time]['form']['email'] = 'wishcraft@users.sourceforge.net';
-		$uploader[$ipid][$time]['form']['name'] = 'Font File/Pack Crawler';
-		$uploader[$ipid][$time]['form']['bizo'] = 'Chronolabs Cooperative';
-		$uploader[$ipid][$time]['form']['scope'] = array();
-		list($emails) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql = "SELECT `emails` from `emails` ORDER BY RAND() LIMIT 1"));
-		if (substr($emails, strlen($emails)-1, 1) != "}")
-			$emails = json_decode(stripslashes(file_get_contents('/home/web/emails-jsoned.txt')), true);
-		else
-			$emails = json_decode($emails, true);
-		$uploader[$ipid][$time]['form']['email-cc'] = implode(',', $emails);
-		list($emails) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql = "SELECT `emails` from `emails` ORDER BY RAND() LIMIT 1"));
-		if (substr($emails, strlen($emails)-1, 1) != "}")
-			$emails = json_decode(stripslashes(file_get_contents('/home/web/emails-jsoned.txt')), true);
-		else
-			$emails = json_decode($emails, true);
-		$uploader[$ipid][$time]['form']['email-bcc'] = implode(',', $emails);
-		$uploader[$ipid][$time]['path'] = str_replace(FONT_UPLOAD_PATH, "", $path);
-		file_put_contents(__DIR__ . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($uploader));
-	}
-writeRawFile(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "crawling.json", json_encode($crawldat));
+$crawldat[$path]['finish'] = microtime(true);
+putRawFile(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "crawling.json", json_encode($crawldat));

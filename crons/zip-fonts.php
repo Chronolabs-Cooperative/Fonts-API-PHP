@@ -33,7 +33,7 @@ include_once dirname(dirname(__FILE__)).'/functions.php';
 include_once dirname(dirname(__FILE__)).'/class/fontages.php';
 set_time_limit(7200);
 $GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
-$result = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `uploads` WHERE `uploaded` > '0' AND `converted` > '0' AND `quizing` > '0' AND `storaged` <= '0'  AND (`finished` >= `needing` OR `expired` < UNIX_TIMESTAMP()) ORDER BY RAND() LIMIT " . mt_rand(6,41));
+$result = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `uploads` WHERE `uploaded` > '0' AND `converted` > '0' AND `quizing` > '0' AND `storaged` <= '0'  AND (`finished` >= `needing` OR `expired` < UNIX_TIMESTAMP()) ORDER BY RAND() LIMIT " . mt_rand(7,42));
 while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 {
 	$GLOBALS['FontsDB']->queryF("START TRANSACTION");
@@ -278,6 +278,38 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 		}
 	}
 	
+	foreach(getCompleteFilesListAsArray($currently) as $file)
+		if (substr($file, strlen($file)-5) == '.glif')
+		{
+			$glyph = getGlyphArrayFromXML(xml2array(file_get_contents($file)));
+			if (!empty($glyph))
+			{
+				$sql = "SELECT * FROM `fonts_glyphs` WHERE `fingerprint` LIKE '" . $glyph['fingerprint'] . "'";
+				$glyphid = md5($glyph['fingerprint'].$fingerprint);
+				if (!$row = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql)))
+				{
+					$contours = $pointers = $smoothers = 0;
+					foreach($glyph['contours'] as $contour => $points)
+					{
+						$contours++;
+						foreach($points as $weight => $values)
+						{
+							$sql = "INSERT INTO `fonts_glyphs_contours` (`font_id`, `glyph_id`, `contour`, `weight`, `x`, `y`, `type`, `smooth`, `created`) VALUES('$fingerprint', '$glyphid', '$contour', '$weight', '" . $values['x'] . "', '" . $values['y'] . "', '" . $values['type'] . "', '" . $values['smooth'] . "', UNIX_TIMESTAMP())";
+							if ($GLOBALS['FontsDB']->queryF($sql)) { $updated = true; }
+							if ($values['smooth']!='-----') { $smoothers++; }
+							$pointers++;
+						}
+					}
+					$sql = "INSERT INTO `fonts_glyphs` (`font_id`, `glyph_id`, `fingerprint`, `name`, `ufofile`, `unicode`, `format`, `width`, `contours`, `pointers`, `smoothers`, `created`, `occurences`, `addon`) VALUES('$fingerprint', '$glyphid', '".$glyph['fingerprint']."', '".$glyph['name']."', '" . basename($file) . "', '".$glyph['unicode']."', '".$glyph['format']."', '" . $glyph['width'] . "', '$contours', '$pointers', '$smoothers', UNIX_TIMESTAMP(), 1, 'no')";
+					if ($GLOBALS['FontsDB']->queryF($sql)) { $updated = true; }
+				} elseif (!empty($row)) {
+					$sql = "INSERT INTO `fonts_glyphs` (`font_id`, `glyph_id`, `fingerprint`, `name`, `ufofile`, `unicode`, `format`, `width`, `created`, `addon`, `addon-font-id`, `addon-glyph-id`) VALUES('$fingerprint', '$glyphid', '".$glyph['fingerprint']."', '".$glyph['name']."', '" . basename($file) . "', '".$glyph['unicode']."', '".$glyph['format']."', '" . $glyph['width'] . "', UNIX_TIMESTAMP(), 'yes', '".$row['font-id'] . "', '" . $row['glyph-id'] . "')";
+					if ($GLOBALS['FontsDB']->queryF($sql)) { $updated = true; }
+					$sql = "UPDATE `fonts_glyphs` SET `occurences` = `occurences` + 1 WHERE `glyph-id` = '".$row['glyph-id']. "'";
+					if ($GLOBALS['FontsDB']->queryF($sql)) { $updated = true; }
+				}
+			}
+		}
 	
 	$filez = array();
 	foreach(getCompleteDirListAsArray($currently) as $path)

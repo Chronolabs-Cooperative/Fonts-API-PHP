@@ -94,7 +94,6 @@ You need to run the following command from root with sudo at the start unless yo
     */3 * * * * chown -Rf www-data:www-data /tmp/Font-*
     */3 * * * * chmod -Rf 0777 /tmp
     */3 * * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/reboot-checker.php
-    11 23 5 * * sh /var/www/fonts.labs.coop/crons/crawling-fonts.sh
     11 11 */3 * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/lost-fonts-uploads.php
     */11 */11 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/poll-peers.php
     */13 */9 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/check-cache.php
@@ -146,6 +145,71 @@ You need to run the following command from root with sudo at the start unless yo
     11 11 * * */4 sh /fonts/git-all.sh
     */33 */4 * * * sh /fonts/git-json.sh
     */45 */5 * * * unlink /fonts/Fonting/.git/index.lock
+    
+    ##
+    ## Font Website Crawler Robot + Script Genetator
+    ##
+    1 0 1,13 * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/crawling-robots.php
+    21 0 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--001.sh
+    41 0 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--002.sh
+    1 1 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--003.sh
+    21 1 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--004.sh
+    41 1 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--005.sh
+    1 2 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--006.sh
+    21 2 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--007.sh
+    41 2 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--008.sh
+    1 3 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--009.sh
+    21 3 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--010.sh
+    41 3 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--011.sh
+    1 4 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--012.sh
+    21 4 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--013.sh
+    41 4 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--014.sh
+    1 5 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--015.sh
+    21 5 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--016.sh
+    41 5 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--017.sh
+    1 6 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--018.sh
+    21 6 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--019.sh
+    41 6 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--020.sh
+    1 7 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--021.sh
+    21 7 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--022.sh
+    41 7 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--023.sh
+    1 8 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--024.sh
+    21 8 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--025.sh
+    41 8 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--026.sh
+    1 9 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--027.sh
+    21 9 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--028.sh
+    41 9 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--029.sh
+    1 10 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--030.sh
+    21 10 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--031.sh
+    41 10 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--032.sh
+    1 11 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--033.sh
+    21 11 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--034.sh
+    41 11 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--035.sh
+    1 12 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--036.sh
+    21 12 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--037.sh
+    41 12 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--038.sh
+    1 13 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--039.sh
+    21 13 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--040.sh
+    41 13 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--041.sh
+    1 14 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--042.sh
+    21 14 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--043.sh
+    41 14 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--044.sh
+    1 15 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--045.sh
+    21 15 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--046.sh
+    41 15 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--047.sh
+    1 16 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--048.sh
+    21 16 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--049.sh
+    41 16 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--050.sh
+    1 17 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--051.sh
+    21 17 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--052.sh
+    41 17 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--053.sh
+    1 18 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--054.sh
+    21 18 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--055.sh
+    41 18 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--056.sh
+    1 19 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--057.sh
+    21 19 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--058.sh
+    41 19 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--059.sh
+    1 20 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--060.sh
 
 
 That's pretty much the basic of setting up, you can of course make changes to the paths, even store your SVN remotely for larger file support. I hope this installation guide will help you in configuring the Font's API
