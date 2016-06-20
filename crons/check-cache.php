@@ -30,21 +30,21 @@ error_reporting(E_ERROR);
 set_time_limit(7200);
 
 
-@writeRawFile(FONT_RESOURCES_RESOURCE . DIRECTORY_SEPARATOR . 'nodes-all.json', json_encode(getNodesListArray('all', 'json', 'cron', 'v2')));
-@writeRawFile(FONT_RESOURCES_RESOURCE . DIRECTORY_SEPARATOR . 'fonts-all.json', json_encode(getFontsListArray('all', 'json', 'cron', 'v2')));
+@writeRawFile(FONT_RESOURCES_RESOURCE_RESOURCE . DIRECTORY_SEPARATOR . 'nodes-all.json', json_encode(getNodesListArray('all', 'json', 'cron', 'v2')));
+@writeRawFile(FONT_RESOURCES_RESOURCE_RESOURCE . DIRECTORY_SEPARATOR . 'fonts-all.json', json_encode(getFontsListArray('all', 'json', 'cron', 'v2')));
 
 //die("TMP Break-point!");
-$result = $GLOBALS['FontsDB']->queryF("SELECT * from `fonts` WHERE `medium` = 'FONT_RESOURCES_RESOURCE' ORDER BY RAND() LIMIT 36");
+$result = $GLOBALS['FontsDB']->queryF("SELECT * from `fonts` WHERE `medium` = 'FONT_RESOURCES_RESOURCE_RESOURCE' ORDER BY RAND() LIMIT 36");
 while($row = $GLOBALS['FontsDB']->fetchArray($result))
 {
 	$archive = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF("SELECT * from `fonts_archiving` WHERE `font_id` = '" . $row['id'] . "'"));
 	if (API_REPOSITORY == 'svn')
-		if (sha1_file(constant("FONT_RESOURCES") . $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']) == sha1(file_get_contents(sprintf(constant("FONT_RESOURCES_STORE"), $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']))))
+		if (sha1_file(constant("FONT_RESOURCES_RESOURCE") . $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']) == sha1(file_get_contents(sprintf(constant("FONT_RESOURCES_RESOURCE_STORE"), $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']))))
 		{
 			$GLOBALS['FontsDB']->queryF("UPDATE `fonts` SET `medium` = 'FONT_RESOURCES_CACHE' WHERE `id` = '" . $row['id'] . "'");
 			$GLOBALS['FontsDB']->queryF("UPDATE `fonts_archiving` SET `unlocalised` = UNIX_TIMSTAMP(), `unlocalisation` = `unlocalisation` + 1 WHERE `id` = '" . $archive['id'] . "'");
-			unlink(constant("FONT_RESOURCES") . $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']);
-			$path = constant("FONT_RESOURCES") . $archive['path'];
+			unlink(constant("FONT_RESOURCES_RESOURCE") . $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']);
+			$path = constant("FONT_RESOURCES_RESOURCE") . $archive['path'];
 			foreach(explode(DIRECTORY_SEPARATOR, $archive['path']) as $folder)
 			{
 				rmdir($path);
@@ -52,12 +52,13 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 			}
 		}
 	elseif (API_REPOSITORY == 'git')
-		if (sha1_file(constant("FONT_RESOURCES") . $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']) == sha1(file_get_contents(sprintf(constant("FONT_RESOURCES_STORE_GIT"), $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']))))
+		if (sha1_file(constant("FONT_RESOURCES_RESOURCE") . $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']) == sha1(file_get_contents(sprintf(constant("FONT_RESOURCES_RESOURCE_STORE_GIT"), $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']))))
 		{
 			$GLOBALS['FontsDB']->queryF("UPDATE `fonts` SET `medium` = 'FONT_RESOURCES_CACHE' WHERE `id` = '" . $row['id'] . "'");
 			$GLOBALS['FontsDB']->queryF("UPDATE `fonts_archiving` SET `unlocalised` = UNIX_TIMSTAMP(), `unlocalisation` = `unlocalisation` + 1 WHERE `id` = '" . $archive['id'] . "'");
-			unlink(constant("FONT_RESOURCES") . $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']);
-			$path = constant("FONT_RESOURCES") . $archive['path'];
+			putRawFile(constant("FONT_RESOURCES_RESOURCE") . $archive['path'] . DIRECTORY_SEPARATOR . '.gitignore', "!/".$archive['filename']);
+			unlink(constant("FONT_RESOURCES_RESOURCE") . $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']);
+			$path = constant("FONT_RESOURCES_RESOURCE") . $archive['path'];
 			foreach(explode(DIRECTORY_SEPARATOR, $archive['path']) as $folder)
 			{
 				rmdir($path);
@@ -65,12 +66,13 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 			}
 		}
 	elseif (API_REPOSITORY == 'git,svn')
-		if (sha1_file(constant("FONT_RESOURCES") . $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']) == sha1(file_get_contents(sprintf(constant("FONT_RESOURCES_STORE"), $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename'])))  == sha1(file_get_contents(sprintf(constant("FONT_RESOURCES_STORE_GIT"), $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']))))
+		if (sha1_file(constant("FONT_RESOURCES_RESOURCE") . $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']) == sha1(file_get_contents(sprintf(constant("FONT_RESOURCES_RESOURCE_STORE"), $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename'])))  == sha1(file_get_contents(sprintf(constant("FONT_RESOURCES_RESOURCE_STORE_GIT"), $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']))))
 		{
 			$GLOBALS['FontsDB']->queryF("UPDATE `fonts` SET `medium` = 'FONT_RESOURCES_CACHE' WHERE `id` = '" . $row['id'] . "'");
 			$GLOBALS['FontsDB']->queryF("UPDATE `fonts_archiving` SET `unlocalised` = UNIX_TIMSTAMP(), `unlocalisation` = `unlocalisation` + 1 WHERE `id` = '" . $archive['id'] . "'");
-			unlink(constant("FONT_RESOURCES") . $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']);
-			$path = constant("FONT_RESOURCES") . $archive['path'];
+			putRawFile(constant("FONT_RESOURCES_RESOURCE") . $archive['path'] . DIRECTORY_SEPARATOR . '.gitignore', "!/".$archive['filename']);
+			unlink(constant("FONT_RESOURCES_RESOURCE") . $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']);
+			$path = constant("FONT_RESOURCES_RESOURCE") . $archive['path'];
 			foreach(explode(DIRECTORY_SEPARATOR, $archive['path']) as $folder)
 			{
 				rmdir($path);
@@ -85,13 +87,13 @@ $result = $GLOBALS['FontsDB']->queryF("SELECT * from `fonts` WHERE `medium` = 'F
 while($row = $GLOBALS['FontsDB']->fetchArray($result))
 {
 	$archive = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF("SELECT * from `fonts_archiving` WHERE `font_id` = '" . $row['id'] . "'"));
-	if (file_exists(constant("FONT_RESOURCES") . $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']))
+	if (file_exists(constant("FONT_RESOURCES_RESOURCE") . $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']))
 	{
 		if (API_REPOSITORY == 'svn')
-			if (sha1_file(constant("FONT_RESOURCES") . $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']) == sha1(file_get_contents(sprintf(constant("FONT_RESOURCES_STORE"), $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']))))
+			if (sha1_file(constant("FONT_RESOURCES_RESOURCE") . $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']) == sha1(file_get_contents(sprintf(constant("FONT_RESOURCES_RESOURCE_STORE"), $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']))))
 			{
-				unlink(constant("FONT_RESOURCES") . $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']);
-				$path = constant("FONT_RESOURCES") . $archive['path'];
+				unlink(constant("FONT_RESOURCES_RESOURCE") . $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']);
+				$path = constant("FONT_RESOURCES_RESOURCE") . $archive['path'];
 				foreach(explode(DIRECTORY_SEPARATOR, $archive['path']) as $folder)
 				{
 					rmdir($path);
@@ -99,10 +101,11 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 				}
 			}
 		elseif (API_REPOSITORY == 'git')
-			if (sha1_file(constant("FONT_RESOURCES") . $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']) == sha1(file_get_contents(sprintf(constant("FONT_RESOURCES_STORE_GIT"), $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']))))
+			if (sha1_file(constant("FONT_RESOURCES_RESOURCE") . $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']) == sha1(file_get_contents(sprintf(constant("FONT_RESOURCES_RESOURCE_STORE_GIT"), $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']))))
 			{
-				unlink(constant("FONT_RESOURCES") . $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']);
-				$path = constant("FONT_RESOURCES") . $archive['path'];
+				putRawFile(constant("FONT_RESOURCES_RESOURCE") . $archive['path'] . DIRECTORY_SEPARATOR . '.gitignore', "!/".$archive['filename']);
+				unlink(constant("FONT_RESOURCES_RESOURCE") . $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']);
+				$path = constant("FONT_RESOURCES_RESOURCE") . $archive['path'];
 				foreach(explode(DIRECTORY_SEPARATOR, $archive['path']) as $folder)
 				{
 					rmdir($path);
@@ -110,10 +113,11 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 				}
 			}
 		elseif (API_REPOSITORY == 'git,svn')
-			if (sha1_file(constant("FONT_RESOURCES") . $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']) == sha1(file_get_contents(sprintf(constant("FONT_RESOURCES_STORE"), $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']))) == sha1(file_get_contents(sprintf(constant("FONT_RESOURCES_STORE_GIT"), $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']))))
+			if (sha1_file(constant("FONT_RESOURCES_RESOURCE") . $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']) == sha1(file_get_contents(sprintf(constant("FONT_RESOURCES_RESOURCE_STORE"), $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']))) == sha1(file_get_contents(sprintf(constant("FONT_RESOURCES_RESOURCE_STORE_GIT"), $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']))))
 			{
-				unlink(constant("FONT_RESOURCES") . $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']);
-				$path = constant("FONT_RESOURCES") . $archive['path'];
+				putRawFile(constant("FONT_RESOURCES_RESOURCE") . $archive['path'] . DIRECTORY_SEPARATOR . '.gitignore', "!/".$archive['filename']);
+				unlink(constant("FONT_RESOURCES_RESOURCE") . $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']);
+				$path = constant("FONT_RESOURCES_RESOURCE") . $archive['path'];
 				foreach(explode(DIRECTORY_SEPARATOR, $archive['path']) as $folder)
 				{
 					rmdir($path);

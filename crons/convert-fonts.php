@@ -30,6 +30,7 @@ $GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 $result = $GLOBALS['FontsDB']->queryF("SELECT * from `uploads` WHERE `uploaded` > '0' AND `converted` = '0' AND `storaged` = 0 ORDER BY RAND() LIMIT ".mt_rand(17,77));
 while($row = $GLOBALS['FontsDB']->fetchArray($result))
 {
+	sleep(mt_rand(20,90));
 	$skip = false;
 	$upldata = json_decode($row['datastore'], true);
 	if (file_exists($row['uploaded_path'] . DIRECTORY_SEPARATOR . $row['uploaded_file']))

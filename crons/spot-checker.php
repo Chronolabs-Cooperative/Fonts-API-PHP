@@ -37,6 +37,7 @@ $pool = $GLOBALS['FontsDB']->queryF($sql = "SELECT `a`.* from `fonts_archiving` 
 // Searches For Unrecorded Fonts
 while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 {
+	sleep(mt_rand(20,90));
 	$sortpath = FONT_RESOURCES_RESOURCE . DIRECTORY_SEPARATOR . $archive['path'];
 	$packfile = $sortpath . DIRECTORY_SEPARATOR . $archive['filename'];
 	$updated = false;
@@ -764,6 +765,7 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 							unset($bash[count($bash)-1]);
 						}
 						$bash[] = "cd " . dirname($packfile);
+						$bash[] = "unlink .gitignore";
 						$bash[] = "git add ".basename($packfile)."";
 						$bash[] = "git commit -m \"Updating Repository for 1st time; the font: $naming\"";
 						$bash[] = "git push origin master";

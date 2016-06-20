@@ -33,6 +33,7 @@ set_time_limit(7200);
 $result = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `uploads` WHERE `uploaded` > '0' AND `converted` > '0' AND `quizing` > '0' AND (`storaged` > '0' OR (`storaged` = '0' AND `expired` < UNIX_TIMESTAMP())) AND `released` = 0 ORDER BY RAND() LIMIT " . mt_rand(7,37));
 while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 {
+	sleep(mt_rand(70,175));
 	$datastore = json_decode($upload['datastore'], true);
 	if ($archive  = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql = "SELECT * from `fonts_archiving` WHERE `font_id` = '" . $upload['font_id'] . "'")))
 	{

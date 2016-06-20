@@ -29,7 +29,7 @@ ini_set('memory_limit', '555M');
 include_once dirname(dirname(__FILE__)).'/functions.php';
 include_once dirname(dirname(__FILE__)).'/class/fontages.php';
 set_time_limit(7200);
-
+$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 // Searches For Unrecorded Fonts
 $folders = array_unique(array_merge(array('0','1','2','3','4','5','6','7','8','9','_','%','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'), getDirListAsArray(FONT_RESOURCES_RESOURCE)));
 shuffle($folders);
@@ -480,8 +480,10 @@ foreach($folders as $folder)
 		} else {
 			echo "x";
 		}
+		sleep(mt_rand(20,90));
 	}
 }
+$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
 exit(0);
 
 

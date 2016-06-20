@@ -135,6 +135,7 @@ foreach(getDirListAsArray(FONT_RESOURCES_UNPACKING) as $dir)
 						}
 						echo ".";
 					} else 
-						echo "x";				
+						echo "x";	
+					sleep(mt_rand(20,90));
 				}
 			}

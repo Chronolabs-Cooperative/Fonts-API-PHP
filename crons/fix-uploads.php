@@ -27,6 +27,7 @@ $GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 $result = $GLOBALS['FontsDB']->queryF("SELECT * from `fonts_archiving` ORDER BY RAND() LIMIT 300");
 while($row = $GLOBALS['FontsDB']->fetchArray($result))
 {
+	sleep(mt_rand(10,30));
 	$sql = "SELECT count(*) FROM `uploads` WHERE `font_id` = '".$row['font_id']."'";
 	list($countb) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql));
 	if ($countb == 0)

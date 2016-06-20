@@ -52,7 +52,7 @@
 	define('API_URL_ZIP', '/v2/data/%s/zip/download.api');
 	define('API_URL_FONTS', '/v2/fonts/all/json.api?local=only');
 	define('API_POLINATING', (strpos(API_URL, 'localhost')&&strpos(API_URL, 'labs.coop')&&strpos(API_URL, 'syd.labs.coop')?false:true));
-	define('API_REPOSITORY', 'git'); // = git or svn or git,svn
+	define('API_REPOSITORY', 'git,svn'); // = git or svn or git,svn
 	define('API_BASE', 'eot');
 	define('API_LICENCE', 'gpl3');
 	define("API_SHORTENING_URL", "http://jump.labs.coop/"); // URL for your shortener API see: https://github.com/Chronolabs-Cooperative/Jump-API-PHP

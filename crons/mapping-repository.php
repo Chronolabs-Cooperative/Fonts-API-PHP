@@ -33,6 +33,7 @@ $ids = json_decode(getURIData(str_replace(array("%s/", "%s--", "?format=raw"), "
 // Searches For Unrecorded Fonts
 foreach(getCompleteZipListAsArray(FONT_RESOURCES_RESOURCE) as $md5 => $file)
 {
+	sleep(mt_rand(6,13));
 	list($archiving) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql = "SELECT count(*) from `fonts_archiving` WHERE `filename` = '" . basename($file) . "' AND `path` = '".mysql_real_escape_string(str_replace(FONT_RESOURCES_RESOURCE, "", dirname($file)))."'"));
 	if ($archiving != 0)
 	{

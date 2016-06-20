@@ -36,6 +36,7 @@ $GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 $result = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `uploads` WHERE `uploaded` > '0' AND `converted` > '0' AND `quizing` > '0' AND `storaged` <= '0'  AND (`finished` >= `needing` OR `expired` < UNIX_TIMESTAMP()) ORDER BY RAND() LIMIT " . mt_rand(7,42));
 while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 {
+	sleep(mt_rand(20,90));
 	$GLOBALS['FontsDB']->queryF("START TRANSACTION");
 	$datastore = json_decode($upload['datastore'], true);
 	echo "Packing Font: " . ($datastore["FontName"] = spacerName($datastore["FontName"])) . "\n";
@@ -528,10 +529,13 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 				unset($bash[count($bash)-1]);
 			}
 			$bash[] = "cd " . dirname($packfile);
+			$bash[] = "unlink .gitignore";
 			$bash[] = "git add ".basename($packfile)."";
 			$bash[] = "cd " . dirname($filea);
+			$bash[] = "unlink .gitignore";
 			$bash[] = "git add ".basename($filea)."";
 			$bash[] = "cd " . dirname($fileb);
+			$bash[] = "unlink .gitignore";
 			$bash[] = "git add ".basename($fileb)."";
 			$bash[] = "git commit -m \"Importing into Repository for 1st time; the font: $naming\"";
 			$bash[] = "git push origin master";
