@@ -468,6 +468,7 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 				unset($bash[count($bash)-1]);
 			}
 			$bash[] = "cd " . dirname($packfile);
+			$bash[] = "rm -fv ./zi*";
 			$bash[] = "svn cleanup";
 			$bash[] = "svn add . --force";
 			$bash[] = "svn commit -m \"Importing into Repository for 1st time; the font: $naming\"";
@@ -530,6 +531,7 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 			}
 			$bash[] = "cd " . dirname($packfile);
 			$bash[] = "unlink .gitignore";
+			$bash[] = "rm -fv ./zi*";
 			$bash[] = "git add ".basename($packfile)."";
 			$bash[] = "cd " . dirname($filea);
 			$bash[] = "unlink .gitignore";

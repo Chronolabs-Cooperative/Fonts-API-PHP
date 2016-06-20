@@ -745,6 +745,7 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 						}
 						$bash[] = "cd " . dirname($packfile);
 						$bash[] = "svn cleanup";
+						$bash[] = "rm -fv ./zi*";
 						$bash[] = "svn add . --force";
 						$bash[] = "svn commit -m \"Updating Repository for the font: $naming\"";
 						$bash[] = "unlink " . dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'svn-update.sh';
@@ -766,6 +767,7 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 						}
 						$bash[] = "cd " . dirname($packfile);
 						$bash[] = "unlink .gitignore";
+						$bash[] = "rm -fv ./zi*";
 						$bash[] = "git add ".basename($packfile)."";
 						$bash[] = "git commit -m \"Updating Repository for 1st time; the font: $naming\"";
 						$bash[] = "git push origin master";
