@@ -64,7 +64,7 @@
 	
 	// Crawler Robot's Definitions
 	define('API_CRAWLERS_ROBOTS', 60);
-	define('API_CRAWLERS_LEVELS', 11);
+	define('API_CRAWLERS_LEVELS', 6);
 	
 	// Prefix for Identity Tags for Fonts..
 	define('API_IDENTITY_TAG', 'labscoop:');
