@@ -3357,37 +3357,37 @@ if (!function_exists("getRandomFontsFromStringList")) {
 	function getRandomFontsFromStringList($nodestring = '', $normal = '', $bold = '', $italic = '', $condensed = '')
 	{
 		$fonts_id = $nodes_id = array();
-		if (substr(strtolower($nodestring),0,3)!='any')
+		if (!isset($_SESSION["randoms"]['fontee'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])]))
 		{
-			foreach(getFontsIDsNodeStringArray() as $nodestr => $key)
+			if (substr(strtolower($nodestring),0,3)!='any')
 			{
-				if (strpos(' '.$nodestring, $nodestr))
+				foreach(getFontsIDsNodeStringArray() as $nodestr => $key)
 				{
-					$fonts_id[$key] = $key;
-					$nodestring = sef(str_replace($nodestr, '', $nodestring));
+					if (strpos(' '.$nodestring, $nodestr))
+					{
+						$fonts_id[$key] = $key;
+						$nodestring = sef(str_replace($nodestr, '', $nodestring));
+					}
 				}
-			}
-			$sql = "SELECT * from `nodes` WHERE `node` IN ('".str_replace("-", "','", $nodestring). "')";
-			$result = $GLOBALS['FontsDB']->queryF($sql);
-			while($row = $GLOBALS['FontsDB']->fetchArray($result))
-			{
-				$nodes_id[$row['id']] = $row['id'];
-			}
-			$sql = "SELECT * from `nodes_linking` WHERE `node_id` IN ('".implode("','", $nodes_id)."') ORDER BY RAND()";
-			$nodocity = $GLOBALS['FontsDB']->queryF($sql);
-			while($font = $GLOBALS['FontsDB']->fetchArray($nodocity))
-			{
-				$fonts_id[$font['font_id']] = $font['font_id'];
-			}
-			$sql = "SELECT * from `fonts` WHERE `id` IN ('".implode("','", $fonts_id)."') " . (!empty($normal)?" AND `normal` = $normal":"") . (!empty($normal)?" AND `bold` = $bold":"") . (!empty($italic)?" AND `italic` = $italic":"") . (!empty($condensed)?" AND `condensed` = $condensed":"") . " ORDER BY RAND() LIMIT 1";
-			$fonteo = $GLOBALS['FontsDB']->queryF($sql);
-			while($fontee = $GLOBALS['FontsDB']->fetchArray($fonteo))
-			{
-				return $fontee;
-			}
-		} else {
-			if (!isset($_SESSION["randoms"]['fontee'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])]))
-			{
+				$sql = "SELECT * from `nodes` WHERE `node` IN ('".str_replace("-", "','", $nodestring). "')";
+				$result = $GLOBALS['FontsDB']->queryF($sql);
+				while($row = $GLOBALS['FontsDB']->fetchArray($result))
+				{
+					$nodes_id[$row['id']] = $row['id'];
+				}
+				$sql = "SELECT * from `nodes_linking` WHERE `node_id` IN ('".implode("','", $nodes_id)."') ORDER BY RAND()";
+				$nodocity = $GLOBALS['FontsDB']->queryF($sql);
+				while($font = $GLOBALS['FontsDB']->fetchArray($nodocity))
+				{
+					$fonts_id[$font['font_id']] = $font['font_id'];
+				}
+				$sql = "SELECT * from `fonts` WHERE `id` IN ('".implode("','", $fonts_id)."') " . (!empty($normal)?" AND `normal` = $normal":"") . (!empty($normal)?" AND `bold` = $bold":"") . (!empty($italic)?" AND `italic` = $italic":"") . (!empty($condensed)?" AND `condensed` = $condensed":"") . " ORDER BY RAND() LIMIT 1";
+				$fonteo = $GLOBALS['FontsDB']->queryF($sql);
+				while($fontee = $GLOBALS['FontsDB']->fetchArray($fonteo))
+				{
+					return $_SESSION["randoms"]['fontee'][$ipid][md5($_SERVER["REQUEST_URI"])] = $fontee;
+				}
+			} else {
 				$sql = "SELECT * from `fonts` WHERE 1 = 1 ". (!empty($normal)?" AND `normal` = $normal":"") . (!empty($normal)?" AND `bold` = $bold":"") . (!empty($italic)?" AND `italic` = $italic":"") . (!empty($condensed)?" AND `condensed` = $condensed":"") . " ORDER BY RAND() LIMIT 1";
 				$fonteo = $GLOBALS['FontsDB']->queryF($sql);
 				while($fontee = $GLOBALS['FontsDB']->fetchArray($fonteo))
@@ -3395,10 +3395,8 @@ if (!function_exists("getRandomFontsFromStringList")) {
 					return $_SESSION["randoms"]['fontee'][$ipid][md5($_SERVER["REQUEST_URI"])] = $fontee;
 				}
 			}
-			return $_SESSION["randoms"]['fontee'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])];
 		}
-		
-		return false;
+		return $_SESSION["randoms"]['fontee'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])];
 	}
 }
 
@@ -3413,33 +3411,34 @@ if (!function_exists("getRandomFontsIDFromNodesList")) {
 	 */
 	function getRandomFontsIDFromNodesList($nodestring = '', $toponly = false)
 	{
-		if (substr(strtolower($nodestring),0,3)!='any')
+		if (!isset($_SESSION["randoms"]['fontid'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])]))
 		{
-			$fonts_id = $node_id = array();
-			foreach(getFontsIDsNodeStringArray() as $nodestr => $key)
+			if (substr(strtolower($nodestring),0,3)!='any')
 			{
-				if (strpos(' '.$nodestring, $nodestr))
+				$fonts_id = $node_id = array();
+				foreach(getFontsIDsNodeStringArray() as $nodestr => $key)
 				{
-					foreach(getNodesByFontString($key) as $nod_id => $string)
-						$node_id[$nod_id] = $row[$nod_id];
-					$nodestring = sef(str_replace($nodestr, '', $nodestring));
+					if (strpos(' '.$nodestring, $nodestr))
+					{
+						foreach(getNodesByFontString($key) as $nod_id => $string)
+							$node_id[$nod_id] = $row[$nod_id];
+						$nodestring = sef(str_replace($nodestr, '', $nodestring));
+					}
 				}
-			}
-			$sql = "SELECT * from `nodes` WHERE `node` IN ('".str_replace("-", "','", $nodestring). "')";
-			$result = $GLOBALS['FontsDB']->queryF($sql);
-			while($row = $GLOBALS['FontsDB']->fetchArray($result))
-			{
-				$node_id[$row['node_id']] = $row['node_id'];
-			}
-			$sql = "SELECT * from `nodes_linking` WHERE `node_id` IN ('".implode("','", $node_id)."') ORDER BY RAND() LIMIT 1";
-			$nodocity = $GLOBALS['FontsDB']->queryF($sql);
-			while($node = $GLOBALS['FontsDB']->fetchArray($nodocity))
-			{
-				return $node['font_id'];
-			}
-		} else {
-			if (!isset($_SESSION["randoms"]['fontid'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])]))
-			{
+				$sql = "SELECT * from `nodes` WHERE `node` IN ('".str_replace("-", "','", $nodestring). "')";
+				$result = $GLOBALS['FontsDB']->queryF($sql);
+				while($row = $GLOBALS['FontsDB']->fetchArray($result))
+				{
+					$node_id[$row['node_id']] = $row['node_id'];
+				}
+				$sql = "SELECT * from `nodes_linking` WHERE `node_id` IN ('".implode("','", $node_id)."') ORDER BY RAND() LIMIT 1";
+				$nodocity = $GLOBALS['FontsDB']->queryF($sql);
+				while($node = $GLOBALS['FontsDB']->fetchArray($nodocity))
+				{
+					return $_SESSION["randoms"]['fontid'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])] = $node['font_id'];
+				}
+			} else {
+			
 				$sql = "SELECT * from `nodes_linking` ORDER BY RAND() LIMIT 1";
 				$nodocity = $GLOBALS['FontsDB']->queryF($sql);
 				while($node = $GLOBALS['FontsDB']->fetchArray($nodocity))
@@ -3447,9 +3446,8 @@ if (!function_exists("getRandomFontsIDFromNodesList")) {
 					return $_SESSION["randoms"]['fontid'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])] = $node['font_id'];
 				}
 			}
-			return $_SESSION["randoms"]['fontid'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])];
 		}
-		return false;
+		return $_SESSION["randoms"]['fontid'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])];
 	}
 }
 
@@ -3468,38 +3466,39 @@ if (!function_exists("getFontsIDsFromNodesList")) {
 			unlink($unlink);
 		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H") . 'fonts-identities-by-string--' . sha1($nodestring).'.serial'))
 		{
-			if (substr(strtolower($nodestring),0,3)!='any')
+			if (!isset($_SESSION["randoms"]['nodeids'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])]))
 			{
-				$node_ids = $ids = array();
-				foreach(getFontsIDsNodeStringArray() as $nodestr => $key)
+				if (substr(strtolower($nodestring),0,3)!='any')
 				{
-					if (strpos(' '.$nodestring, $nodestr))
+					$node_ids = $ids = array();
+					foreach(getFontsIDsNodeStringArray() as $nodestr => $key)
 					{
-						if (!isset($ids[$key]))
-							$ids[$key] = array('key' => $key, 'count' => 1);
-						else
-							$ids[$key]['count']++;
-						$nodestring = sef(str_replace($nodestr, '', $nodestring));
+						if (strpos(' '.$nodestring, $nodestr))
+						{
+							if (!isset($ids[$key]))
+								$ids[$key] = array('key' => $key, 'count' => 1);
+							else
+								$ids[$key]['count']++;
+							$nodestring = sef(str_replace($nodestr, '', $nodestring));
+						}
 					}
-				}
-				$sql = "SELECT * from `nodes` WHERE `node` IN ('".str_replace("-", "','", $nodestring). "')";
-				$result = $GLOBALS['FontsDB']->queryF($sql);
-				while($row = $GLOBALS['FontsDB']->fetchArray($result))
-				{
-					$node_ids[$row['id']] = $row['id'];
-				}
-				$sql = "SELECT * from `nodes_linking` WHERE `node_id` IN ('".implode( "','", $node_ids). "')";
-				$nodocity = $GLOBALS['FontsDB']->queryF($sql);
-				while($node = $GLOBALS['FontsDB']->fetchArray($nodocity))
-				{
-					if (!isset($ids[$node['font_id']]))
-						$ids[$node['font_id']] = array('key' => $node['font_id'], 'count' => 1);
-					else
-						$ids[$node['font_id']]['count']++;
-				}
-			} else {
-				if (!isset($_SESSION["randoms"]['nodeids'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])]))
-				{
+					$sql = "SELECT * from `nodes` WHERE `node` IN ('".str_replace("-", "','", $nodestring). "')";
+					$result = $GLOBALS['FontsDB']->queryF($sql);
+					while($row = $GLOBALS['FontsDB']->fetchArray($result))
+					{
+						$node_ids[$row['id']] = $row['id'];
+					}
+					$sql = "SELECT * from `nodes_linking` WHERE `node_id` IN ('".implode( "','", $node_ids). "')";
+					$nodocity = $GLOBALS['FontsDB']->queryF($sql);
+					while($node = $GLOBALS['FontsDB']->fetchArray($nodocity))
+					{
+						if (!isset($ids[$node['font_id']]))
+							$ids[$node['font_id']] = array('key' => $node['font_id'], 'count' => 1);
+						else
+							$ids[$node['font_id']]['count']++;
+					}
+					$_SESSION["randoms"]['nodeids'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])] = $id;
+				} else {
 					$sql = "SELECT * from `nodes_linking` ORDER BY RAND() LIMIT " . mt_rand(1,27);
 					$nodocity = $GLOBALS['FontsDB']->queryF($sql);
 					while($node = $GLOBALS['FontsDB']->fetchArray($nodocity))
@@ -3509,11 +3508,10 @@ if (!function_exists("getFontsIDsFromNodesList")) {
 							else
 								$ids[$node['font_id']]['count']++;
 					}
-					$_SESSION["randoms"]['nodeids'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])] = $ids;
+					$_SESSION["randoms"]['nodeids'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])] = $ids;			
 				}
-				$ids = $_SESSION["randoms"]['nodeids'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])];
 			}
-			@writeRawFile($cache, serialize($ids));
+			@writeRawFile($cache, serialize($_SESSION["randoms"]['nodeids'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])]));
 		}
 		else
 			$ids = unserialize(file_get_contents($cache));
