@@ -23,7 +23,6 @@
 use FontLib\Font;
 require_once dirname(__DIR__).'/class/FontLib/Autoloader.php';
 
-$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 ini_set('display_errors', true);
 ini_set('log_errors', true);
 error_reporting(E_ERROR);
@@ -38,6 +37,7 @@ $pool = $GLOBALS['FontsDB']->queryF($sql = "SELECT `a`.* from `fonts_archiving` 
 while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 {
 	sleep(mt_rand(20,90));
+	$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 	$sortpath = FONT_RESOURCES_RESOURCE . DIRECTORY_SEPARATOR . $archive['path'];
 	$packfile = $sortpath . DIRECTORY_SEPARATOR . $archive['filename'];
 	$updated = false;
@@ -790,8 +790,8 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 		echo ".";
 	else
 		echo 'x';
+	$GLOBALS['FontsDB']->queryF($sql = "COMMIT");	
 }
-$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
 exit(0);
 
 

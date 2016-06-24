@@ -34,6 +34,7 @@ foreach(getDirListAsArray(FONT_RESOURCES_UNPACKING) as $dir)
 			{
 				if (filectime($folder . DIRECTORY_SEPARATOR . $key) <= time() - (3 * 24 * 3600))
 				{
+					$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 					$fontfile = $folder . DIRECTORY_SEPARATOR . $key;
 					
 					$patheles = array_reverse(explode(DIRECTORY_SEPARATOR, $folder));
@@ -133,6 +134,7 @@ foreach(getDirListAsArray(FONT_RESOURCES_UNPACKING) as $dir)
 							else
 								die('SQL Failed: ' . $sql);
 						}
+						$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
 						echo ".";
 					} else 
 						echo "x";	

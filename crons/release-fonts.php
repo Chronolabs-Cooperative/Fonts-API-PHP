@@ -34,6 +34,7 @@ $result = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `uploads` WHERE `upl
 while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 {
 	sleep(mt_rand(370,2799));
+	$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 	$datastore = json_decode($upload['datastore'], true);
 	if ($archive  = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql = "SELECT * from `fonts_archiving` WHERE `font_id` = '" . $upload['font_id'] . "'")))
 	{
@@ -158,6 +159,7 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 		}
 	} else
 		echo("SQL Failed: $sql;\n");
+	$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
 }
 exit(0);
 

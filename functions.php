@@ -2093,104 +2093,114 @@ if (!function_exists("getCSSListArray")) {
 	 */
 	function getCSSListArray($mode = '', $clause = '', $state = '', $name = '', $output = '', $version = "v2")
 	{
-	$styles = array();
-	switch($mode)
-	{
-		case "font":
-			$sql = "SELECT * from `fonts` WHERE `id` = '$clause'";
-			$result = $GLOBALS['FontsDB']->queryF($sql);
-			while($font = $GLOBALS['FontsDB']->fetchArray($result))
-			{
-				foreach(getArchivingShellExec() as $type => $exec)
-					$GLOBALS['downloaduris'][$font['name']][$type] = API_URL . '/v2/data/' .  $font['id'] . '/' . $type . '/download.api';
-				$fonts = array();
-				$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts` SET `hits` = `hits` + 1 WHERE `id` = '" . $clause . "'");
-				foreach(array_keys(fontsUseragentSupportedArray()) as $fonttype)
-				{
-					$fonts[$fonttype] = API_URL . "/".$version."/font/$clause/$fonttype.api";
-				}
-				//die(getRegionalFontName($clause));
-				$GLOBALS['fontnames'][spacerName(getRegionalFontName($clause))] = spacerName(getRegionalFontName($clause));
-				$styles[spacerName(getRegionalFontName($clause))] = generateCSS($fonts, spacerName(getRegionalFontName($clause)), $font['normal'], $font['bold'], $font['italics']);
-				if ($state!='preview')
-				{
-					foreach(array_keys(fontsUseragentSupportedArray()) as $fonttype)
-					{
-						$fonts[$clause][$fonttype] = API_URL . "/".$version."/font/$clause/$fonttype.api";
-					}
-					$GLOBALS['fontnames'][$clause] = $clause;
-					foreach(getArchivingShellExec() as $type => $exec)
-						$GLOBALS['downloaduris'][$clause][$type] = API_URL . '/v2/data/' .  $clause . '/' . $type . '/download.api';
-					$styles[$clause] = generateCSS($fonts[$clause], $clause, $font['normal'], $font['bold'], $font['italics']);
-				}
-			}
-			break;
-		case "fonts":
-			$names = array();
-			foreach(getFontsListArray($clause, $output) as $key => $font)
-			{
-				$fonts = array();
-				$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts` SET `hits` = `hits` + 1 WHERE `id` = '" . $key . "'");
-				foreach(array_keys(fontsUseragentSupportedArray()) as $fonttype)
-				{
-					$fonts[getRegionalFontName($key)][$fonttype] = API_URL . "/".$version."/font/$key/$fonttype.api";
-				}
-				$GLOBALS['fontnames'][getRegionalFontName($key)] = getRegionalFontName($key);
-				foreach(getArchivingShellExec() as $type => $exec)
-					$GLOBALS['downloaduris'][getRegionalFontName($key)][$type] = API_URL . '/v2/data/' .  $key . '/' . $type . '/download.api';
-				$sql = "SELECT * from `fonts_names` WHERE `font_id` = '$key'";
-				$result = $GLOBALS['FontsDB']->queryF($sql);
-				while($fontname = $GLOBALS['FontsDB']->fetchArray($result))
-				{
-					$styles[md5($key.$fontname['name'])] = generateCSS($fonts[getRegionalFontName($key)], spacerName($fontname['name']), $font['normal'], $font['bold'], $font['italics']);
-				}
-				$GLOBALS['fontnames'][$key] = $key;
-				foreach(getArchivingShellExec() as $type => $exec)
-					$GLOBALS['downloaduris'][$key][$type] = API_URL . '/v2/data/' .  $key . '/' . $type . '/download.api';
-				$styles[$key] = generateCSS($fonts[getRegionalFontName($key)], getRegionalFontName($key), $font['normal'], $font['bold'], $font['italics']);
+
+		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H", time() - 3600 *24 * 7) . 'font-css-list-clause--' . sha1($clause.$output.$version).'.serial'))
+			unlink($unlink);
+		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H") . 'font-css-list-clause--' . sha1($clause.$output.$version).'.serial'))
+		{
 				
-			}
-			break;
-		case "sites":
-			break;
-		case "random":
-			$fonts = array();
-			$fonts['normal'] = getRandomFontsFromStringList($clause, 'yes', '', '', '');
-			$fonts['bold'] = getRandomFontsFromStringList($clause, '', 'yes', '', '');
-			$fonts['italic'] = getRandomFontsFromStringList($clause, '', '', 'yes', '');
-			$fonts['condensed'] = getRandomFontsFromStringList($clause, '', '', '', 'yes');
-			$fontooo = array();
-			foreach($fonts as $key => $font)
+			$styles = array();
+			switch($mode)
 			{
-				if (!empty($font))
-				{
-					$font['name'] = trim(ucwords(str_replace('-', ' ', spacerName($state))));
-					$fontooo[$font['id']] = $font;
-					if (count($fontooo)>=2)
-						$fontooo[$font['id']]['name'] . " " . ucfirst(spacerName($key));
-				}
-			}
-			$GLOBALS['fontnames'][] = $font['name'];
-			foreach($fontooo as $key => $font)
-			{
-				if (!empty($font))
-				{
-					$fonter = array();
-					$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts` SET `hits` = `hits` + 1 WHERE `id` = '" . $key . "'");
-					foreach(array_keys(fontsUseragentSupportedArray()) as $fonttype)
+				case "font":
+					$sql = "SELECT * from `fonts` WHERE `id` = '$clause'";
+					$result = $GLOBALS['FontsDB']->queryF($sql);
+					while($font = $GLOBALS['FontsDB']->fetchArray($result))
 					{
-						$fonter[$fonttype] = API_URL . "/".$version."/font/$key/$fonttype.api";
+						foreach(getArchivingShellExec() as $type => $exec)
+							$GLOBALS['downloaduris'][$font['name']][$type] = API_URL . '/v2/data/' .  $font['id'] . '/' . $type . '/download.api';
+						$fonts = array();
+						$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts` SET `hits` = `hits` + 1 WHERE `id` = '" . $clause . "'");
+						foreach(array_keys(fontsUseragentSupportedArray()) as $fonttype)
+						{
+							$fonts[$fonttype] = API_URL . "/".$version."/font/$clause/$fonttype.api";
+						}
+						//die(getRegionalFontName($clause));
+						$GLOBALS['fontnames'][spacerName(getRegionalFontName($clause))] = spacerName(getRegionalFontName($clause));
+						$styles[spacerName(getRegionalFontName($clause))] = generateCSS($fonts, spacerName(getRegionalFontName($clause)), $font['normal'], $font['bold'], $font['italics']);
+						if ($state!='preview')
+						{
+							foreach(array_keys(fontsUseragentSupportedArray()) as $fonttype)
+							{
+								$fonts[$clause][$fonttype] = API_URL . "/".$version."/font/$clause/$fonttype.api";
+							}
+							$GLOBALS['fontnames'][$clause] = $clause;
+							foreach(getArchivingShellExec() as $type => $exec)
+								$GLOBALS['downloaduris'][$clause][$type] = API_URL . '/v2/data/' .  $clause . '/' . $type . '/download.api';
+							$styles[$clause] = generateCSS($fonts[$clause], $clause, $font['normal'], $font['bold'], $font['italics']);
+						}
 					}
-					$styles[$key] = generateCSS($fonter, trim(spacerName($font['name'])) . ($names[$font['name']]!="AA"?" ".$names[$font['name']]:""), $font['normal'], $font['bold'], $font['italics']);
-				}
+					break;
+				case "fonts":
+					$names = array();
+					foreach(getFontsListArray($clause, $output) as $key => $font)
+					{
+						$fonts = array();
+						$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts` SET `hits` = `hits` + 1 WHERE `id` = '" . $key . "'");
+						foreach(array_keys(fontsUseragentSupportedArray()) as $fonttype)
+						{
+							$fonts[getRegionalFontName($key)][$fonttype] = API_URL . "/".$version."/font/$key/$fonttype.api";
+						}
+						$GLOBALS['fontnames'][getRegionalFontName($key)] = getRegionalFontName($key);
+						foreach(getArchivingShellExec() as $type => $exec)
+							$GLOBALS['downloaduris'][getRegionalFontName($key)][$type] = API_URL . '/v2/data/' .  $key . '/' . $type . '/download.api';
+						$sql = "SELECT * from `fonts_names` WHERE `font_id` = '$key'";
+						$result = $GLOBALS['FontsDB']->queryF($sql);
+						while($fontname = $GLOBALS['FontsDB']->fetchArray($result))
+						{
+							$styles[md5($key.$fontname['name'])] = generateCSS($fonts[getRegionalFontName($key)], spacerName($fontname['name']), $font['normal'], $font['bold'], $font['italics']);
+						}
+						$GLOBALS['fontnames'][$key] = $key;
+						foreach(getArchivingShellExec() as $type => $exec)
+							$GLOBALS['downloaduris'][$key][$type] = API_URL . '/v2/data/' .  $key . '/' . $type . '/download.api';
+						$styles[$key] = generateCSS($fonts[getRegionalFontName($key)], getRegionalFontName($key), $font['normal'], $font['bold'], $font['italics']);
+						
+					}
+					break;
+				case "sites":
+					break;
+				case "random":
+					$fonts = array();
+					$fonts['normal'] = getRandomFontsFromStringList($clause, 'yes', '', '', '');
+					$fonts['bold'] = getRandomFontsFromStringList($clause, '', 'yes', '', '');
+					$fonts['italic'] = getRandomFontsFromStringList($clause, '', '', 'yes', '');
+					$fonts['condensed'] = getRandomFontsFromStringList($clause, '', '', '', 'yes');
+					$fontooo = array();
+					foreach($fonts as $key => $font)
+					{
+						if (!empty($font))
+						{
+							$font['name'] = trim(ucwords(str_replace('-', ' ', spacerName($state))));
+							$fontooo[$font['id']] = $font;
+							if (count($fontooo)>=2)
+								$fontooo[$font['id']]['name'] . " " . ucfirst(spacerName($key));
+						}
+					}
+					$GLOBALS['fontnames'][] = $font['name'];
+					foreach($fontooo as $key => $font)
+					{
+						if (!empty($font))
+						{
+							$fonter = array();
+							$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts` SET `hits` = `hits` + 1 WHERE `id` = '" . $key . "'");
+							foreach(array_keys(fontsUseragentSupportedArray()) as $fonttype)
+							{
+								$fonter[$fonttype] = API_URL . "/".$version."/font/$key/$fonttype.api";
+							}
+							$styles[$key] = generateCSS($fonter, trim(spacerName($font['name'])) . ($names[$font['name']]!="AA"?" ".$names[$font['name']]:""), $font['normal'], $font['bold'], $font['italics']);
+						}
+					}
+					break;
 			}
-			break;
+			foreach($GLOBALS['fontnames'] as $key => $value)
+				if (empty($value)||empty($key))
+					unset($GLOBALS['fontnames'][$key]);
+			@writeRawFile($cache, serialize(array('styles'=>$styles, 'fontnames'=>$GLOBALS['fontnames'])));
+			return $styles;
 		}
-		foreach($GLOBALS['fontnames'] as $key => $value)
-			if (empty($value)||empty($key))
-				unset($GLOBALS['fontnames'][$key]);
-			
-		return $styles;
+		$data = unserialize(file_get_contents($cache));
+		$GLOBALS['fontnames'] = $data['fontnames'];
+		return $data['styles'];
 	}
 }
 
@@ -2209,67 +2219,76 @@ if (!function_exists("getFontsRssData")) {
 	 */
 	function getFontsRssData($mode = '', $clause = '', $state = '', $output = '', $version = "v2")
 	{
-		$xml = "<?xml version='1.0' encoding='utf-8' ?>";
-		$xml .= "\n<rss version='2.0'>";
-		$xml .= "\n<channel>";
-		$xml .= "\n\t<title>".($clause=='zeroday'?"Zero-day Font Releases":"Popular Fonts")."</title>";
-		$xml .= "\n\t<link>http://fonts.labs.coop</link>";
-		$xml .= "\n\t<description>".($clause=='zeroday'?"Zero-day Font Releases":"Popular Fonts")." on our font api ~ http://fonts.labs.coop</description>";
-		$xml .= "\n\t<language>en</language>";
-		$xml .= "\n\t<webMaster>wishcraft@users.sourceforge.net</webMaster>";
-		$xml .= "\n\t<image>";
-		$xml .= "\n\t\t<title>Chronolabs Cooperative</title>";
-		$xml .= "\n\t\t<url>http://fonts.labs.coop/images/200x200.png</url>";
-		$xml .= "\n\t\t<link>http://fonts.labs.coop</link>";
-		$xml .= "\n\t</image>";
-		
-		$items = 30;
-		foreach($_GET as $key => $value)
-			if (empty($value) && is_numeric($key))
-				$items = $key;
-		if ($items < 5)
-			$items = 5;
-		
-		switch($clause)
+		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H", time() - 3600 *24 * 7) . 'font-feed-by-clause--' . sha1($clause.$output.$version).'.rss'))
+			unlink($unlink);
+		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H") . 'font-feed-by-clause--' . sha1($clause.$output.$version).'.rss'))
 		{
-			case "zeroday":
-				$sql = "SELECT * from `uploads` WHERE (`released` > 0) ORDER BY `released` DESC LIMIT $items";
-				$result = $GLOBALS['FontsDB']->queryF($sql);
-				while($row = $GLOBALS['FontsDB']->fetchArray($result))
-				{
-					$xml .= "\n\n\t<item>";
-					$xml .= "\n\t\t<title>Font Released: ".getRegionalFontName($row['font_id'])."</title>";
-					$xml .= "\n\t\t<pubDate>".date('D, y-m-d H:i:s', $row['released'])." +1000</pubDate>";
-					$xml .= "\n\t\t<link>".API_URL."/v2/font/".$row['font_id']."/preview.api</link>";
-					$xml .= "\n\t\t<guid>".sha1($row['font_id'].$row['released'])."</guid>";
-					$xml .= "\n\t\t<description>&lt;img src='".API_URL."/v2/font/".$row['font_id']."/preview/image.png' width='100%'/&gt;</description>";
-					$xml .= "\n\t\t<identity>".$row['font_id']."</identity>";
-					$xml .= "\n\t\t<enclosure url=\"".API_URL."/v2/data/".$row['font_id']."/zip/download.api\" />";
-					$xml .= "\n\t</item>";
-				}
-				break;
-			default:
-			case "popular":
-				$sql = "SELECT * from `fonts` WHERE (`hits` > 0) ORDER BY `hits` DESC LIMIT $items";
-				$result = $GLOBALS['FontsDB']->queryF($sql);
-				while($row = $GLOBALS['FontsDB']->fetchArray($result))
-				{
-					$xml .= "\n\n\t<item>";
-					$xml .= "\n\t\t<title>Popular Font: ".getRegionalFontName($row['id'])." ~ Hits: ".$row['hits']."</title>";
-					$xml .= "\n\t\t<pubDate>".date('D, y-m-d H:i:s', time())." +1000</pubDate>";
-					$xml .= "\n\t\t<link>".API_URL."/v2/font/".$row['id']."/preview.api</link>";
-					$xml .= "\n\t\t<guid>".sha1($row['id'].$row['hits'])."</guid>";
-					$xml .= "\n\t\t<description>&lt;img src='".API_URL."/v2/font/".$row['id']."/preview/image.png' width='100%'/&gt;</description>";
-					$xml .= "\n\t\t<identity>".$row['id']."</identity>";
-					$xml .= "\n\t\t<enclosure url=\"".API_URL."/v2/data/".$row['id']."/zip/download.api\" />";
-					$xml .= "\n\t</item>";
-				}
-				break;
+		
+			$xml = "<?xml version='1.0' encoding='utf-8' ?>";
+			$xml .= "\n<rss version='2.0'>";
+			$xml .= "\n<channel>";
+			$xml .= "\n\t<title>".($clause=='zeroday'?"Zero-day Font Releases":"Popular Fonts")."</title>";
+			$xml .= "\n\t<link>http://fonts.labs.coop</link>";
+			$xml .= "\n\t<description>".($clause=='zeroday'?"Zero-day Font Releases":"Popular Fonts")." on our font api ~ http://fonts.labs.coop</description>";
+			$xml .= "\n\t<language>en</language>";
+			$xml .= "\n\t<webMaster>wishcraft@users.sourceforge.net</webMaster>";
+			$xml .= "\n\t<image>";
+			$xml .= "\n\t\t<title>Chronolabs Cooperative</title>";
+			$xml .= "\n\t\t<url>http://fonts.labs.coop/images/200x200.png</url>";
+			$xml .= "\n\t\t<link>http://fonts.labs.coop</link>";
+			$xml .= "\n\t</image>";
+			
+			$items = 30;
+			foreach($_GET as $key => $value)
+				if (empty($value) && is_numeric($key))
+					$items = $key;
+			if ($items < 5)
+				$items = 5;
+			
+			switch($clause)
+			{
+				case "zeroday":
+					$sql = "SELECT * from `uploads` WHERE (`released` > 0) ORDER BY `released` DESC LIMIT $items";
+					$result = $GLOBALS['FontsDB']->queryF($sql);
+					while($row = $GLOBALS['FontsDB']->fetchArray($result))
+					{
+						$xml .= "\n\n\t<item>";
+						$xml .= "\n\t\t<title>Font Released: ".getRegionalFontName($row['font_id'])."</title>";
+						$xml .= "\n\t\t<pubDate>".date('D, y-m-d H:i:s', $row['released'])." +1000</pubDate>";
+						$xml .= "\n\t\t<link>".API_URL."/v2/font/".$row['font_id']."/preview.api</link>";
+						$xml .= "\n\t\t<guid>".sha1($row['font_id'].$row['released'])."</guid>";
+						$xml .= "\n\t\t<description>&lt;img src='".API_URL."/v2/font/".$row['font_id']."/preview/image.png' width='100%'/&gt;</description>";
+						$xml .= "\n\t\t<identity>".$row['font_id']."</identity>";
+						$xml .= "\n\t\t<enclosure url=\"".API_URL."/v2/data/".$row['font_id']."/zip/download.api\" />";
+						$xml .= "\n\t</item>";
+					}
+					break;
+				default:
+				case "popular":
+					$sql = "SELECT * from `fonts` WHERE (`hits` > 0) ORDER BY `hits` DESC LIMIT $items";
+					$result = $GLOBALS['FontsDB']->queryF($sql);
+					while($row = $GLOBALS['FontsDB']->fetchArray($result))
+					{
+						$xml .= "\n\n\t<item>";
+						$xml .= "\n\t\t<title>Popular Font: ".getRegionalFontName($row['id'])." ~ Hits: ".$row['hits']."</title>";
+						$xml .= "\n\t\t<pubDate>".date('D, y-m-d H:i:s', time())." +1000</pubDate>";
+						$xml .= "\n\t\t<link>".API_URL."/v2/font/".$row['id']."/preview.api</link>";
+						$xml .= "\n\t\t<guid>".sha1($row['id'].$row['hits'])."</guid>";
+						$xml .= "\n\t\t<description>&lt;img src='".API_URL."/v2/font/".$row['id']."/preview/image.png' width='100%'/&gt;</description>";
+						$xml .= "\n\t\t<identity>".$row['id']."</identity>";
+						$xml .= "\n\t\t<enclosure url=\"".API_URL."/v2/data/".$row['id']."/zip/download.api\" />";
+						$xml .= "\n\t</item>";
+					}
+					break;
+			}
+	
+			$xml .= "\n</channel>";
+			$xml .= "\n</rss>";
+			
+			@writeRawFile($cache, $xml);
+			return $xml;
 		}
-
-		$xml .= "\n</channel>";
-		$xml .= "\n</rss>";
-		return $xml;
+		return file_get_contents($cache);
 	}
 }
 
@@ -2329,158 +2348,164 @@ if (!function_exists("getFontRawData")) {
 	 */
 	function getFontRawData($mode = '', $clause = '', $output = '', $ufofile = '')
 	{
-		global $ipid;
-		if (!$GLOBALS['FontsDB']->queryF($sql = "UPDATE `networking` SET `fonts` = `fonts` + 1 WHERE `ip_id` LIKE '$ipid'"))
-			die("SQL Failed: $sql;");
-		$sql = "SELECT * from `fonts_archiving` WHERE (`font_id` = '$clause' OR `fingerprint` = '$clause')";
-		if (!$result = $GLOBALS['FontsDB']->queryF($sql))
-			die("SQL Failed: $sql;");
-		while($row = $GLOBALS['FontsDB']->fetchArray($result))
+		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H", time() - 3600 *24 * 7) . 'font-raw-data-by-id--' . sha1($clause.$output.$version).'.data'))
+			unlink($unlink);
+		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H") . 'font-raw-data-by-id--' . sha1($clause.$output.$version).'.data'))
 		{
-			$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts` SET `hits` = `hits` + 1 WHERE `id` = '" . $row['font_id'] . "'");
-			$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `accessings` = `accessings` + 1, `accessed` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
-			$sql = "SELECT * from `fonts` WHERE `id` = '" . $row['font_id'] . "'";
-			$font = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql));
-			switch($font['medium'])
+			global $ipid;
+			if (!$GLOBALS['FontsDB']->queryF($sql = "UPDATE `networking` SET `fonts` = `fonts` + 1 WHERE `ip_id` LIKE '$ipid'"))
+				die("SQL Failed: $sql;");
+			$sql = "SELECT * from `fonts_archiving` WHERE (`font_id` = '$clause' OR `fingerprint` = '$clause')";
+			if (!$result = $GLOBALS['FontsDB']->queryF($sql))
+				die("SQL Failed: $sql;");
+			while($row = $GLOBALS['FontsDB']->fetchArray($result))
 			{
-				case 'FONT_RESOURCES_CACHE':
-				case 'FONT_RESOURCES_RESOURCE':
-					if ($font['medium'] == 'FONT_RESOURCES_CACHE')
-					{
-						$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
-						if (!file_exists(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
+				$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts` SET `hits` = `hits` + 1 WHERE `id` = '" . $row['font_id'] . "'");
+				$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `accessings` = `accessings` + 1, `accessed` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
+				$sql = "SELECT * from `fonts` WHERE `id` = '" . $row['font_id'] . "'";
+				$font = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql));
+				switch($font['medium'])
+				{
+					case 'FONT_RESOURCES_CACHE':
+					case 'FONT_RESOURCES_RESOURCE':
+						if ($font['medium'] == 'FONT_RESOURCES_CACHE')
 						{
-							mkdir(constant("FONT_RESOURCES_CACHE") . $row['path'], 0777, true);
-							writeRawFile(constant("FONT_RESOURCES_CACHE") . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], getURIData(sprintf(FONT_RESOURCES_STORE, $row['path'] . DIRECTORY_SEPARATOR . $row['filename'])));
-							$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])] = array("opened" => microtime(true), "dropped" => microtime(true) + mt_rand(3600 * 0.785, 3600 * 1.896), "resource" => $font['path'] . DIRECTORY_SEPARATOR . $font['filename']);
-							$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `cachings` = `cachings` + 1, `cached` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
+							$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
+							if (!file_exists(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
+							{
+								mkdir(constant("FONT_RESOURCES_CACHE") . $row['path'], 0777, true);
+								writeRawFile(constant("FONT_RESOURCES_CACHE") . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], getURIData(sprintf(FONT_RESOURCES_STORE, $row['path'] . DIRECTORY_SEPARATOR . $row['filename'])));
+								$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])] = array("opened" => microtime(true), "dropped" => microtime(true) + mt_rand(3600 * 0.785, 3600 * 1.896), "resource" => $font['path'] . DIRECTORY_SEPARATOR . $font['filename']);
+								$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `cachings` = `cachings` + 1, `cached` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
+							} else {
+								if ($sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] < microtime(true) + ($next = mt_rand(1800*.3236, 2560*.5436)))
+									$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] + $next;
+							}
+							writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial", serialize($sessions));
+						} elseif ($font['medium'] == 'FONT_RESOURCES_RESOURCE')
+						{
+							if (!file_exists(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
+							{
+								mkdir(constant($font['medium']) . $row['path'], 0777, true);
+								writeRawFile(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], getURIData(sprintf(FONT_RESOURCES_STORE, $row['path'] . DIRECTORY_SEPARATOR . $row['filename'])));
+								$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `cachings` = `cachings` + 1, `cached` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
+							}
+						}
+						$json = json_decode(getArchivedZIPFile($zip = constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'font-resource.json'), true);
+						break;
+					case 'FONT_RESOURCES_PEER':
+						$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
+						if (!file_exists(constant(FONT_RESOURCES_CACHE) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
+						{
+							$sql = "SELECT * FROM `peers` WHERE `peer-id` LIKE '%s'";
+							if ($GLOBALS['FontsDB']->getRowsNum($results = $GLOBALS['FontsDB']->queryF(sprintf($sql, $GLOBALS['FontsDB']->escape($font['peer_id']))))==1)
+							{
+								$peer = $GLOBALS['FontsDB']->fetchArray($results);
+								mkdir(constant("FONT_RESOURCES_CACHE") . $row['path'], 0777, true);
+								writeRawFile(constant("FONT_RESOURCES_CACHE") . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], getURIData(sprintf($peer['api-uri'].$peer['api-uri-zip'], $row['font_id'])));
+								$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])] = array("opened" => microtime(true), "dropped" => microtime(true) + mt_rand(3600 * 0.785, 3600 * 1.896), "resource" => $font['path'] . DIRECTORY_SEPARATOR . $font['filename']);
+							}
 						} else {
 							if ($sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] < microtime(true) + ($next = mt_rand(1800*.3236, 2560*.5436)))
 								$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] + $next;
 						}
 						writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial", serialize($sessions));
-					} elseif ($font['medium'] == 'FONT_RESOURCES_RESOURCE')
-					{
-						if (!file_exists(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
-						{
-							mkdir(constant($font['medium']) . $row['path'], 0777, true);
-							writeRawFile(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], getURIData(sprintf(FONT_RESOURCES_STORE, $row['path'] . DIRECTORY_SEPARATOR . $row['filename'])));
-							$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `cachings` = `cachings` + 1, `cached` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
-						}
-					}
-					$json = json_decode(getArchivedZIPFile($zip = constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'font-resource.json'), true);
-					break;
-				case 'FONT_RESOURCES_PEER':
-					$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
-					if (!file_exists(constant(FONT_RESOURCES_CACHE) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
-					{
-						$sql = "SELECT * FROM `peers` WHERE `peer-id` LIKE '%s'";
-						if ($GLOBALS['FontsDB']->getRowsNum($results = $GLOBALS['FontsDB']->queryF(sprintf($sql, $GLOBALS['FontsDB']->escape($font['peer_id']))))==1)
-						{
-							$peer = $GLOBALS['FontsDB']->fetchArray($results);
-							mkdir(constant("FONT_RESOURCES_CACHE") . $row['path'], 0777, true);
-							writeRawFile(constant("FONT_RESOURCES_CACHE") . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], getURIData(sprintf($peer['api-uri'].$peer['api-uri-zip'], $row['font_id'])));
-							$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])] = array("opened" => microtime(true), "dropped" => microtime(true) + mt_rand(3600 * 0.785, 3600 * 1.896), "resource" => $font['path'] . DIRECTORY_SEPARATOR . $font['filename']);
-						}
-					} else {
-						if ($sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] < microtime(true) + ($next = mt_rand(1800*.3236, 2560*.5436)))
-							$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] + $next;
-					}
-					writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial", serialize($sessions));
-					$json = json_decode(getArchivedZIPFile($zip = FONT_RESOURCES_CACHE . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'font-resource.json'), true);
-					break;
-			}
-			if ($output!="font-resource.json")
-			{
-				$found = false;
-				$cachefile = FONTS_CACHE . DIRECTORY_SEPARATOR . '--raw--' . DIRECTORY_SEPARATOR . md5(getRegionalFontName($row['font_id']).$row['font_id']) . '.zip';
-				if (!is_dir(FONTS_CACHE . DIRECTORY_SEPARATOR . '--raw--' . DIRECTORY_SEPARATOR))
-					mkdir(FONTS_CACHE . DIRECTORY_SEPARATOR . '--raw--' . DIRECTORY_SEPARATOR, 0777, true);
-				if (!file_exists($cachefile))
-					$found = false;
-				else {
-					foreach(getArchivedZIPContentsArray($cachefile) as $crc => $file)
-						if (substr($file['filename'], strlen($file['filename']) - strlen($output)) == $output || strpos($file['path'], $output) > 0)
-							$found = true;
+						$json = json_decode(getArchivedZIPFile($zip = FONT_RESOURCES_CACHE . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'font-resource.json'), true);
+						break;
 				}
-				if ($found != true)
+				if ($output!="font-resource.json")
 				{
-					mkdir($currently = FONT_RESOURCES_CONVERTING . DIRECTORY_SEPARATOR . sha1(md5_file($zip).$row['font_id']), 0777, true);
-					chdir($currently);
-					foreach(getArchivedZIPContentsArray($zip) as $crc => $file)
-						if (substr($file['filename'], strlen($file['filename']) - strlen(API_BASE)) == API_BASE)
-						{
-							$basefile = $file['filename'];
-							continue;
-						}
-					writeRawFile($font = $currently . DIRECTORY_SEPARATOR . $basefile, getArchivedZIPFile($zip, $basefile, $row['font_id']));					
-					if (isset($json['Font']))
-						writeFontResourceHeader($font, $json["Font"]['licence'], $json['Font']);
-					$totalmaking = count(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"))-1;
-					$outt = array();exec("cd $currently", $outt, $return);
-					$covertscript = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"));
-					foreach($covertscript as $line => $value)
-						if (!strpos($value, $output) && substr($value,0,4)!='Open' && !in_array($output, array('z', 'php')))
-							unset($covertscript[$line]);
-						elseif(in_array($output, array('z', 'php') && substr($value,0,4)!='Open' && (!strpos($value, 'ttf')) && !strpos($value, 'afm')))
-							unset($covertscript[$line]);
-					writeRawFile($script = FONT_RESOURCES_CACHE.DIRECTORY_SEPARATOR.md5(microtime(true).$zip.$row['font_id']).".pe", implode("\n", $covertscript));
-					$outt = shell_exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", $script, $font));
-					unlink($script);
-					if (in_array($output, array('z', 'php')))
-					{
-						$parts = explode('.', basename($font));
-						unset($parts[count($parts)-1]);
-						$fbase = implode(".", $parts);
-						if (file_exists($currently . DIRECTORY_SEPARATOR . $fbase . '.ttf') && file_exists($currently . DIRECTORY_SEPARATOR . $fbase . '.afm'))
-							MakePHPFont($currently . DIRECTORY_SEPARATOR . $fbase . '.ttf', $currently . DIRECTORY_SEPARATOR . $fbase . '.afm', $currently, true);
-					}
-					$packing = getArchivingShellExec();
-					chdir($currently);
-					$cmda = str_replace("%folder", "./", str_replace("%pack", $cachefile, str_replace("%comment", $comment, (substr($packing['zip'],0,1)!="#"?$packing['zip']:substr($packing['zip'],1)))));
-					$outt = shell_exec($cmda);
+					$found = false;
+					$cachefile = FONTS_CACHE . DIRECTORY_SEPARATOR . '--raw--' . DIRECTORY_SEPARATOR . md5(getRegionalFontName($row['font_id']).$row['font_id']) . '.zip';
+					if (!is_dir(FONTS_CACHE . DIRECTORY_SEPARATOR . '--raw--' . DIRECTORY_SEPARATOR))
+						mkdir(FONTS_CACHE . DIRECTORY_SEPARATOR . '--raw--' . DIRECTORY_SEPARATOR, 0777, true);
 					if (!file_exists($cachefile))
-						die("File not found: $cachefile ~~ Failed: $cmda\n\n$outt");
-					$output = array();
-					exec($cmd = "rm -Rfv $currently", $output);
-				}
-				$zip = $cachefile;
-			}
-			$fontfiles = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql = "SELECT * from `fonts_files` WHERE `font_id` = '" . $row['font_id'] . "' AND `type` = '$output'"));
-			$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts` SET `hits` = `hits` + 1, `accessed` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['font_id'] . "'");
-			$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `hits` = `hits` + 1, `accessed` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
-			$resultb = $GLOBALS['FontsDB']->queryF($sql = "SELECT * FROM `fonts_callbacks` WHERE `failed` <= unix_timestamp() - (3600 * 6) AND LENGTH(`uri`) > 0 AND `type` IN ('fonthit') AND `font_id` = '" . $row['font_id'] . "'");
-			while($callback = $GLOBALS['FontsDB']->fetchArray($resultb))
-			{
-				@setCallBackURI($callback['uri'], 145, 145, array_merge(array('type' => $output, 'hits' => $fontfiles['hits']+1, 'font-key' => $row['font_id'], 'ipid' => getIPIdentity('', true))), array("success"=>"UPDATE `fonts_callbacks` SET `calls` = `calls` + 1, `last` = UNIX_TIMESTAMP() WHERE `id` = '" . $callback['id'] . "'", "failed" => "UPDATE `fonts_callbacks` SET `calls` = `calls` + 1, `last` = UNIX_TIMESTAMP(), `failed` = UNIX_TIMESTAMP() WHERE `id` = '" . $callback['id'] . "'"));
-			}
-			$resdata = array();
-			foreach(getArchivedZIPContentsArray($zip) as $md5 => $values)
-				if ($output == 'ufo' || $values['type'] === $output || strtolower(substr($values['filename'], strlen($values['filename']) - strlen($output), strlen($output))) == strtolower($output))
-					switch($output)
-					{
-						default:
-							$GLOBALS['filename'] = $values['filename'];
-							if (!file_exists($font = FONTS_CACHE . DIRECTORY_SEPARATOR . '--data--' . DIRECTORY_SEPARATOR . md5($zip.sha1(date('Y-m-d'))) . ".$output"))
-							{
-								$data = getArchivedZIPFile($zip, $values['filename'], $row['font_id']);
-								if (!is_dir(FONTS_CACHE . DIRECTORY_SEPARATOR . '--data--'))
-									mkdir(FONTS_CACHE . DIRECTORY_SEPARATOR . '--data--', 0777, true);
-								writeRawFile($font, $data);
-								return $data;
-							}
-							return file_get_contents($font);
-							break;
-						case "ufo":
-							$GLOBALS['filename'] = basename($ufofile);
-							return getArchivedZIPFile($zip, $ufofile, $row['font_id']);
-							break;
+						$found = false;
+					else {
+						foreach(getArchivedZIPContentsArray($cachefile) as $crc => $file)
+							if (substr($file['filename'], strlen($file['filename']) - strlen($output)) == $output || strpos($file['path'], $output) > 0)
+								$found = true;
 					}
-			if (!empty($data))
-				return $data;
-			die("Font Type: $output - Not found in Font Resource: ".basename($zip));
+					if ($found != true)
+					{
+						mkdir($currently = FONT_RESOURCES_CONVERTING . DIRECTORY_SEPARATOR . sha1(md5_file($zip).$row['font_id']), 0777, true);
+						chdir($currently);
+						foreach(getArchivedZIPContentsArray($zip) as $crc => $file)
+							if (substr($file['filename'], strlen($file['filename']) - strlen(API_BASE)) == API_BASE)
+							{
+								$basefile = $file['filename'];
+								continue;
+							}
+						writeRawFile($font = $currently . DIRECTORY_SEPARATOR . $basefile, getArchivedZIPFile($zip, $basefile, $row['font_id']));					
+						if (isset($json['Font']))
+							writeFontResourceHeader($font, $json["Font"]['licence'], $json['Font']);
+						$totalmaking = count(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"))-1;
+						$outt = array();exec("cd $currently", $outt, $return);
+						$covertscript = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"));
+						foreach($covertscript as $line => $value)
+							if (!strpos($value, $output) && substr($value,0,4)!='Open' && !in_array($output, array('z', 'php')))
+								unset($covertscript[$line]);
+							elseif(in_array($output, array('z', 'php') && substr($value,0,4)!='Open' && (!strpos($value, 'ttf')) && !strpos($value, 'afm')))
+								unset($covertscript[$line]);
+						writeRawFile($script = FONT_RESOURCES_CACHE.DIRECTORY_SEPARATOR.md5(microtime(true).$zip.$row['font_id']).".pe", implode("\n", $covertscript));
+						$outt = shell_exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", $script, $font));
+						unlink($script);
+						if (in_array($output, array('z', 'php')))
+						{
+							$parts = explode('.', basename($font));
+							unset($parts[count($parts)-1]);
+							$fbase = implode(".", $parts);
+							if (file_exists($currently . DIRECTORY_SEPARATOR . $fbase . '.ttf') && file_exists($currently . DIRECTORY_SEPARATOR . $fbase . '.afm'))
+								MakePHPFont($currently . DIRECTORY_SEPARATOR . $fbase . '.ttf', $currently . DIRECTORY_SEPARATOR . $fbase . '.afm', $currently, true);
+						}
+						$packing = getArchivingShellExec();
+						chdir($currently);
+						$cmda = str_replace("%folder", "./", str_replace("%pack", $cachefile, str_replace("%comment", $comment, (substr($packing['zip'],0,1)!="#"?$packing['zip']:substr($packing['zip'],1)))));
+						$outt = shell_exec($cmda);
+						if (!file_exists($cachefile))
+							die("File not found: $cachefile ~~ Failed: $cmda\n\n$outt");
+						$output = array();
+						exec($cmd = "rm -Rfv $currently", $output);
+					}
+					$zip = $cachefile;
+				}
+				$fontfiles = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql = "SELECT * from `fonts_files` WHERE `font_id` = '" . $row['font_id'] . "' AND `type` = '$output'"));
+				$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts` SET `hits` = `hits` + 1, `accessed` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['font_id'] . "'");
+				$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `hits` = `hits` + 1, `accessed` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
+				$resultb = $GLOBALS['FontsDB']->queryF($sql = "SELECT * FROM `fonts_callbacks` WHERE `failed` <= unix_timestamp() - (3600 * 6) AND LENGTH(`uri`) > 0 AND `type` IN ('fonthit') AND `font_id` = '" . $row['font_id'] . "'");
+				while($callback = $GLOBALS['FontsDB']->fetchArray($resultb))
+				{
+					@setCallBackURI($callback['uri'], 145, 145, array_merge(array('type' => $output, 'hits' => $fontfiles['hits']+1, 'font-key' => $row['font_id'], 'ipid' => getIPIdentity('', true))), array("success"=>"UPDATE `fonts_callbacks` SET `calls` = `calls` + 1, `last` = UNIX_TIMESTAMP() WHERE `id` = '" . $callback['id'] . "'", "failed" => "UPDATE `fonts_callbacks` SET `calls` = `calls` + 1, `last` = UNIX_TIMESTAMP(), `failed` = UNIX_TIMESTAMP() WHERE `id` = '" . $callback['id'] . "'"));
+				}
+				$resdata = array();
+				foreach(getArchivedZIPContentsArray($zip) as $md5 => $values)
+					if ($output == 'ufo' || $values['type'] === $output || strtolower(substr($values['filename'], strlen($values['filename']) - strlen($output), strlen($output))) == strtolower($output))
+						switch($output)
+						{
+							default:
+								$GLOBALS['filename'] = $values['filename'];
+								if (!file_exists($font = FONTS_CACHE . DIRECTORY_SEPARATOR . '--data--' . DIRECTORY_SEPARATOR . md5($zip.sha1(date('Y-m-d'))) . ".$output"))
+								{
+									$data = getArchivedZIPFile($zip, $values['filename'], $row['font_id']);
+									if (!is_dir(FONTS_CACHE . DIRECTORY_SEPARATOR . '--data--'))
+										mkdir(FONTS_CACHE . DIRECTORY_SEPARATOR . '--data--', 0777, true);
+									writeRawFile($font, $data);
+									return $data;
+								}
+								return file_get_contents($font);
+								break;
+							case "ufo":
+								$GLOBALS['filename'] = basename($ufofile);
+								return getArchivedZIPFile($zip, $ufofile, $row['font_id']);
+								break;
+						}
+				if (empty($data))
+					$data = "Font Type: $output - Not found in Font Resource: ".basename($zip);
+			}
+			@writeRawFile($cache, $data);
+			return $data;
 		}
-		return false;
+		return file_get_contents($cache);
 	}
 }
 
@@ -2499,63 +2524,71 @@ if (!function_exists("getFontFileDiz")) {
 	 */
 	function getFontFileDiz($mode = '', $clause = '', $state = '', $output = '', $version = '')
 	{
-		$sql = "SELECT * from `fonts_archiving` WHERE (`font_id` = '$clause' OR `fingerprint` = '$clause')";
-		$result = $GLOBALS['FontsDB']->queryF($sql);
-		while($row = $GLOBALS['FontsDB']->fetchArray($result))
+		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H", time() - 3600 *24 * 7) . 'font-diz-by-id--' . sha1($clause.$version).'.diz'))
+			unlink($unlink);
+		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H") . 'font-diz-by-id--' . sha1($clause.$version).'.diz'))
 		{
-			$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `accessings` = `accessings` + 1, `accessed` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
-			$sql = "SELECT * from `fonts` WHERE `id` = '" . $row['font_id'] . "'";
-			$font = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql));
-			switch($font['medium'])
+			$sql = "SELECT * from `fonts_archiving` WHERE (`font_id` = '$clause' OR `fingerprint` = '$clause')";
+			$result = $GLOBALS['FontsDB']->queryF($sql);
+			while($row = $GLOBALS['FontsDB']->fetchArray($result))
 			{
-				case 'FONT_RESOURCES_CACHE':
-				case 'FONT_RESOURCES_RESOURCE':
-					if ($font['medium'] == 'FONT_RESOURCES_CACHE')
-					{
-						$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
-						if (!file_exists(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
+				$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `accessings` = `accessings` + 1, `accessed` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
+				$sql = "SELECT * from `fonts` WHERE `id` = '" . $row['font_id'] . "'";
+				$font = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql));
+				switch($font['medium'])
+				{
+					case 'FONT_RESOURCES_CACHE':
+					case 'FONT_RESOURCES_RESOURCE':
+						if ($font['medium'] == 'FONT_RESOURCES_CACHE')
 						{
-							mkdir(constant("FONT_RESOURCES_CACHE") . $row['path'], 0777, true);
-							writeRawFile(constant("FONT_RESOURCES_CACHE") . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], getURIData(sprintf(FONT_RESOURCES_STORE, $row['path'] . DIRECTORY_SEPARATOR . $row['filename'])));
-							$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])] = array("opened" => microtime(true), "dropped" => microtime(true) + mt_rand(3600 * 0.785, 3600 * 1.896), "resource" => $font['path'] . DIRECTORY_SEPARATOR . $font['filename']);
-							$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `cachings` = `cachings` + 1, `cached` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
+							$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
+							if (!file_exists(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
+							{
+								mkdir(constant("FONT_RESOURCES_CACHE") . $row['path'], 0777, true);
+								writeRawFile(constant("FONT_RESOURCES_CACHE") . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], getURIData(sprintf(FONT_RESOURCES_STORE, $row['path'] . DIRECTORY_SEPARATOR . $row['filename'])));
+								$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])] = array("opened" => microtime(true), "dropped" => microtime(true) + mt_rand(3600 * 0.785, 3600 * 1.896), "resource" => $font['path'] . DIRECTORY_SEPARATOR . $font['filename']);
+								$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `cachings` = `cachings` + 1, `cached` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
+							} else {
+								if ($sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] < microtime(true) + ($next = mt_rand(1800*.3236, 2560*.5436)))
+									$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] + $next;
+							}
+							writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial", serialize($sessions));
+						} elseif ($font['medium'] == 'FONT_RESOURCES_RESOURCE')
+						{
+							if (!file_exists(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
+							{
+								mkdir(constant($font['medium']) . $row['path'], 0777, true);
+								writeRawFile(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], getURIData(sprintf(FONT_RESOURCES_STORE, $row['path'] . DIRECTORY_SEPARATOR . $row['filename'])));
+								$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `cachings` = `cachings` + 1, `cached` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
+							}
+						}
+						$data = getArchivedZIPFile($zip = constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'file.diz');
+						break;
+					case 'FONT_RESOURCES_PEER':
+						$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
+						if (!file_exists(constant(FONT_RESOURCES_CACHE) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
+						{
+							$sql = "SELECT * FROM `peers` WHERE `peer-id` LIKE '%s'";
+							if ($GLOBALS['FontsDB']->getRowsNum($results = $GLOBALS['FontsDB']->queryF(sprintf($sql, $GLOBALS['FontsDB']->escape($font['peer_id']))))==1)
+							{
+								$peer = $GLOBALS['FontsDB']->fetchArray($results);
+								mkdir(constant("FONT_RESOURCES_CACHE") . $row['path'], 0777, true);
+								writeRawFile(constant("FONT_RESOURCES_CACHE") . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], getURIData(sprintf($peer['api-uri'].$peer['api-uri-zip'], $row['font_id'])));
+								$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])] = array("opened" => microtime(true), "dropped" => microtime(true) + mt_rand(3600 * 0.785, 3600 * 1.896), "resource" => $font['path'] . DIRECTORY_SEPARATOR . $font['filename']);
+							}
 						} else {
 							if ($sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] < microtime(true) + ($next = mt_rand(1800*.3236, 2560*.5436)))
 								$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] + $next;
 						}
 						writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial", serialize($sessions));
-					} elseif ($font['medium'] == 'FONT_RESOURCES_RESOURCE')
-					{
-						if (!file_exists(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
-						{
-							mkdir(constant($font['medium']) . $row['path'], 0777, true);
-							writeRawFile(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], getURIData(sprintf(FONT_RESOURCES_STORE, $row['path'] . DIRECTORY_SEPARATOR . $row['filename'])));
-							$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `cachings` = `cachings` + 1, `cached` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
-						}
-					}
-					return getArchivedZIPFile($zip = constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'file.diz');
-					break;
-				case 'FONT_RESOURCES_PEER':
-					$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
-					if (!file_exists(constant(FONT_RESOURCES_CACHE) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
-					{
-						$sql = "SELECT * FROM `peers` WHERE `peer-id` LIKE '%s'";
-						if ($GLOBALS['FontsDB']->getRowsNum($results = $GLOBALS['FontsDB']->queryF(sprintf($sql, $GLOBALS['FontsDB']->escape($font['peer_id']))))==1)
-						{
-							$peer = $GLOBALS['FontsDB']->fetchArray($results);
-							mkdir(constant("FONT_RESOURCES_CACHE") . $row['path'], 0777, true);
-							writeRawFile(constant("FONT_RESOURCES_CACHE") . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], getURIData(sprintf($peer['api-uri'].$peer['api-uri-zip'], $row['font_id'])));
-							$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])] = array("opened" => microtime(true), "dropped" => microtime(true) + mt_rand(3600 * 0.785, 3600 * 1.896), "resource" => $font['path'] . DIRECTORY_SEPARATOR . $font['filename']);
-						}
-					} else {
-						if ($sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] < microtime(true) + ($next = mt_rand(1800*.3236, 2560*.5436)))
-							$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] + $next;
-					}
-					writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial", serialize($sessions));
-					return getArchivedZIPFile($zip = FONT_RESOURCES_CACHE . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'file_diz');
-					break;
+						$data = getArchivedZIPFile($zip = FONT_RESOURCES_CACHE . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'file_diz');
+						break;
+				}
 			}
+			@writeRawFile($cache, $data);
+			return $data;
 		}
+		return file_get_contents($cache);
 	}
 }
 
@@ -2624,16 +2657,23 @@ if (!function_exists("getFontsCallbacksArray")) {
 	 */
 	function getFontsCallbacksArray($clause = '', $state = '', $output = '', $version = '')
 	{
-		$return = array();
-		$sql = "SELECT * from `fonts_callbacks` WHERE (`font_id` = '$clause')";
-		$result = $GLOBALS['FontsDB']->queryF($sql);
-		while($row = $GLOBALS['FontsDB']->fetchArray($result))
+		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H", time() - 3600 *24 * 7) . 'font-callbacks-by-id--' . sha1($clause.$version).'.serial'))
+			unlink($unlink);
+		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H") . 'font-callbacks-by-id--' . sha1($clause.$version).'.serial'))
 		{
-			unset($row['id']);
-			unset($row['archive_id']);
-			$return[] = $row;
+			$return = array();
+			$sql = "SELECT * from `fonts_callbacks` WHERE (`font_id` = '$clause')";
+			$result = $GLOBALS['FontsDB']->queryF($sql);
+			while($row = $GLOBALS['FontsDB']->fetchArray($result))
+			{
+				unset($row['id']);
+				unset($row['archive_id']);
+				$return[] = $row;
+			}
+			@writeRawFile($cache, serialize($return));
+			return $return;
 		}
-		return $return;
+		return unserialize(file_get_contents($cache));
 	}
 }
 
@@ -2650,64 +2690,72 @@ if (!function_exists("getFontsDataArray")) {
 	 */
 	function getFontsDataArray($clause = '', $state = '', $output = '', $version = '')
 	{
-		$sql = "SELECT * from `fonts_archiving` WHERE (`font_id` = '$clause' OR `fingerprint` = '$clause')";
-		$result = $GLOBALS['FontsDB']->queryF($sql);
-		while($row = $GLOBALS['FontsDB']->fetchArray($result))
+		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H", time() - 3600 *24 * 7) . 'font-data-by-id--' . sha1($clause.$version).'.serial'))
+			unlink($unlink);
+		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H") . 'font-data-by-id--' . sha1($clause.$version).'.serial'))
 		{
-			$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts` SET `hits` = `hits` + 1 WHERE `id` = '" . $row['font_id'] . "'");
-			$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `accessings` = `accessings` + 1, `accessed` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
-			$sql = "SELECT * from `fonts` WHERE `id` = '" . $row['font_id'] . "'";
-			$font = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql));
-			switch($font['medium'])
+			$sql = "SELECT * from `fonts_archiving` WHERE (`font_id` = '$clause' OR `fingerprint` = '$clause')";
+			$result = $GLOBALS['FontsDB']->queryF($sql);
+			while($row = $GLOBALS['FontsDB']->fetchArray($result))
 			{
-				case 'FONT_RESOURCES_CACHE':
-				case 'FONT_RESOURCES_RESOURCE':
-					if ($font['medium'] == 'FONT_RESOURCES_CACHE')
-					{
-						$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
-						if (!file_exists(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
+				$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts` SET `hits` = `hits` + 1 WHERE `id` = '" . $row['font_id'] . "'");
+				$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `accessings` = `accessings` + 1, `accessed` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
+				$sql = "SELECT * from `fonts` WHERE `id` = '" . $row['font_id'] . "'";
+				$font = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql));
+				switch($font['medium'])
+				{
+					case 'FONT_RESOURCES_CACHE':
+					case 'FONT_RESOURCES_RESOURCE':
+						if ($font['medium'] == 'FONT_RESOURCES_CACHE')
 						{
-							mkdir(constant("FONT_RESOURCES_CACHE") . $row['path'], 0777, true);
-							writeRawFile(constant("FONT_RESOURCES_CACHE") . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], getURIData(sprintf(FONT_RESOURCES_STORE, $row['path'] . DIRECTORY_SEPARATOR . $row['filename'])));
-							$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])] = array("opened" => microtime(true), "dropped" => microtime(true) + mt_rand(3600 * 0.785, 3600 * 1.896), "resource" => $font['path'] . DIRECTORY_SEPARATOR . $font['filename']);
-							$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `cachings` = `cachings` + 1, `cached` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
+							$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
+							if (!file_exists(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
+							{
+								mkdir(constant("FONT_RESOURCES_CACHE") . $row['path'], 0777, true);
+								writeRawFile(constant("FONT_RESOURCES_CACHE") . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], getURIData(sprintf(FONT_RESOURCES_STORE, $row['path'] . DIRECTORY_SEPARATOR . $row['filename'])));
+								$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])] = array("opened" => microtime(true), "dropped" => microtime(true) + mt_rand(3600 * 0.785, 3600 * 1.896), "resource" => $font['path'] . DIRECTORY_SEPARATOR . $font['filename']);
+								$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `cachings` = `cachings` + 1, `cached` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
+							} else {
+								if ($sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] < microtime(true) + ($next = mt_rand(1800*.3236, 2560*.5436)))
+									$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] + $next;
+							}
+							writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial", serialize($sessions));
+						} elseif ($font['medium'] == 'FONT_RESOURCES_RESOURCE')
+						{
+							if (!file_exists(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
+							{
+								mkdir(constant($font['medium']) . $row['path'], 0777, true);
+								writeRawFile(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], getURIData(sprintf(FONT_RESOURCES_STORE, $row['path'] . DIRECTORY_SEPARATOR . $row['filename'])));
+							}
+						}
+						$data =  json_decode(getArchivedZIPFile($zip = constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'font-resource.json'), true);
+						break;
+					case 'FONT_RESOURCES_PEER':
+						$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
+						if (!file_exists(constant(FONT_RESOURCES_CACHE) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
+						{
+							$sql = "SELECT * FROM `peers` WHERE `peer-id` LIKE '%s'";
+							if ($GLOBALS['FontsDB']->getRowsNum($results = $GLOBALS['FontsDB']->queryF(sprintf($sql, $GLOBALS['FontsDB']->escape($font['peer_id']))))==1)
+							{
+								$peer = $GLOBALS['FontsDB']->fetchArray($results);
+								mkdir(constant("FONT_RESOURCES_CACHE") . $row['path'], 0777, true);
+								writeRawFile(constant("FONT_RESOURCES_CACHE") . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], getURIData(sprintf($peer['api-uri'].$peer['api-uri-zip'], $row['font_id'])));
+								$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])] = array("opened" => microtime(true), "dropped" => microtime(true) + mt_rand(3600 * 0.785, 3600 * 1.896), "resource" => $font['path'] . DIRECTORY_SEPARATOR . $font['filename']);
+								$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `cachings` = `cachings` + 1, `cached` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
+							}
 						} else {
 							if ($sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] < microtime(true) + ($next = mt_rand(1800*.3236, 2560*.5436)))
 								$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] + $next;
 						}
 						writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial", serialize($sessions));
-					} elseif ($font['medium'] == 'FONT_RESOURCES_RESOURCE')
-					{
-						if (!file_exists(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
-						{
-							mkdir(constant($font['medium']) . $row['path'], 0777, true);
-							writeRawFile(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], getURIData(sprintf(FONT_RESOURCES_STORE, $row['path'] . DIRECTORY_SEPARATOR . $row['filename'])));
-						}
-					}
-					return json_decode(getArchivedZIPFile($zip = constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'font-resource.json'), true);
-					break;
-				case 'FONT_RESOURCES_PEER':
-					$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
-					if (!file_exists(constant(FONT_RESOURCES_CACHE) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
-					{
-						$sql = "SELECT * FROM `peers` WHERE `peer-id` LIKE '%s'";
-						if ($GLOBALS['FontsDB']->getRowsNum($results = $GLOBALS['FontsDB']->queryF(sprintf($sql, $GLOBALS['FontsDB']->escape($font['peer_id']))))==1)
-						{
-							$peer = $GLOBALS['FontsDB']->fetchArray($results);
-							mkdir(constant("FONT_RESOURCES_CACHE") . $row['path'], 0777, true);
-							writeRawFile(constant("FONT_RESOURCES_CACHE") . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], getURIData(sprintf($peer['api-uri'].$peer['api-uri-zip'], $row['font_id'])));
-							$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])] = array("opened" => microtime(true), "dropped" => microtime(true) + mt_rand(3600 * 0.785, 3600 * 1.896), "resource" => $font['path'] . DIRECTORY_SEPARATOR . $font['filename']);
-							$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `cachings` = `cachings` + 1, `cached` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
-						}
-					} else {
-						if ($sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] < microtime(true) + ($next = mt_rand(1800*.3236, 2560*.5436)))
-							$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] + $next;
-					}
-					writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial", serialize($sessions));
-					return json_decode(getArchivedZIPFile($zip = FONT_RESOURCES_CACHE . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'font-resource.json'), true);
-					break;
+						$data = json_decode(getArchivedZIPFile($zip = FONT_RESOURCES_CACHE . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'font-resource.json'), true);
+						break;
+				}
 			}
+			@writeRawFile($cache, serialize($data));
+			return $data;
 		}
+		return unserialize(file_get_contents($cache));
 	}
 }
 
@@ -2972,134 +3020,143 @@ if (!function_exists("getFontUFORawData")) {
 	 */
 	function getFontUFORawData($mode = '', $clause = '', $state = '', $output = '', $ufofile = '')
 	{
-		$sql = "SELECT * from `fonts_archiving` WHERE (`font_id` = '$clause' OR `fingerprint` = '$clause')";
-		$result = $GLOBALS['FontsDB']->queryF($sql);
-		while($row = $GLOBALS['FontsDB']->fetchArray($result))
+		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H", time() - 3600 *24 * 7) . 'font-ufo-by-id--' . sha1($clause.$ufofile).'.serial'))
+			unlink($unlink);
+		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H") . 'font-ufo-by-id--' . sha1($clause.$ufofile).'.serial'))
 		{
-			$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `accessings` = `accessings` + 1, `accessed` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
-			$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts` SET `hits` = `hits` + 1 WHERE `id` = '" . $row['font_id'] . "'");
-			$sql = "SELECT * from `fonts` WHERE `id` = '" . $row['font_id'] . "'";
-			$font = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql));
-			switch($font['medium'])
+			$sql = "SELECT * from `fonts_archiving` WHERE (`font_id` = '$clause' OR `fingerprint` = '$clause')";
+			$result = $GLOBALS['FontsDB']->queryF($sql);
+			while($row = $GLOBALS['FontsDB']->fetchArray($result))
 			{
-				case 'FONT_RESOURCES_CACHE':
-				case 'FONT_RESOURCES_RESOURCE':
-					
-					if ($font['medium'] == 'FONT_RESOURCES_CACHE')
-					{
-						$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
-						if (!file_exists(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
+				$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `accessings` = `accessings` + 1, `accessed` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
+				$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts` SET `hits` = `hits` + 1 WHERE `id` = '" . $row['font_id'] . "'");
+				$sql = "SELECT * from `fonts` WHERE `id` = '" . $row['font_id'] . "'";
+				$font = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql));
+				switch($font['medium'])
+				{
+					case 'FONT_RESOURCES_CACHE':
+					case 'FONT_RESOURCES_RESOURCE':
+						
+						if ($font['medium'] == 'FONT_RESOURCES_CACHE')
 						{
-							mkdir(constant("FONT_RESOURCES_CACHE") . $row['path'], 0777, true);
-							writeRawFile(constant("FONT_RESOURCES_CACHE") . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], getURIData(sprintf(FONT_RESOURCES_STORE, $row['path'] . DIRECTORY_SEPARATOR . $row['filename'])));
-							$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])] = array("opened" => microtime(true), "dropped" => microtime(true) + mt_rand(3600 * 0.785, 3600 * 1.896), "resource" => $font['path'] . DIRECTORY_SEPARATOR . $font['filename']);
-							$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `cachings` = `cachings` + 1, `cached` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
+							$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
+							if (!file_exists(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
+							{
+								mkdir(constant("FONT_RESOURCES_CACHE") . $row['path'], 0777, true);
+								writeRawFile(constant("FONT_RESOURCES_CACHE") . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], getURIData(sprintf(FONT_RESOURCES_STORE, $row['path'] . DIRECTORY_SEPARATOR . $row['filename'])));
+								$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])] = array("opened" => microtime(true), "dropped" => microtime(true) + mt_rand(3600 * 0.785, 3600 * 1.896), "resource" => $font['path'] . DIRECTORY_SEPARATOR . $font['filename']);
+								$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `cachings` = `cachings` + 1, `cached` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
+							} else {
+								if ($sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] < microtime(true) + ($next = mt_rand(1800*.3236, 2560*.5436)))
+									$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] + $next;
+							}
+							$zip = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['resource'];
+							writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial", serialize($sessions));
+						} elseif ($font['medium'] == 'FONT_RESOURCES_RESOURCE')
+						{
+							if (!file_exists($zip = constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
+							{
+								mkdir(constant($font['medium']) . $row['path'], 0777, true);
+								writeRawFile(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], getURIData(sprintf(FONT_RESOURCES_STORE, $row['path'] . DIRECTORY_SEPARATOR . $row['filename'])));
+							}
+						}
+						$json = json_decode(getArchivedZIPFile($zip = constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'font-resource.json'), true);
+						break;
+					case 'FONT_RESOURCES_PEER':
+						$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
+						if (!file_exists(constant(FONT_RESOURCES_CACHE) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
+						{
+							$sql = "SELECT * FROM `peers` WHERE `peer-id` LIKE '%s'";
+							if ($GLOBALS['FontsDB']->getRowsNum($results = $GLOBALS['FontsDB']->queryF(sprintf($sql, $GLOBALS['FontsDB']->escape($font['peer_id']))))==1)
+							{
+								$peer = $GLOBALS['FontsDB']->fetchArray($results);
+								mkdir(constant("FONT_RESOURCES_CACHE") . $row['path'], 0777, true);
+								writeRawFile(constant("FONT_RESOURCES_CACHE") . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], getURIData(sprintf($peer['api-uri'].$peer['api-uri-zip'], $row['font_id'])));
+								$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])] = array("opened" => microtime(true), "dropped" => microtime(true) + mt_rand(3600 * 0.785, 3600 * 1.896), "resource" => $font['path'] . DIRECTORY_SEPARATOR . $font['filename']);
+								$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `cachings` = `cachings` + 1, `cached` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
+							}
 						} else {
 							if ($sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] < microtime(true) + ($next = mt_rand(1800*.3236, 2560*.5436)))
 								$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] + $next;
 						}
 						$zip = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['resource'];
 						writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial", serialize($sessions));
-					} elseif ($font['medium'] == 'FONT_RESOURCES_RESOURCE')
-					{
-						if (!file_exists($zip = constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
-						{
-							mkdir(constant($font['medium']) . $row['path'], 0777, true);
-							writeRawFile(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], getURIData(sprintf(FONT_RESOURCES_STORE, $row['path'] . DIRECTORY_SEPARATOR . $row['filename'])));
-						}
-					}
-					$json = json_decode(getArchivedZIPFile($zip = constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'font-resource.json'), true);
-					break;
-				case 'FONT_RESOURCES_PEER':
-					$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
-					if (!file_exists(constant(FONT_RESOURCES_CACHE) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
-					{
-						$sql = "SELECT * FROM `peers` WHERE `peer-id` LIKE '%s'";
-						if ($GLOBALS['FontsDB']->getRowsNum($results = $GLOBALS['FontsDB']->queryF(sprintf($sql, $GLOBALS['FontsDB']->escape($font['peer_id']))))==1)
-						{
-							$peer = $GLOBALS['FontsDB']->fetchArray($results);
-							mkdir(constant("FONT_RESOURCES_CACHE") . $row['path'], 0777, true);
-							writeRawFile(constant("FONT_RESOURCES_CACHE") . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], getURIData(sprintf($peer['api-uri'].$peer['api-uri-zip'], $row['font_id'])));
-							$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])] = array("opened" => microtime(true), "dropped" => microtime(true) + mt_rand(3600 * 0.785, 3600 * 1.896), "resource" => $font['path'] . DIRECTORY_SEPARATOR . $font['filename']);
-							$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `cachings` = `cachings` + 1, `cached` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
-						}
-					} else {
-						if ($sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] < microtime(true) + ($next = mt_rand(1800*.3236, 2560*.5436)))
-							$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] + $next;
-					}
-					$zip = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['resource'];
-					writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial", serialize($sessions));
-					$json = json_decode(getArchivedZIPFile($zip = FONT_RESOURCES_CACHE . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'font-resource.json'), true);
-					break;
-			}
-			$filez = $files = $folder = array();
-			foreach($json['Files'] as $key => $file)
-			{
-				if (strpos(dirname($key), '.ufo'))
-				{
-					$parts = explode('.ufo/', dirname($key));
-					if (strlen($state)==1 || empty($state) && !isset($parts[1]) && isset($parts[0]))
-					{
-						$files['.'][md5($key)] = basename($file); 
-					} elseif ($parts[1] == substr($state, 0, strlen($state) - 1))
-					{
-						$folder[md5($parts[1])] = $parts[1];
-						$files[$parts[1]][md5($key)] = basename($file);
-					} elseif (isset($parts[1]))
-					{
-						$folder[md5($parts[1])] = $parts[1];
-					}
+						$json = json_decode(getArchivedZIPFile($zip = FONT_RESOURCES_CACHE . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'font-resource.json'), true);
+						break;
 				}
-			}			
-			if (strlen($state)==1 || empty($state)) 
-			{
-				$filez['parent'] = API_URL;
-				if (is_array($files['.']))
+				$filez = $files = $folder = array();
+				foreach($json['Files'] as $key => $file)
 				{
-					$filez['root'] = API_URL."/v2/font/$clause/ufo.api";
-					$filez['title'] = "$clause/ufo.api";
-					foreach($files['.'] as $file)
+					if (strpos(dirname($key), '.ufo'))
+					{
+						$parts = explode('.ufo/', dirname($key));
+						if (strlen($state)==1 || empty($state) && !isset($parts[1]) && isset($parts[0]))
+						{
+							$files['.'][md5($key)] = basename($file); 
+						} elseif ($parts[1] == substr($state, 0, strlen($state) - 1))
+						{
+							$folder[md5($parts[1])] = $parts[1];
+							$files[$parts[1]][md5($key)] = basename($file);
+						} elseif (isset($parts[1]))
+						{
+							$folder[md5($parts[1])] = $parts[1];
+						}
+					}
+				}			
+				if (strlen($state)==1 || empty($state)) 
+				{
+					$filez['parent'] = API_URL;
+					if (is_array($files['.']))
+					{
+						$filez['root'] = API_URL."/v2/font/$clause/ufo.api";
+						$filez['title'] = "$clause/ufo.api";
+						foreach($files['.'] as $file)
+						{
+							$filez['files'][md5($file)]['name'] = $file;
+							$filez['files'][md5($file)]['bytes'] = number_format(strlen(getArchivedZIPFile($zip, basename($file), true)),0);
+						}
+					}		
+					$filez['folder'] = $folder;
+				} elseif (substr($state, strlen($state)-1, 1) == "/")
+				{
+					$state = substr($state,0, strlen($state)-1);
+					$filez['parent'] = API_URL."/v2/font/$clause/ufo.api";
+					$filez['root'] = API_URL."/v2/font/$clause/ufo.api/$state";
+					$filez['title'] = "ufo.api/$state";
+					foreach($files[$state] as $key => $file)
 					{
 						$filez['files'][md5($file)]['name'] = $file;
 						$filez['files'][md5($file)]['bytes'] = number_format(strlen(getArchivedZIPFile($zip, basename($file), true)),0);
 					}
-				}		
-				$filez['folder'] = $folder;
-			} elseif (substr($state, strlen($state)-1, 1) == "/")
-			{
-				$state = substr($state,0, strlen($state)-1);
-				$filez['parent'] = API_URL."/v2/font/$clause/ufo.api";
-				$filez['root'] = API_URL."/v2/font/$clause/ufo.api/$state";
-				$filez['title'] = "ufo.api/$state";
-				foreach($files[$state] as $key => $file)
-				{
-					$filez['files'][md5($file)]['name'] = $file;
-					$filez['files'][md5($file)]['bytes'] = number_format(strlen(getArchivedZIPFile($zip, basename($file), true)),0);
+					$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_files` SET `accessings` = `accessings` + 1, `accessed` = UNIX_TIMESTAMP() WHERE `path` LIKE '" . dirname($state) . "' AND `font_id` = '".$row['font_id']."'");
+				} elseif (substr($state, strlen($state)-1, 1) != "/" && strlen($state)) {
+					$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_files` SET `sourcings` = `sourcings` + 1, `sourced` = UNIX_TIMESTAMP() WHERE `filename` = '" . basename($state) . "' AND `path` LIKE '" . dirname($state) . "' AND `font_id` = '".$row['font_id']."'");
+					$data = getArchivedZIPFile($zip, basename($state), $row['font_id']);
+					@writeRawFile($cache, $data);
+					return $data;
 				}
-				$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_files` SET `accessings` = `accessings` + 1, `accessed` = UNIX_TIMESTAMP() WHERE `path` LIKE '" . dirname($state) . "' AND `font_id` = '".$row['font_id']."'");
-			} elseif (substr($state, strlen($state)-1, 1) != "/" && strlen($state)) {
-				$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_files` SET `sourcings` = `sourcings` + 1, `sourced` = UNIX_TIMESTAMP() WHERE `filename` = '" . basename($state) . "' AND `path` LIKE '" . dirname($state) . "' AND `font_id` = '".$row['font_id']."'");
-				return getArchivedZIPFile($zip, basename($state), $row['font_id']);
 			}
+			$html = "<h1>Index of ".$filez['title']."</h1>\n";
+			$html .= "<table>\n";
+			$html .= "<tbody>";
+			$html .= "<tr><th colspan=\"5\"><hr></th></tr>";
+			$html .= "<tr><td valign=\"top\"><img src=\"".API_URL."/images/back.gif\" alt=\"[PARENTDIR]\"></td><td><a href=\"".$filez['parent']."\">Parent Directory</a></td><td>&nbsp;</td><td align=\"right\">  - </td><td>&nbsp;</td></tr>\n";
+			if (isset($filez['folder']))
+			{
+				foreach($filez['folder'] as $md5 => $folder)
+					$html .= "<tr><td valign=\"top\"><img src=\"".API_URL."/images/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"".$filez['root']."/$folder/\">$folder/</a></td><td align=\"right\">".date("Y-m-d H:i:s")."</td><td align=\"right\">  - </td><td>&nbsp;</td></tr>\n";
+			}
+			if (isset($filez['files']))
+			{
+				foreach($filez['files'] as $md5 => $file)
+					$html .= "<tr><td valign=\"top\"><img src=\"".API_URL."/images/text.gif\" alt=\"[FILE]\"></td><td><a href=\"".$filez['root']."/".$file['name']."\">".$file['name']."</a></td><td align=\"right\">".date("Y-m-d H:i:s")."</td><td align=\"right\">".$file['bytes']." bytes</td><td>&nbsp;</td></tr>\n";
+			}
+			$html .= "<tr><th colspan=\"5\"><hr></th></tr></tbody></table>\n";
+			$html .= "<address>Fonts API/".API_VERSION." (".PHP_VERSION.") Server at ".parse_url("http://".$_SERVER["HTTP_HOST"], PHP_URL_HOST). " Port ".$_SERVER["SERVER_PORT"]."</address>\n";
+			@writeRawFile($cache, $html);
+			return $html;
 		}
-		$html = "<h1>Index of ".$filez['title']."</h1>\n";
-		$html .= "<table>\n";
-		$html .= "<tbody>";
-		$html .= "<tr><th colspan=\"5\"><hr></th></tr>";
-		$html .= "<tr><td valign=\"top\"><img src=\"".API_URL."/images/back.gif\" alt=\"[PARENTDIR]\"></td><td><a href=\"".$filez['parent']."\">Parent Directory</a></td><td>&nbsp;</td><td align=\"right\">  - </td><td>&nbsp;</td></tr>\n";
-		if (isset($filez['folder']))
-		{
-			foreach($filez['folder'] as $md5 => $folder)
-				$html .= "<tr><td valign=\"top\"><img src=\"".API_URL."/images/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"".$filez['root']."/$folder/\">$folder/</a></td><td align=\"right\">".date("Y-m-d H:i:s")."</td><td align=\"right\">  - </td><td>&nbsp;</td></tr>\n";
-		}
-		if (isset($filez['files']))
-		{
-			foreach($filez['files'] as $md5 => $file)
-				$html .= "<tr><td valign=\"top\"><img src=\"".API_URL."/images/text.gif\" alt=\"[FILE]\"></td><td><a href=\"".$filez['root']."/".$file['name']."\">".$file['name']."</a></td><td align=\"right\">".date("Y-m-d H:i:s")."</td><td align=\"right\">".$file['bytes']." bytes</td><td>&nbsp;</td></tr>\n";
-		}
-		$html .= "<tr><th colspan=\"5\"><hr></th></tr></tbody></table>\n";
-		$html .= "<address>Fonts API/".API_VERSION." (".PHP_VERSION.") Server at ".parse_url("http://".$_SERVER["HTTP_HOST"], PHP_URL_HOST). " Port ".$_SERVER["SERVER_PORT"]."</address>\n";
-		return $html;
+		return file_get_contents($cache);
 	}
 }
 
@@ -3175,49 +3232,56 @@ if (!function_exists("getFontsByNodeListArray")) {
 	 */
 	function getFontsByNodeListArray($node_id = 0, $nochain = false)
 	{
-		$file = $archive = $fontsid = $fonts = array();
-		$sql = "SELECT * from `nodes_linking` WHERE `node_id` = '$node_id'";
-		$result = $GLOBALS['FontsDB']->queryF($sql);
-		while($row = $GLOBALS['FontsDB']->fetchArray($result))
+		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H", time() - 3600 *24 * 7) . 'node-identities-by-id--' . sha1($node_id.$nochain).'.serial'))
+			unlink($unlink);
+		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H") . 'node-identities-by-id--' . sha1($node_id.$nochain).'.serial'))
 		{
-			$fontsids[$row['font_id']] = $row['font_id'];
-		}
-		if (count($fontsid))
-		{
-			$sql = "SELECT * from `fonts_archiving` WHERE `font_id` IN ('".implode("', '", $fontsid) ."') ORDER BY `font_id` ASC";
-			$archives = $GLOBALS['FontsDB']->queryF($sql);
-			while($data = $GLOBALS['FontsDB']->fetchArray($archives))
+			$file = $archive = $fontsid = $fonts = array();
+			$sql = "SELECT * from `nodes_linking` WHERE `node_id` = '$node_id'";
+			$result = $GLOBALS['FontsDB']->queryF($sql);
+			while($row = $GLOBALS['FontsDB']->fetchArray($result))
 			{
-				$archive[$data['font_id']] = $data;
-				unset($archive[$data['font_id']]['font_id']);
+				$fontsids[$row['font_id']] = $row['font_id'];
 			}
-			$sql = "SELECT * from `fonts_files` WHERE `font_id` IN ('".implode("', '", $fontsid) ."') ORDER BY `font_id` ASC, `path` ASC, `filename` ASC";
-			$files = $GLOBALS['FontsDB']->queryF($sql);
-			while($data = $GLOBALS['FontsDB']->fetchArray($files))
+			if (count($fontsid))
 			{
-				$file[$data['font_id']][md5($data['id'].$data['font_id'])] = $data;
-				unset($file[$data['font_id']][md5($data['id'].$data['font_id'])]['font_id']);
+				$sql = "SELECT * from `fonts_archiving` WHERE `font_id` IN ('".implode("', '", $fontsid) ."') ORDER BY `font_id` ASC";
+				$archives = $GLOBALS['FontsDB']->queryF($sql);
+				while($data = $GLOBALS['FontsDB']->fetchArray($archives))
+				{
+					$archive[$data['font_id']] = $data;
+					unset($archive[$data['font_id']]['font_id']);
+				}
+				$sql = "SELECT * from `fonts_files` WHERE `font_id` IN ('".implode("', '", $fontsid) ."') ORDER BY `font_id` ASC, `path` ASC, `filename` ASC";
+				$files = $GLOBALS['FontsDB']->queryF($sql);
+				while($data = $GLOBALS['FontsDB']->fetchArray($files))
+				{
+					$file[$data['font_id']][md5($data['id'].$data['font_id'])] = $data;
+					unset($file[$data['font_id']][md5($data['id'].$data['font_id'])]['font_id']);
+					
+				}
+				$sql = "SELECT * from `fonts_names` WHERE `font_id` IN ('".implode("', '", $fontsid) ."') ORDER BY `font_id` ASC, `name` ASC";
+				$names = $GLOBALS['FontsDB']->queryF($sql);
+				while($data = $GLOBALS['FontsDB']->fetchArray($names))
+				{
+					$name[$data['font_id']][md5($data['name'].$data['font_id'])] = $data;
+					unset($file[$data['font_id']][md5($data['name'].$data['font_id'])]['font_id']);
 				
+				}			
+				$sql = "SELECT * from `fonts` WHERE `font_id` IN ('".implode("', '", $fontsid) ."') ORDER BY `font_id` ASC";
+				$fontages = $GLOBALS['FontsDB']->queryF($sql);
+				while($font = $GLOBALS['FontsDB']->fetchArray($fontages))
+				{
+					if ($nochain==true)
+						$fonts[$font['id']] = array('key' => $font['id'], 'peer-id' => $font['peer_id'], 'names' => $name[$font['id']], 'normal' => $font['normal'], 'italic' => $font['italic'], 'bold' => $font['bold'], 'condensed' => $font['condensed'], 'light' => $font['light'], 'semi' => $font['semi'], 'book' => $font['book'], 'body' => $font['body'], 'header' => $font['header'], 'heading' => $font['heading'], 'footer' => $font['footer'], 'graphic' => $font['graphic'], 'system' => $font['system'], 'block' => $font['block'], 'quote' => $font['quote'], 'message' => $font['message'], 'admin' => $font['admin'], 'logo' => $font['logo'], 'slogon' => $font['slogon'], 'legal' => $font['legal'], 'script' => $font['script'], 'medium' => $font['medium'], 'archive' => $archive[$font['id']], 'files'=> $file[$font['id']]);
+					else 
+						$fonts[$font['id']] = array('key' => $font['id'], 'peer-id' => $font['peer_id'], 'names' => $name[$font['id']], 'normal' => $font['normal'], 'italic' => $font['italic'], 'bold' => $font['bold'], 'condensed' => $font['condensed'], 'light' => $font['light'], 'semi' => $font['semi'], 'book' => $font['book'], 'body' => $font['body'], 'header' => $font['header'], 'heading' => $font['heading'], 'footer' => $font['footer'], 'graphic' => $font['graphic'], 'system' => $font['system'], 'block' => $font['block'], 'quote' => $font['quote'], 'message' => $font['message'], 'admin' => $font['admin'], 'logo' => $font['logo'], 'slogon' => $font['slogon'], 'legal' => $font['legal'], 'script' => $font['script'], 'medium' => $font['medium'], 'archive' => $archive[$font['id']], 'files'=> $file[$font['id']]);
+				}			
 			}
-			$sql = "SELECT * from `fonts_names` WHERE `font_id` IN ('".implode("', '", $fontsid) ."') ORDER BY `font_id` ASC, `name` ASC";
-			$names = $GLOBALS['FontsDB']->queryF($sql);
-			while($data = $GLOBALS['FontsDB']->fetchArray($names))
-			{
-				$name[$data['font_id']][md5($data['name'].$data['font_id'])] = $data;
-				unset($file[$data['font_id']][md5($data['name'].$data['font_id'])]['font_id']);
-			
-			}			
-			$sql = "SELECT * from `fonts` WHERE `font_id` IN ('".implode("', '", $fontsid) ."') ORDER BY `font_id` ASC";
-			$fontages = $GLOBALS['FontsDB']->queryF($sql);
-			while($font = $GLOBALS['FontsDB']->fetchArray($fontages))
-			{
-				if ($nochain==true)
-					$fonts[$font['id']] = array('key' => $font['id'], 'peer-id' => $font['peer_id'], 'names' => $name[$font['id']], 'normal' => $font['normal'], 'italic' => $font['italic'], 'bold' => $font['bold'], 'condensed' => $font['condensed'], 'light' => $font['light'], 'semi' => $font['semi'], 'book' => $font['book'], 'body' => $font['body'], 'header' => $font['header'], 'heading' => $font['heading'], 'footer' => $font['footer'], 'graphic' => $font['graphic'], 'system' => $font['system'], 'block' => $font['block'], 'quote' => $font['quote'], 'message' => $font['message'], 'admin' => $font['admin'], 'logo' => $font['logo'], 'slogon' => $font['slogon'], 'legal' => $font['legal'], 'script' => $font['script'], 'medium' => $font['medium'], 'archive' => $archive[$font['id']], 'files'=> $file[$font['id']]);
-				else 
-					$fonts[$font['id']] = array('key' => $font['id'], 'peer-id' => $font['peer_id'], 'names' => $name[$font['id']], 'normal' => $font['normal'], 'italic' => $font['italic'], 'bold' => $font['bold'], 'condensed' => $font['condensed'], 'light' => $font['light'], 'semi' => $font['semi'], 'book' => $font['book'], 'body' => $font['body'], 'header' => $font['header'], 'heading' => $font['heading'], 'footer' => $font['footer'], 'graphic' => $font['graphic'], 'system' => $font['system'], 'block' => $font['block'], 'quote' => $font['quote'], 'message' => $font['message'], 'admin' => $font['admin'], 'logo' => $font['logo'], 'slogon' => $font['slogon'], 'legal' => $font['legal'], 'script' => $font['script'], 'medium' => $font['medium'], 'archive' => $archive[$font['id']], 'files'=> $file[$font['id']]);
-			}			
+			@writeRawFile($cache, serialize($fonts));
+			return $fonts;
 		}
-		return $fonts;
+		return unserialize(file_get_contents($cache));
 	}
 }
 
@@ -3231,18 +3295,25 @@ if (!function_exists("getNodesByFontListArray")) {
 	 */
 	function getNodesByFontListArray($font_id = '', $nochain = false)
 	{
-		$nodes = array();
-		$sql = "SELECT * from `nodes_linking` WHERE `font_id` = '$font_id'";
-		$result = $GLOBALS['FontsDB']->queryF($sql);
-		while($row = $GLOBALS['FontsDB']->fetchArray($result))
+		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H", time() - 3600 *24 * 7) . 'font-nodes-by-id--' . sha1($font_id.$nochain).'.serial'))
+			unlink($unlink);
+		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H") . 'font-nodes-by-id--' . sha1($font_id.$nochain).'.serial'))
 		{
-			$ncity = $GLOBALS['FontsDB']->queryF("SELECT * from `nodes` WHERE `id` = '".$row['node_id']."'");
-			while($node = $GLOBALS['FontsDB']->fetchArray($ncity))
+			$nodes = array();
+			$sql = "SELECT * from `nodes_linking` WHERE `font_id` = '$font_id'";
+			$result = $GLOBALS['FontsDB']->queryF($sql);
+			while($row = $GLOBALS['FontsDB']->fetchArray($result))
 			{
-				$nodes[$node['type']][$node['node']] = array('node' => $node['node'], 'type' => $node['type'], 'usage' => $node['usage'], 'weight' => $node['weight'], 'fonts' => getFontsByNodeListArray($row['node_id'], $nochain));
+				$ncity = $GLOBALS['FontsDB']->queryF("SELECT * from `nodes` WHERE `id` = '".$row['node_id']."'");
+				while($node = $GLOBALS['FontsDB']->fetchArray($ncity))
+				{
+					$nodes[$node['type']][$node['node']] = array('node' => $node['node'], 'type' => $node['type'], 'usage' => $node['usage'], 'weight' => $node['weight'], 'fonts' => getFontsByNodeListArray($row['node_id'], $nochain));
+				}
 			}
+			@writeRawFile($cache, serialize($nodes));
+			return $nodes;
 		}
-		return $nodes;
+		return unserialize(file_get_contents($cache));
 	}
 }
 

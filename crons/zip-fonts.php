@@ -32,7 +32,6 @@ ini_set('memory_limit', '128M');
 include_once dirname(dirname(__FILE__)).'/functions.php';
 include_once dirname(dirname(__FILE__)).'/class/fontages.php';
 set_time_limit(7200);
-$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 $result = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `uploads` WHERE `uploaded` > '0' AND `converted` > '0' AND `quizing` > '0' AND `storaged` <= '0'  AND (`finished` >= `needing` OR `expired` < UNIX_TIMESTAMP()) ORDER BY RAND() LIMIT " . mt_rand(7,42));
 while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 {
@@ -366,7 +365,8 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 			}
 		}
 	}
-	
+	$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
+	$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 	// Writes file.diz
 	writeRawFile($comment = $currently . DIRECTORY_SEPARATOR . "file.diz", getFileDIZ(0, $upload['id'], $fingerprint, $filename = $packname.'.zip', $expanded, $filez)."\n.");
 	deleteFilesNotListedByArray($currently, array(API_BASE, 'file.diz', 'resource.json', 'LICENCE'));
@@ -545,7 +545,7 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 			writeRawFile(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-add.sh', implode("\n", $bash));
 			unset($bash);
 		}
-			
+		$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
 	} else 
 		echo("Error: Failed generated archived pack font file!!\n");
 	

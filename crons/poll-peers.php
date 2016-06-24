@@ -38,6 +38,7 @@ if ($GLOBALS['FontsDB']->getRowsNum($results = $GLOBALS['FontsDB']->queryF(sprin
 		$fonts = json_decode(getURIData($other['api-uri'].$other['api-uri-fonts'], 900, 900, array()), true);
 		foreach($fonts as $fontid => $values)
 		{
+			$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 			switch ($values['medium'])
 			{
 				case 'FONT_RESOURCES_CACHE':
@@ -136,6 +137,7 @@ if ($GLOBALS['FontsDB']->getRowsNum($results = $GLOBALS['FontsDB']->queryF(sprin
 					
 					break;
 			}
+			$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
 		}
 	}
 }

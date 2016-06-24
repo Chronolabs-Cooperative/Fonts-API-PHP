@@ -26,11 +26,12 @@ error_reporting(E_ERROR);
 set_time_limit(1999);
 require_once dirname(__DIR__).'/functions.php';
 require_once dirname(__DIR__).'/class/fontages.php';
-$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 $result = $GLOBALS['FontsDB']->queryF("SELECT * from `uploads` WHERE `uploaded` > '0' AND `converted` = '0' AND `storaged` = 0 ORDER BY RAND() LIMIT ".mt_rand(17,77));
 while($row = $GLOBALS['FontsDB']->fetchArray($result))
 {
+	$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
 	sleep(mt_rand(20,90));
+	$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 	$skip = false;
 	$upldata = json_decode($row['datastore'], true);
 	if (file_exists($row['uploaded_path'] . DIRECTORY_SEPARATOR . $row['uploaded_file']))
