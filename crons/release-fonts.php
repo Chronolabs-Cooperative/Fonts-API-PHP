@@ -28,12 +28,12 @@ include_once dirname(dirname(__FILE__)).'/functions.php';
 include_once dirname(dirname(__FILE__)).'/class/fontages.php';
 include_once dirname(dirname(__FILE__)).'/class/TwitterAPIExchange.php';
 require_once dirname(__DIR__).'/class/fontsmailer.php';
-set_time_limit(7200);
+set_time_limit(9999992);
 
 $result = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `uploads` WHERE `uploaded` > '0' AND `converted` > '0' AND `quizing` > '0' AND (`storaged` > '0' OR (`storaged` = '0' AND `expired` < UNIX_TIMESTAMP())) AND `released` = 0 ORDER BY RAND() LIMIT " . mt_rand(7,37));
 while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 {
-	sleep(mt_rand(70,175));
+	sleep(mt_rand(370,2799));
 	$datastore = json_decode($upload['datastore'], true);
 	if ($archive  = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql = "SELECT * from `fonts_archiving` WHERE `font_id` = '" . $upload['font_id'] . "'")))
 	{

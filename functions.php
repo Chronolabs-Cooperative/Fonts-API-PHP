@@ -3386,12 +3386,16 @@ if (!function_exists("getRandomFontsFromStringList")) {
 				return $fontee;
 			}
 		} else {
-			$sql = "SELECT * from `fonts` WHERE 1 = 1 ". (!empty($normal)?" AND `normal` = $normal":"") . (!empty($normal)?" AND `bold` = $bold":"") . (!empty($italic)?" AND `italic` = $italic":"") . (!empty($condensed)?" AND `condensed` = $condensed":"") . " ORDER BY RAND() LIMIT 1";
-			$fonteo = $GLOBALS['FontsDB']->queryF($sql);
-			while($fontee = $GLOBALS['FontsDB']->fetchArray($fonteo))
+			if (!isset($_SESSION["randoms"]['fontee'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])]))
 			{
-				return $fontee;
+				$sql = "SELECT * from `fonts` WHERE 1 = 1 ". (!empty($normal)?" AND `normal` = $normal":"") . (!empty($normal)?" AND `bold` = $bold":"") . (!empty($italic)?" AND `italic` = $italic":"") . (!empty($condensed)?" AND `condensed` = $condensed":"") . " ORDER BY RAND() LIMIT 1";
+				$fonteo = $GLOBALS['FontsDB']->queryF($sql);
+				while($fontee = $GLOBALS['FontsDB']->fetchArray($fonteo))
+				{
+					return $_SESSION["randoms"]['fontee'][$ipid][md5($_SERVER["REQUEST_URI"])] = $fontee;
+				}
 			}
+			return $_SESSION["randoms"]['fontee'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])];
 		}
 		
 		return false;
@@ -3434,12 +3438,16 @@ if (!function_exists("getRandomFontsIDFromNodesList")) {
 				return $node['font_id'];
 			}
 		} else {
-			$sql = "SELECT * from `nodes_linking` ORDER BY RAND() LIMIT 1";
-			$nodocity = $GLOBALS['FontsDB']->queryF($sql);
-			while($node = $GLOBALS['FontsDB']->fetchArray($nodocity))
+			if (!isset($_SESSION["randoms"]['fontid'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])]))
 			{
-				return $node['font_id'];
+				$sql = "SELECT * from `nodes_linking` ORDER BY RAND() LIMIT 1";
+				$nodocity = $GLOBALS['FontsDB']->queryF($sql);
+				while($node = $GLOBALS['FontsDB']->fetchArray($nodocity))
+				{
+					return $_SESSION["randoms"]['fontid'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])] = $node['font_id'];
+				}
 			}
+			return $_SESSION["randoms"]['fontid'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])];
 		}
 		return false;
 	}
@@ -3490,15 +3498,20 @@ if (!function_exists("getFontsIDsFromNodesList")) {
 						$ids[$node['font_id']]['count']++;
 				}
 			} else {
-				$sql = "SELECT * from `nodes_linking` ORDER BY RAND() LIMIT " . mt_rand(1,27);
-				$nodocity = $GLOBALS['FontsDB']->queryF($sql);
-				while($node = $GLOBALS['FontsDB']->fetchArray($nodocity))
+				if (!isset($_SESSION["randoms"]['nodeids'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])]))
 				{
-					if (!isset($ids[$node['font_id']]))
-						$ids[$node['font_id']] = array('key' => $node['font_id'], 'count' => 1);
-						else
-							$ids[$node['font_id']]['count']++;
+					$sql = "SELECT * from `nodes_linking` ORDER BY RAND() LIMIT " . mt_rand(1,27);
+					$nodocity = $GLOBALS['FontsDB']->queryF($sql);
+					while($node = $GLOBALS['FontsDB']->fetchArray($nodocity))
+					{
+						if (!isset($ids[$node['font_id']]))
+							$ids[$node['font_id']] = array('key' => $node['font_id'], 'count' => 1);
+							else
+								$ids[$node['font_id']]['count']++;
+					}
+					$_SESSION["randoms"]['nodeids'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])] = $ids;
 				}
+				$ids = $_SESSION["randoms"]['nodeids'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])];
 			}
 			@writeRawFile($cache, serialize($ids));
 		}
