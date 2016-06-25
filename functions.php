@@ -2467,7 +2467,7 @@ if (!function_exists("getFontRawData")) {
 						writeRawFile($font = $currently . DIRECTORY_SEPARATOR . $basefile, getArchivedZIPFile($zip, $basefile, $row['font_id']));					
 						if (isset($json['Font']))
 							writeFontResourceHeader($font, $json["Font"]['licence'], $json['Font']);
-						$totalmaking = count(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"))-1;
+						$totalmaking = count(file(__DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"))-1;
 						$outt = array();exec("cd $currently", $outt, $return);
 						$covertscript = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"));
 						foreach($covertscript as $line => $value)
@@ -2895,9 +2895,9 @@ if (!function_exists("getFontDownload")) {
 				
 				// Generating Super Font
 				$fonts = getFontsListAsArray($currently);
-				$totalmaking = count(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts-glyphs.pe"))-1;
+				$totalmaking = count(file(__DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts-glyphs.pe"))-1;
 				exec("cd $currently", $output, $return);
-				$covertscript = cleanWhitespaces(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts-glyphs.pe"));
+				$covertscript = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts-glyphs.pe"));
 				$fonts = getFontsListAsArray($currently);
 				foreach($covertscript as $line => $value)
 					foreach($fonts as $file => $values)
@@ -2970,7 +2970,7 @@ if (!function_exists("getFontDownload")) {
 						$glifmap[$step] .= "\t\t\t\t";
 					}
 				}
-				putRawFile($file, str_replace("%glyphmaps", implode("\n", $glifmap, file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "feature.fea"))));
+				putRawFile($file, str_replace("%glyphmaps", implode("\n", $glifmap, file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "feature.fea"))));
 				unset($glifmap);
 				unset($glifs);
 				unset($files);
@@ -2979,7 +2979,7 @@ if (!function_exists("getFontDownload")) {
 				unset($missing);
 				foreach(getDirListAsArray($currently) as $folder)
 				{
-					exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts-upload.pe", $currently . DIRECTORY_SEPARATOR . $folder), $output, $return);;
+					exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", __DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts-upload.pe", $currently . DIRECTORY_SEPARATOR . $folder), $output, $return);;
 					echo "Executed: $exe<br/>\n\n$output\n\n<br/><br/>";
 				}
 				deleteFilesNotListedByArray($currently, array(".".API_BASE));
