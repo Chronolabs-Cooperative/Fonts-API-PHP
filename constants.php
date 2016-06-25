@@ -86,7 +86,7 @@
 	define('FONT_RESOURCES_PEERS_GIT', 'https://github.com/Chronolabs-Cooperative/Fonting-Repository/raw/master/peers.json');
 	define('FONT_RESOURCES_REPOMAP_GIT', 'https://github.com/Chronolabs-Cooperative/Fonting-Repository/raw/master/%s/%s--repository-mapping.json');
 	define('FONT_UPLOAD_PATH', '/tmp/Fonts-Uploads');
-	define('FONTS_CACHE', FONT_RESOURCES_CACHE);
+	define('FONTS_CACHE', FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . '--dumps--');
 	
 
 	/******* DO NOT CHANGE THIS VARIABLE ****

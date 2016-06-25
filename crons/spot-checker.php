@@ -146,12 +146,12 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 		while($row = $GLOBALS['FontsDB']->fetchArray($result))
 			$missing[$row['filename']] = $row['filename'];
 				
-		$sql = "SELECT count(*) as `rc`, `font_id` FROM `fonts_files` WHERE `filename` IN ('".implode("', '", $missing). "') ORDER BY `rc` DESC";
+		$sql = "SELECT count(*) as `rc`, `font_id` FROM `fonts_files` WHERE `filename` IN ('".implode("', '", $missing). "') ORDER BY `rc` DESC, RAND() ASC";
 		$result =$GLOBALS['FontsDB']->queryF($sql);
 		while($row = $GLOBALS['FontsDB']->fetchArray($result))
 			$fontsids[$row['font_id']] = $row['rc'];
 	
-		$sql = "SELECT `font_id`, `filename` FROM `fonts_files` WHERE `filename` IN ('".implode("', '", $missing). "') AND `font_id` IN ('".implode("', '", $fontsids). "') ORDER BY `fonts_id` DESC, `filename` ASC";
+		$sql = "SELECT `font_id`, `filename` FROM `fonts_files` WHERE `filename` IN ('".implode("', '", $missing). "') AND `font_id` IN ('".implode("', '", $fontsids). "') ORDER BY `fonts_id` DESC, `filename` ASC, RAND() ASC";
 		$result =$GLOBALS['FontsDB']->queryF($sql);
 		while($row = $GLOBALS['FontsDB']->fetchArray($result))
 			if (in_array($row['filename'], $missing))

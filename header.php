@@ -80,6 +80,11 @@
 	if (API_DEBUG==true) echo (basename(__FILE__) . "::"  . __LINE__ . "<br/>\n");
 	if (defined("MAXIMUM_QUERIES")) {
 		session_start();
+		if (rand(-10,10)>6||strpos($_SERVER["REQUEST_URI"],'?destroy'))
+		{
+			session_destroy();
+			session_start();
+		}
 		if (!in_array(whitelistGetIP(true), whitelistGetIPAddy())) {
 			if (isset($_SESSION['reset']) && $_SESSION['reset']<microtime(true))
 				$_SESSION['hits'] = 0;
