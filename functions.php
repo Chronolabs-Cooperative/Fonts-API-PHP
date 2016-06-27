@@ -51,7 +51,7 @@ if (!function_exists("getCacheFilename")) {
 			mkdir($path  . DIRECTORY_SEPARATOR . ".$output", 0777, true);
 		
 		// Works out cache file spacing times	
-		$diff = ceil(time() - strtotime(date("Y-m-d H:00:00")) / 20);
+		$diff = ceil(time() - strtotime(date("Y-m-d H:00:00")) / 20) * 60;
 		$origin = strtotime(date("Y-m-d H:00:00", strtotime(date("Y-m-d H:00:00")) + $diff * 20));
 		$last = strtotime(date("Y-m-d H:00:00", strtotime(date("Y-m-d H:00:00")) + $diff * 20) - (3600*24));
 		if ($maxedfor==-1)
