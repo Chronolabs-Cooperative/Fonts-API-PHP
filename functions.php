@@ -55,7 +55,7 @@ if (!function_exists("getCacheFilename")) {
 		$origin = strtotime(date("Y-m-d H:00:00", strtotime(date("Y-m-d H:00:00")) + $diff * 20));
 		$last = strtotime(date("Y-m-d H:00:00", strtotime(date("Y-m-d H:00:00")) + $diff * 20) - (3600*24));
 		if ($maxedfor==-1)
-			$dropfrom = strtotime(date("Y-m-d H:00:00", strtotime(date("Y-m-d H:00:00")) + $diff * 20) - (3600*12));
+			$dropfrom = strtotime(date("Y-m-d H:00:00", strtotime(date("Y-m-d H:00:00")) + $diff * 20) - (3600*mt_rand(11,21)));
 		else
 			$dropfrom = strtotime(date("Y-m-d H:00:00", strtotime(date("Y-m-d H:00:00")) + $diff * 20) - $maxedfor);
 
