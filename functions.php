@@ -30,6 +30,57 @@ require_once __DIR__.'/class/FontLib/Autoloader.php';
 if (API_DEBUG==true) echo (basename(__FILE__) . "::"  . __LINE__ . "<br/>\n");
 
 
+if (!function_exists("getCacheFilename")) {
+	/**
+	 * get a cache filename from the routine for passing to cache routines
+	 *
+	 * @param string $path
+	 * @param string $ffiletemp
+	 * @param string $filehash
+	 * @param string $output
+	 * @param integer $maxedfor
+	 *
+	 * @return string
+	 */
+	function getCacheFilename($path = '', $ffiletemp = '', $filehash = '', $output = '', $maxedfor = -1)
+	{
+		if (empty($output))
+			$output = 'data';
+		
+		if (!is_dir($path  . DIRECTORY_SEPARATOR . ".$output"))
+			mkdir($path  . DIRECTORY_SEPARATOR . ".$output", 0777, true);
+		
+		// Works out cache file spacing times	
+		$diff = ceil(time() - strtotime(date("Y-m-d H:00:00")) / 20);
+		$origin = strtotime(date("Y-m-d H:00:00", strtotime(date("Y-m-d H:00:00")) + $diff * 20));
+		$last = strtotime(date("Y-m-d H:00:00", strtotime(date("Y-m-d H:00:00")) + $diff * 20) - (3600*24));
+		if ($maxedfor==-1)
+			$dropfrom = strtotime(date("Y-m-d H:00:00", strtotime(date("Y-m-d H:00:00")) + $diff * 20) - (3600*12));
+		else
+			$dropfrom = strtotime(date("Y-m-d H:00:00", strtotime(date("Y-m-d H:00:00")) + $diff * 20) - $maxedfor);
+
+		// Calculates Cache Time
+		$filename = '';
+		for($pioning = $origin + (60*20); $pioning < $last; $pioning = $pioning - (60*20))
+		{
+			if (file_exists($tmpname = $path  . DIRECTORY_SEPARATOR . ".$output" . DIRECTORY_SEPARATOR . sprintf($ffiletemp, date('Y-m-d H:i:s - ', $pioning), $filehash)))
+			{
+				if (empty($filename) && $poining > $dropfrom)
+				{
+					$filename = $tmpname;
+				} else {
+					unlink($tmpname);
+					rmdir(dirname($tmpname));
+				}
+			}
+		}
+		if (empty($filename))
+			$filename = $path  . DIRECTORY_SEPARATOR . ".$output" . DIRECTORY_SEPARATOR . sprintf($ffiletemp, date('Y-m-d H:i:s - ', $origin), $filehash);
+		return $filename;
+	}
+}
+
+
 if (!function_exists("getNodesByFontString")) {
 	/**
 	 * get a font nodes by Font Identity Hash
@@ -40,9 +91,7 @@ if (!function_exists("getNodesByFontString")) {
 	 */
 	function getNodesByFontString($font_id = '')
 	{
-		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H", time() - 3600 *24 * 7) . 'nodes-by-font--' . sha1($font_id).'.serial'))
-			unlink($unlink);
-		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H") . 'nodes-by-font--' . sha1($font_id).'.serial'))
+		if (!file_exists($cache = getCacheFilename(FONTS_CACHE , '%snodes-by-font--%s.serial',sha1($font_id), 'nodes')))
 		{
 			$nodes = $nodesid = array();
 			try
@@ -1870,7 +1919,7 @@ if (!function_exists("getNamingImage")) {
 	function getNamingImage($mode = '', $clause = '', $state = '', $output = '', $version = "v2")
 	{
 
-		if (!file_exists($font = FONTS_CACHE . DIRECTORY_SEPARATOR . md5($clause.sha1(date('Y-m-d'))) . ".ttf"))
+		if (!file_exists($font = getCacheFilename(FONT_CACHE, "%sfont--%s.tff", md5($clause), "ttf")))
 		{
 			$ttf = getFontRawData($mode, $clause, 'ttf', '');
 			if (!is_dir(FONTS_CACHE))
@@ -1952,7 +2001,7 @@ if (!function_exists("getGlyphPreview")) {
 	function getGlyphPreview($mode = '', $clause = '', $state = '', $name = '', $output = '', $char = '0', $version = "v2")
 	{
 
-		if (!file_exists($font = FONTS_CACHE . DIRECTORY_SEPARATOR . md5($clause.sha1(date('Y-m-d'))) . ".ttf"))
+		if (!file_exists($font = getCacheFilename(FONT_CACHE, "%sfont--%s.tff", md5($clause), "ttf")))
 		{
 			$ttf = getFontRawData($mode, $clause, 'ttf', '');
 			if (!is_dir(FONTS_CACHE))
@@ -2137,9 +2186,7 @@ if (!function_exists("getCSSListArray")) {
 	function getCSSListArray($mode = '', $clause = '', $state = '', $name = '', $output = '', $version = "v2")
 	{
 
-		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H", time() - 3600 *24 * 7) . '-'.$mode.'-css-list-clause--' . sha1($mode.$clause.$output.$state.$name.$version).'.json'))
-			unlink($unlink);
-		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H") . '-'.$mode.'-css-list-clause--' . sha1($mode.$clause.$output.$state.$name.$version).'.json'))
+		if (!file_exists($cache = getCacheFilename(FONT_CACHE, "%s$mode-css-list-clause--%s.json", sha1($mode.$clause.$output.$state.$name.$version), "css")))
 		{
 			$styles = array();
 			switch($mode)
@@ -2247,11 +2294,8 @@ if (!function_exists("getFontsRssData")) {
 	 */
 	function getFontsRssData($mode = '', $clause = '', $state = '', $output = '', $version = "v2")
 	{
-		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H", time() - 3600 *24 * 7) . 'font-feed-by-clause--' . sha1($clause.$output.$version).'.rss'))
-			unlink($unlink);
-		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H") . 'font-feed-by-clause--' . sha1($clause.$output.$version).'.rss'))
+		if (!file_exists($cache = getCacheFilename(FONT_CACHE, "%sfont-feed-by-clause--%s.rss", sha1($clause.$output.$version), "rss", 1800)))
 		{
-		
 			$xml = "<?xml version='1.0' encoding='utf-8' ?>";
 			$xml .= "\n<rss version='2.0'>";
 			$xml .= "\n<channel>";
@@ -2341,9 +2385,7 @@ if (!function_exists("getSurveyCSSListArray")) {
 			if (file_exists($row['currently_path'] . DIRECTORY_SEPARATOR . "font-resource.json"))
 				$data = json_decode(file_get_contents($row['currently_path'] . DIRECTORY_SEPARATOR  . "font-resource.json"), true);
 		}
-		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . $GLOBALS['hourprev'] . '--' . date('d-M-Y') . '---css-list--' . sha1($mode.$clause.$state.$name.$version).'.serial'))
-			unlink($unlink);
-		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . $GLOBALS['hourindx'] . '--' . date('d-M-Y') . '---css-list--' . sha1($mode.$clause.$state.$name.$version).'.serial'))
+		if (!file_exists($cache = getCacheFilename(FONT_CACHE, "%s".$GLOBALS['hourindx']."-survey-css-list--%s.serial", sha1($mode.$clause.$state.$name.$version), "css")))
 		{
 			$styles = array();
 			switch($mode)
@@ -2376,9 +2418,7 @@ if (!function_exists("getFontRawData")) {
 	 */
 	function getFontRawData($mode = '', $clause = '', $output = '', $ufofile = '')
 	{
-		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H", time() - 3600 *24 * 7) . 'font-raw-data-by-id--' . sha1($clause.$output.$version).'.data'))
-			unlink($unlink);
-		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H") . 'font-raw-data-by-id--' . sha1($clause.$output.$version).'.data'))
+		if (!file_exists($cache = getCacheFilename(FONT_CACHE, '%sfont-raw-data-by-id--%s.raw', sha1($clause.$output.$version), $output)))
 		{
 			global $ipid;
 			if (!$GLOBALS['FontsDB']->queryF($sql = "UPDATE `networking` SET `fonts` = `fonts` + 1 WHERE `ip_id` LIKE '$ipid'"))
@@ -2444,9 +2484,7 @@ if (!function_exists("getFontRawData")) {
 				if ($output!="font-resource.json")
 				{
 					$found = false;
-					$cachefile = FONTS_CACHE . DIRECTORY_SEPARATOR . '--raw--' . DIRECTORY_SEPARATOR . md5(getRegionalFontName($row['font_id']).$row['font_id']) . '.zip';
-					if (!is_dir(FONTS_CACHE . DIRECTORY_SEPARATOR . '--raw--' . DIRECTORY_SEPARATOR))
-						mkdir(FONTS_CACHE . DIRECTORY_SEPARATOR . '--raw--' . DIRECTORY_SEPARATOR, 0777, true);
+					$cachefile = getCacheFilename(FONT_CACHE, '%sfont-cached-data-by-hash--%s.zip', md5(getRegionalFontName($row['font_id']).$row['font_id']), 'zip');
 					if (!file_exists($cachefile))
 						$found = false;
 					else {
@@ -2558,9 +2596,7 @@ if (!function_exists("getFontFileDiz")) {
 	 */
 	function getFontFileDiz($mode = '', $clause = '', $state = '', $output = '', $version = '')
 	{
-		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H", time() - 3600 *24 * 7) . 'font-diz-by-id--' . sha1($clause.$version).'.diz'))
-			unlink($unlink);
-		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H") . 'font-diz-by-id--' . sha1($clause.$version).'.diz'))
+		if (!file_exists($cache = getCacheFilename(FONT_CACHE, '%sfont-diz-by-id--%s.diz', sha1($clause.$version), $output)))
 		{
 			$sql = "SELECT * from `fonts_archiving` WHERE (`font_id` = '$clause' OR `fingerprint` = '$clause')";
 			$result = $GLOBALS['FontsDB']->queryF($sql);
@@ -2692,9 +2728,7 @@ if (!function_exists("getFontsCallbacksArray")) {
 	 */
 	function getFontsCallbacksArray($clause = '', $state = '', $output = '', $version = '')
 	{
-		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H", time() - 3600 *24 * 7) . 'font-callbacks-by-id--' . sha1($clause.$version).'.serial'))
-			unlink($unlink);
-		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H") . 'font-callbacks-by-id--' . sha1($clause.$version).'.serial'))
+		if (!file_exists($cache = getCacheFilename(FONT_CACHE, '%sfont-callbacks-by-id--%s.serial', sha1($clause.$version), 'array')))
 		{
 			$return = array();
 			$sql = "SELECT * from `fonts_callbacks` WHERE (`font_id` = '$clause')";
@@ -2725,9 +2759,7 @@ if (!function_exists("getFontsDataArray")) {
 	 */
 	function getFontsDataArray($clause = '', $state = '', $output = '', $version = '')
 	{
-		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H", time() - 3600 *24 * 7) . 'font-data-by-id--' . sha1($clause.$version).'.serial'))
-			unlink($unlink);
-		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H") . 'font-data-by-id--' . sha1($clause.$version).'.serial'))
+		if (!file_exists($cache = getCacheFilename(FONT_CACHE, '%sfont-data-by-id--%s.serial', sha1($clause.$version), 'array')))
 		{
 			$sql = "SELECT * from `fonts_archiving` WHERE (`font_id` = '$clause' OR `fingerprint` = '$clause')";
 			$result = $GLOBALS['FontsDB']->queryF($sql);
@@ -3151,9 +3183,7 @@ if (!function_exists("getFontUFORawData")) {
 	 */
 	function getFontUFORawData($mode = '', $clause = '', $state = '', $output = '', $ufofile = '')
 	{
-		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H", time() - 3600 *24 * 7) . 'font-ufo-by-id--' . sha1($clause.$ufofile).'.serial'))
-			unlink($unlink);
-		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H") . 'font-ufo-by-id--' . sha1($clause.$ufofile).'.serial'))
+		if (!file_exists($cache = getCacheFilename(FONT_CACHE, '%sfont-ufo-by-id--%s.serial', sha1($clause.$ufofile), $output)))
 		{
 			$sql = "SELECT * from `fonts_archiving` WHERE (`font_id` = '$clause' OR `fingerprint` = '$clause')";
 			$result = $GLOBALS['FontsDB']->queryF($sql);
@@ -3363,9 +3393,7 @@ if (!function_exists("getFontsByNodeListArray")) {
 	 */
 	function getFontsByNodeListArray($node_id = 0, $nochain = false)
 	{
-		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H", time() - 3600 *24 * 7) . 'node-identities-by-id--' . sha1($node_id.$nochain).'.serial'))
-			unlink($unlink);
-		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H") . 'node-identities-by-id--' . sha1($node_id.$nochain).'.serial'))
+		if (!file_exists($cache = getCacheFilename(FONT_CACHE, '%snode-identities-by-id--%s.serial', sha1($node_id.$nochain), 'array')))
 		{
 			$file = $archive = $fontsid = $fonts = array();
 			$sql = "SELECT * from `nodes_linking` WHERE `node_id` = '$node_id'";
@@ -3426,9 +3454,7 @@ if (!function_exists("getNodesByFontListArray")) {
 	 */
 	function getNodesByFontListArray($font_id = '', $nochain = false)
 	{
-		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H", time() - 3600 *24 * 7) . 'font-nodes-by-id--' . sha1($font_id.$nochain).'.serial'))
-			unlink($unlink);
-		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H") . 'font-nodes-by-id--' . sha1($font_id.$nochain).'.serial'))
+		if (!file_exists($cache = getCacheFilename(FONT_CACHE, '%sfont-nodes-by-id--%s.serial', sha1($font_id.$nochain), 'array')))
 		{
 			$nodes = array();
 			$sql = "SELECT * from `nodes_linking` WHERE `font_id` = '$font_id'";
@@ -3458,9 +3484,7 @@ if (!function_exists("getFontsByNodesListArray")) {
 	 */
 	function getFontsByNodesListArray($node_id = '')
 	{
-		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . $GLOBALS['hourprev'] . '--' . date('d-M-Y') . '---font-noding-'.$node_id.'.serial'))
-			unlink($unlink);
-		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . $GLOBALS['hourindx'] . '--' . date('d-M-Y') . '---font-noding-'.$node_id.'.serial'))
+		if (!file_exists($cache = getCacheFilename(FONT_CACHE, '%sfont-noding--%s.serial', sha1($node_id), 'array')))
 		{
 			try {
 				$name = $file = $archive = $font_ids = $fonts = array();
@@ -3536,9 +3560,7 @@ if (!function_exists("getRandomFontsFromStringList")) {
 		$fonts_id = $nodes_id = array();
 		if (!isset($_SESSION["randoms"]['fontee'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])]))
 		{
-			if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . $GLOBALS['hourprev'] . '--' . date('d-M-Y') . '---font-random-nodes-'.sha1($nodestring.$_SERVER["REQUEST_URI"]).'.serial'))
-				unlink($unlink);
-			if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . $GLOBALS['hourindx'] . '--' . date('d-M-Y') . '---font-random-nodes-'.sha1($nodestring.$_SERVER["REQUEST_URI"]).'.serial'))
+			if (!file_exists($cache = getCacheFilename(FONT_CACHE, '%sfont-random-nodes--%s.serial', sha1($nodestring.$_SERVER["REQUEST_URI"]), 'array')))
 			{
 				if (substr(strtolower($nodestring),0,3)!='any')
 				{
@@ -3598,9 +3620,7 @@ if (!function_exists("getRandomFontsIDFromNodesList")) {
 	{
 		if (!isset($_SESSION["randoms"]['fontid'][$GLOBAL['ipid']][md5($toponly.$_SERVER["REQUEST_URI"])]))
 		{
-			if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . $GLOBALS['hourprev'] . '--' . date('d-M-Y') . '---font-random-nodes-'.sha1($nodestring.$toponly.$_SERVER["REQUEST_URI"]).'.md5'))
-				unlink($unlink);
-			if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . $GLOBALS['hourindx'] . '--' . date('d-M-Y') . '---font-random-nodes-'.sha1($nodestring.$toponly.$_SERVER["REQUEST_URI"]).'.md5'))
+			if (!file_exists($cache = getCacheFilename(FONT_CACHE, '%sfont-fingerprint--%s.md5', sha1($nodestring.$toponly.$_SERVER["REQUEST_URI"]), 'hash')))
 			{
 				if (substr(strtolower($nodestring),0,3)!='any')
 				{
@@ -3655,15 +3675,11 @@ if (!function_exists("getFontsIDsFromNodesList")) {
 	 */
 	function getFontsIDsFromNodesList($nodestring = '', $toponly = false)
 	{
-		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H", time() - 3600 *24 * 7) . 'fonts-identities-by-string--' . sha1($nodestring.$toponly.$_SERVER["REQUEST_URI"]).'.serial'))
-			unlink($unlink);
-		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H") . 'fonts-identities-by-string--' . sha1($nodestring.$toponly.$_SERVER["REQUEST_URI"]).'.serial'))
+		if (!file_exists($cache = getCacheFilename(FONT_CACHE, '%sfonts-identities-by-nodestring--%s.serial', sha1($nodestring.$toponly.$_SERVER["REQUEST_URI"]), 'array')))
 		{
 			if (!isset($_SESSION["randoms"]['nodeids'][$GLOBAL['ipid']][md5($toponly.$_SERVER["REQUEST_URI"])]))
 			{
-				if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . $GLOBALS['hourprev'] . '--' . date('d-M-Y') . '---fonts-random-nodes-'.sha1($nodestring.$toponly.$_SERVER["REQUEST_URI"]).'.serial'))
-					unlink($unlink);
-				if (!file_exists($cacheb = FONTS_CACHE . DIRECTORY_SEPARATOR . $GLOBALS['hourindx'] . '--' . date('d-M-Y') . '---fonts-random-nodes-'.sha1($nodestring.$toponly.$_SERVER["REQUEST_URI"]).'.serial'))
+				if (!file_exists($cacheb = getCacheFilename(FONT_CACHE, '%sfonts-random-nodes--%s.serial', sha1($nodestring.$toponly.$_SERVER["REQUEST_URI"]), 'array')))
 				{
 					if (substr(strtolower($nodestring),0,3)!='any')
 					{
@@ -3749,9 +3765,7 @@ if (!function_exists("getFontsIDsNodeStringArray")) {
 	 */
 	function getFontsIDsNodeStringArray()
 	{
-		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . $GLOBALS['hourprev'] . '--' . date('d-M-Y') . '---font-identities.serial'))
-			unlink($unlink);
-		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . $GLOBALS['hourindx'] . '--' . date('d-M-Y') . '---font-identities.serial'))
+		if (!file_exists($cache = getCacheFilename(FONT_CACHE, '%sfont-identities--%s.serial', sha1($_SERVER["REQUEST_URI"]), 'array')))
 		{
 			$ncity = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `fonts` ORDER BY `created` ASC");
 			while($font = $GLOBALS['FontsDB']->fetchArray($ncity))
@@ -3786,9 +3800,7 @@ if (!function_exists("getFontsListArray")) {
 		{
 			$state = '';
 		}
-		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H", time() - 3600 *24 * 7) . '--fonts-listing--' . sha1($clause.$state).'.serial'))
-			unlink($unlink);
-		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H") . '--fonts-listing--' . sha1($clause.$state).'.serial'))
+		if (!file_exists($cache = getCacheFilename(FONT_CACHE, '%sfonts-listings--%s.serial', sha1($clause.$state), 'array')))
 		{
 			$limits = "";
 			if (strpos($state, '-'))
@@ -3887,7 +3899,7 @@ if (!function_exists("getNodesListArray")) {
 			$state = '';
 		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H", time() - 3600 *24 * 7) . 'nodes-listing--' . sha1($clause.$state).'.serial'))
 			unlink($unlink);
-		if (!file_exists($cache = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H") . 'nodes-listing--' . sha1($clause.$state).'.serial'))
+		if (!file_exists($cache = getCacheFilename(FONT_CACHE, '%snodes-listings--%s.serial', sha1($clause.$state), 'array')))
 		{
 			$limits = "";
 			if (strpos($state, '-'))
