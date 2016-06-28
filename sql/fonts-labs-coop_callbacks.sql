@@ -1,10 +1,10 @@
 CREATE DATABASE  IF NOT EXISTS `fonts-labs-coop` /*!40100 DEFAULT CHARACTER SET utf8 */;
 USE `fonts-labs-coop`;
--- MySQL dump 10.13  Distrib 5.6.30, for debian-linux-gnu (x86_64)
+-- MySQL dump 10.13  Distrib 5.7.12, for Linux (x86_64)
 --
 -- Host: localhost    Database: fonts-labs-coop
 -- ------------------------------------------------------
--- Server version	5.6.30-0ubuntu0.15.10.1
+-- Server version	5.7.12-0ubuntu1.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -16,6 +16,25 @@ USE `fonts-labs-coop`;
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `callbacks`
+--
+
+DROP TABLE IF EXISTS `callbacks`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `callbacks` (
+  `when` int(12) NOT NULL,
+  `uri` varchar(250) NOT NULL DEFAULT '',
+  `timeout` int(4) NOT NULL DEFAULT '0',
+  `connection` int(4) NOT NULL DEFAULT '0',
+  `data` mediumtext NOT NULL,
+  `queries` mediumtext NOT NULL,
+  `fails` int(3) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`when`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `callbacks`
@@ -35,4 +54,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-06-20 14:57:14
+-- Dump completed on 2016-06-28 17:12:11

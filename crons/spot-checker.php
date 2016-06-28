@@ -175,9 +175,9 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 		foreach($ufofiles as $path => $values)
 		{
 			$glifs[basename($path)] = str_replace(".glif", "", basename($path));
-			if (substr($glifs[basename($path)], 0, 1) = "_")
+			if (substr($glifs[basename($path)], 0, 1) == "_")
 				$glifs[basename($path)] = substr($glifs[basename($path)], 1);
-			if (substr($glifs[basename($path)], strlen($glifs[basename($path)])-1, 1) = "_")
+			if (substr($glifs[basename($path)], strlen($glifs[basename($path)])-1, 1) == "_")
 				$glifs[basename($path)] = substr($glifs[basename($path)], 0, strlen($glifs[basename($path)])-2);
 			$working = dirname(dirname($path));
 		}

@@ -63,7 +63,7 @@ if (!function_exists("getCacheFilename")) {
 		$filename = '';
 		for($pioning = $origin + (60*20); $pioning < $last; $pioning = $pioning - (60*20))
 		{
-			if (file_exists($tmpname = $path  . DIRECTORY_SEPARATOR . ".$output" . DIRECTORY_SEPARATOR . sprintf($ffiletemp, date('Y-m-d H:i:s - ', $pioning), $filehash)))
+			if (file_exists($tmpname = $path  . DIRECTORY_SEPARATOR . ".$output" . DIRECTORY_SEPARATOR . sprintf($ffiletemp, date('YmdHis---', $pioning), $filehash)))
 			{
 				if (empty($filename) && $poining > $dropfrom)
 				{
@@ -75,7 +75,7 @@ if (!function_exists("getCacheFilename")) {
 			}
 		}
 		if (empty($filename))
-			$filename = $path  . DIRECTORY_SEPARATOR . ".$output" . DIRECTORY_SEPARATOR . sprintf($ffiletemp, date('Y-m-d H:i:s - ', $origin), $filehash);
+			$filename = $path  . DIRECTORY_SEPARATOR . ".$output" . DIRECTORY_SEPARATOR . sprintf($ffiletemp, date('YmdHis---', $origin), $filehash);
 		return $filename;
 	}
 }
@@ -91,7 +91,7 @@ if (!function_exists("getNodesByFontString")) {
 	 */
 	function getNodesByFontString($font_id = '')
 	{
-		if (!file_exists($cache = getCacheFilename(FONTS_CACHE , '%snodes-by-font--%s.serial',sha1($font_id), 'nodes')))
+		if (!file_exists($cache = getCacheFilename(FONTS_CACHE , '%snodes-by-font--%s.json',sha1($font_id), 'nodes')))
 		{
 			$nodes = $nodesid = array();
 			try
@@ -114,10 +114,10 @@ if (!function_exists("getNodesByFontString")) {
 			{
 				die($error);
 			}
-			@writeRawFile($cache, serialize($nodes));
+			@writeRawFile($cache, json_encode($nodes));
 			return implode("-", $nodes);
 		}
-		return implode("-", unserialize(file_get_contents($cache)));
+		return implode("-", json_decode(file_get_contents($cache), true));
 	}
 }
 
@@ -1623,11 +1623,11 @@ if (!function_exists("getIPIdentity")) {
 					{
 						$sql = "INSERT INTO `networking` (`" . implode("`, `", array_keys($data)) . "`) VALUES ('" . implode("', '", $data) . "')";
 						if (!$GLOBALS['FontsDB']->queryF($sql))
-							die("SQL Failed: ".$GLOBALS['FontsDB']->error() . " :: $sql");
+							trigger_error("SQL Failed: ".$GLOBALS['FontsDB']->error() . " :: $sql");
 					} else {
 						$sql = "UPDATE `networking` SET `last` = '". time() . '\' WHERE `ip_id` = "' . $_SESSION['ipdata'][$ip]['ip_id'] .'"';
 						if (!$GLOBALS['FontsDB']->queryF($sql))
-							die("SQL Failed: ".$GLOBALS['FontsDB']->error() . " :: $sql");
+							trigger_error("SQL Failed: ".$GLOBALS['FontsDB']->error() . " :: $sql");
 					}
 				}
 			}
@@ -1664,7 +1664,7 @@ if (!function_exists("getBaseDomain")) {
 			while(empty($classes) || $attempts <= (count($stratauris) * 1.65))
 			{
 				$attempts++;
-				$classes = array_keys(unserialize(getURIData($stratauris[mt_rand(0, count($stratauris)-1)] ."/v1/strata/serial.api", 120, 120)));
+				$classes = array_keys(json_decode(getURIData($stratauris[mt_rand(0, count($stratauris)-1)] ."/v1/strata/serial.api", 120, 120), true));
 			}
 		}
 		if (empty($fallout))
@@ -1678,7 +1678,7 @@ if (!function_exists("getBaseDomain")) {
 			while(empty($fallout) || $attempts <= (count($stratauris) * 1.65))
 			{
 				$attempts++;
-				$fallout = array_keys(unserialize(getURIData($stratauris[mt_rand(0, count($stratauris)-1)] ."/v1/fallout/serial.api", 120, 120)));
+				$fallout = array_keys(json_decode(getURIData($stratauris[mt_rand(0, count($stratauris)-1)] ."/v1/fallout/serial.api", 120, 120), true));
 			}
 		}
 		
@@ -1797,7 +1797,7 @@ if (!function_exists("getPreviewHTML")) {
 					case "gif":
 					case "png":
 						$json = json_decode(getFontRawData($mode, $clause, "font-resource.json", ''), true);
-						if (!file_exists($font = FONTS_CACHE . DIRECTORY_SEPARATOR . md5($clause.sha1(date('Y-m-d'))) . ".ttf"))
+						if (!file_exists($font = getCacheFilename(FONT_RESOURCES_CACHE, "%sfont--%s.ttf", md5($clause), "ttf")))
 						{
 							$ttf = getFontRawData($mode, $clause, 'ttf', '');
 							if (!is_dir(FONTS_CACHE))
@@ -1919,7 +1919,7 @@ if (!function_exists("getNamingImage")) {
 	function getNamingImage($mode = '', $clause = '', $state = '', $output = '', $version = "v2")
 	{
 
-		if (!file_exists($font = getCacheFilename(FONT_CACHE, "%sfont--%s.tff", md5($clause), "ttf")))
+		if (!file_exists($font = getCacheFilename(FONT_RESOURCES_CACHE, "%sfont--%s.ttf", md5($clause), "ttf")))
 		{
 			$ttf = getFontRawData($mode, $clause, 'ttf', '');
 			if (!is_dir(FONTS_CACHE))
@@ -2001,7 +2001,7 @@ if (!function_exists("getGlyphPreview")) {
 	function getGlyphPreview($mode = '', $clause = '', $state = '', $name = '', $output = '', $char = '0', $version = "v2")
 	{
 
-		if (!file_exists($font = getCacheFilename(FONT_CACHE, "%sfont--%s.tff", md5($clause), "ttf")))
+		if (!file_exists($font = getCacheFilename(FONT_RESOURCES_CACHE, "%sfont--%s.ttf", md5($clause), "ttf")))
 		{
 			$ttf = getFontRawData($mode, $clause, 'ttf', '');
 			if (!is_dir(FONTS_CACHE))
@@ -2186,7 +2186,7 @@ if (!function_exists("getCSSListArray")) {
 	function getCSSListArray($mode = '', $clause = '', $state = '', $name = '', $output = '', $version = "v2")
 	{
 
-		if (!file_exists($cache = getCacheFilename(FONT_CACHE, "%s$mode-css-list-clause--%s.json", sha1($mode.$clause.$output.$state.$name.$version), "css")))
+		if (!file_exists($cache = getCacheFilename(FONT_RESOURCES_CACHE, "%s$mode-css-list-clause--%s.json", sha1($mode.$clause.$output.$state.$name.$version), "css")))
 		{
 			$styles = array();
 			switch($mode)
@@ -2294,7 +2294,7 @@ if (!function_exists("getFontsRssData")) {
 	 */
 	function getFontsRssData($mode = '', $clause = '', $state = '', $output = '', $version = "v2")
 	{
-		if (!file_exists($cache = getCacheFilename(FONT_CACHE, "%sfont-feed-by-clause--%s.rss", sha1($clause.$output.$version), "rss", 1800)))
+		if (!file_exists($cache = getCacheFilename(FONT_RESOURCES_CACHE, "%sfont-feed-by-clause--%s.rss", sha1($clause.$output.$version), "rss", 1800)))
 		{
 			$xml = "<?xml version='1.0' encoding='utf-8' ?>";
 			$xml .= "\n<rss version='2.0'>";
@@ -2385,7 +2385,7 @@ if (!function_exists("getSurveyCSSListArray")) {
 			if (file_exists($row['currently_path'] . DIRECTORY_SEPARATOR . "font-resource.json"))
 				$data = json_decode(file_get_contents($row['currently_path'] . DIRECTORY_SEPARATOR  . "font-resource.json"), true);
 		}
-		if (!file_exists($cache = getCacheFilename(FONT_CACHE, "%s".$GLOBALS['hourindx']."-survey-css-list--%s.serial", sha1($mode.$clause.$state.$name.$version), "css")))
+		if (!file_exists($cache = getCacheFilename(FONT_RESOURCES_CACHE, "%s".$GLOBALS['hourindx']."-survey-css-list--%s.json", sha1($mode.$clause.$state.$name.$version), "css")))
 		{
 			$styles = array();
 			switch($mode)
@@ -2398,10 +2398,10 @@ if (!function_exists("getSurveyCSSListArray")) {
 					$styles = generateCSS($fonts, $data['FontName'], true, false, false);
 					break;
 			}
-			@writeRawFile($cache, serialise($styles));
+			@writeRawFile($cache, json_encode($styles));
 			return $styles;
 		}
-		return unserialise(file_get_contents($cache));
+		return json_decode(file_get_contents($cache), true);
 	}
 }
 
@@ -2418,7 +2418,7 @@ if (!function_exists("getFontRawData")) {
 	 */
 	function getFontRawData($mode = '', $clause = '', $output = '', $ufofile = '')
 	{
-		if (!file_exists($cache = getCacheFilename(FONT_CACHE, '%sfont-raw-data-by-id--%s.raw', sha1($clause.$output.$version), $output)))
+		if (!file_exists($cache = getCacheFilename(FONT_RESOURCES_CACHE, '%sfont-raw-data-by-id--%s.raw', sha1($clause.$output.$version), $output)))
 		{
 			global $ipid;
 			if (!$GLOBALS['FontsDB']->queryF($sql = "UPDATE `networking` SET `fonts` = `fonts` + 1 WHERE `ip_id` LIKE '$ipid'"))
@@ -2438,7 +2438,7 @@ if (!function_exists("getFontRawData")) {
 					case 'FONT_RESOURCES_RESOURCE':
 						if ($font['medium'] == 'FONT_RESOURCES_CACHE')
 						{
-							$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
+							$sessions = json_decode(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.json"), true);
 							if (!file_exists(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
 							{
 								mkdir(constant("FONT_RESOURCES_CACHE") . $row['path'], 0777, true);
@@ -2449,7 +2449,7 @@ if (!function_exists("getFontRawData")) {
 								if ($sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] < microtime(true) + ($next = mt_rand(1800*.3236, 2560*.5436)))
 									$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] + $next;
 							}
-							writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial", serialize($sessions));
+							writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.json", json_encode($sessions));
 						} elseif ($font['medium'] == 'FONT_RESOURCES_RESOURCE')
 						{
 							if (!file_exists(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
@@ -2462,7 +2462,7 @@ if (!function_exists("getFontRawData")) {
 						$json = json_decode(getArchivedZIPFile($zip = constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'font-resource.json'), true);
 						break;
 					case 'FONT_RESOURCES_PEER':
-						$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
+						$sessions = json_decode(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.json"), true);
 						if (!file_exists(constant(FONT_RESOURCES_CACHE) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
 						{
 							$sql = "SELECT * FROM `peers` WHERE `peer-id` LIKE '%s'";
@@ -2477,14 +2477,14 @@ if (!function_exists("getFontRawData")) {
 							if ($sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] < microtime(true) + ($next = mt_rand(1800*.3236, 2560*.5436)))
 								$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] + $next;
 						}
-						writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial", serialize($sessions));
+						writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.json", json_encode($sessions));
 						$json = json_decode(getArchivedZIPFile($zip = FONT_RESOURCES_CACHE . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'font-resource.json'), true);
 						break;
 				}
 				if ($output!="font-resource.json")
 				{
 					$found = false;
-					$cachefile = getCacheFilename(FONT_CACHE, '%sfont-cached-data-by-hash--%s.zip', md5(getRegionalFontName($row['font_id']).$row['font_id']), 'zip');
+					$cachefile = getCacheFilename(FONT_RESOURCES_CACHE, '%sfont-cached-data-by-hash--%s.zip', md5(getRegionalFontName($row['font_id']).$row['font_id']), 'zip');
 					if (!file_exists($cachefile))
 						$found = false;
 					else {
@@ -2496,12 +2496,28 @@ if (!function_exists("getFontRawData")) {
 					{
 						mkdir($currently = FONT_RESOURCES_CONVERTING . DIRECTORY_SEPARATOR . sha1(md5_file($zip).$row['font_id']), 0777, true);
 						chdir($currently);
+						$basefile = '';
 						foreach(getArchivedZIPContentsArray($zip) as $crc => $file)
 							if (substr($file['filename'], strlen($file['filename']) - strlen(API_BASE)) == API_BASE)
 							{
 								$basefile = $file['filename'];
 								continue;
 							}
+						if (empty($basefile))
+						{
+
+							foreach($formats = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'font-converted.diz')) as $format)
+								foreach(getArchivedZIPContentsArray($zip) as $crc => $file)
+								if (substr($file['filename'], strlen($file['filename']) - strlen($format)) == $format)
+								{
+									$basefile = $file['filename'];
+									continue;
+									continue;
+								}
+							if (empty($basefile))
+								die("Failed to find convertable format in: *." . implode(", *.", $formats) . " for fonting in archive: " . basename($zip));
+						}
+
 						writeRawFile($font = $currently . DIRECTORY_SEPARATOR . $basefile, getArchivedZIPFile($zip, $basefile, $row['font_id']));					
 						if (isset($json['Font']))
 							writeFontResourceHeader($font, $json["Font"]['licence'], $json['Font']);
@@ -2572,10 +2588,10 @@ if (!function_exists("getFontRawData")) {
 				if (empty($data))
 					$data = "Font Type: $output - Not found in Font Resource: ".basename($zip);
 			}
-			@writeRawFile($cache, serialise(array('data'=>$data, 'filename'=>$GLOBALS['filename'])));
+			@writeRawFile($cache, json_encode(array('data'=>$data, 'filename'=>$GLOBALS['filename'])));
 			return $data;
 		}
-		$data = unserialize(file_get_contents($cache));
+		$data = json_decode(file_get_contents($cache), true);
 		$GLOBALS['filename'] = $data['filename'];
 		return $data['data'];
 	}
@@ -2596,7 +2612,7 @@ if (!function_exists("getFontFileDiz")) {
 	 */
 	function getFontFileDiz($mode = '', $clause = '', $state = '', $output = '', $version = '')
 	{
-		if (!file_exists($cache = getCacheFilename(FONT_CACHE, '%sfont-diz-by-id--%s.diz', sha1($clause.$version), $output)))
+		if (!file_exists($cache = getCacheFilename(FONT_RESOURCES_CACHE, '%sfont-diz-by-id--%s.diz', sha1($clause.$version), $output)))
 		{
 			$sql = "SELECT * from `fonts_archiving` WHERE (`font_id` = '$clause' OR `fingerprint` = '$clause')";
 			$result = $GLOBALS['FontsDB']->queryF($sql);
@@ -2611,7 +2627,7 @@ if (!function_exists("getFontFileDiz")) {
 					case 'FONT_RESOURCES_RESOURCE':
 						if ($font['medium'] == 'FONT_RESOURCES_CACHE')
 						{
-							$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
+							$sessions = json_decode(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.json"), true);
 							if (!file_exists(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
 							{
 								mkdir(constant("FONT_RESOURCES_CACHE") . $row['path'], 0777, true);
@@ -2622,7 +2638,7 @@ if (!function_exists("getFontFileDiz")) {
 								if ($sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] < microtime(true) + ($next = mt_rand(1800*.3236, 2560*.5436)))
 									$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] + $next;
 							}
-							writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial", serialize($sessions));
+							writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.json", json_encode($sessions));
 						} elseif ($font['medium'] == 'FONT_RESOURCES_RESOURCE')
 						{
 							if (!file_exists(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
@@ -2635,7 +2651,7 @@ if (!function_exists("getFontFileDiz")) {
 						$data = getArchivedZIPFile($zip = constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'file.diz');
 						break;
 					case 'FONT_RESOURCES_PEER':
-						$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
+						$sessions = json_decode(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.json"), true);
 						if (!file_exists(constant(FONT_RESOURCES_CACHE) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
 						{
 							$sql = "SELECT * FROM `peers` WHERE `peer-id` LIKE '%s'";
@@ -2650,7 +2666,7 @@ if (!function_exists("getFontFileDiz")) {
 							if ($sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] < microtime(true) + ($next = mt_rand(1800*.3236, 2560*.5436)))
 								$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] + $next;
 						}
-						writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial", serialize($sessions));
+						writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.json", json_encode($sessions));
 						$data = getArchivedZIPFile($zip = FONT_RESOURCES_CACHE . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'file_diz');
 						break;
 					
@@ -2728,7 +2744,7 @@ if (!function_exists("getFontsCallbacksArray")) {
 	 */
 	function getFontsCallbacksArray($clause = '', $state = '', $output = '', $version = '')
 	{
-		if (!file_exists($cache = getCacheFilename(FONT_CACHE, '%sfont-callbacks-by-id--%s.serial', sha1($clause.$version), 'array')))
+		if (!file_exists($cache = getCacheFilename(FONT_RESOURCES_CACHE, '%sfont-callbacks-by-id--%s.json', sha1($clause.$version), 'array')))
 		{
 			$return = array();
 			$sql = "SELECT * from `fonts_callbacks` WHERE (`font_id` = '$clause')";
@@ -2739,10 +2755,10 @@ if (!function_exists("getFontsCallbacksArray")) {
 				unset($row['archive_id']);
 				$return[] = $row;
 			}
-			@writeRawFile($cache, serialize($return));
+			@writeRawFile($cache, json_encode($return));
 			return $return;
 		}
-		return unserialize(file_get_contents($cache));
+		return json_decode(file_get_contents($cache), true);
 	}
 }
 
@@ -2759,7 +2775,7 @@ if (!function_exists("getFontsDataArray")) {
 	 */
 	function getFontsDataArray($clause = '', $state = '', $output = '', $version = '')
 	{
-		if (!file_exists($cache = getCacheFilename(FONT_CACHE, '%sfont-data-by-id--%s.serial', sha1($clause.$version), 'array')))
+		if (!file_exists($cache = getCacheFilename(FONT_RESOURCES_CACHE, '%sfont-data-by-id--%s.json', sha1($clause.$version), 'array')))
 		{
 			$sql = "SELECT * from `fonts_archiving` WHERE (`font_id` = '$clause' OR `fingerprint` = '$clause')";
 			$result = $GLOBALS['FontsDB']->queryF($sql);
@@ -2775,7 +2791,7 @@ if (!function_exists("getFontsDataArray")) {
 					case 'FONT_RESOURCES_RESOURCE':
 						if ($font['medium'] == 'FONT_RESOURCES_CACHE')
 						{
-							$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
+							$sessions = json_decode(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.json"), true);
 							if (!file_exists(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
 							{
 								mkdir(constant("FONT_RESOURCES_CACHE") . $row['path'], 0777, true);
@@ -2786,7 +2802,7 @@ if (!function_exists("getFontsDataArray")) {
 								if ($sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] < microtime(true) + ($next = mt_rand(1800*.3236, 2560*.5436)))
 									$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] + $next;
 							}
-							writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial", serialize($sessions));
+							writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.json", json_encode($sessions));
 						} elseif ($font['medium'] == 'FONT_RESOURCES_RESOURCE')
 						{
 							if (!file_exists(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
@@ -2800,7 +2816,7 @@ if (!function_exists("getFontsDataArray")) {
 						continue;
 						break;
 					case 'FONT_RESOURCES_PEER':
-						$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
+						$sessions = json_decode(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.json"), true);
 						if (!file_exists(constant(FONT_RESOURCES_CACHE) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
 						{
 							$sql = "SELECT * FROM `peers` WHERE `peer-id` LIKE '%s'";
@@ -2816,17 +2832,17 @@ if (!function_exists("getFontsDataArray")) {
 							if ($sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] < microtime(true) + ($next = mt_rand(1800*.3236, 2560*.5436)))
 								$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] + $next;
 						}
-						writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial", serialize($sessions));
+						writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.json", json_encode($sessions));
 						$data = json_decode(getArchivedZIPFile($zip = FONT_RESOURCES_CACHE . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'font-resource.json'), true);
 						continue;
 						continue;
 						break;
 				}
 			}
-			@writeRawFile($cache, serialize($data));
+			@writeRawFile($cache, json_encode($data));
 			return $data;
 		}
-		return unserialize(file_get_contents($cache));
+		return json_decode(file_get_contents($cache), true);
 	}
 }
 
@@ -2860,7 +2876,7 @@ if (!function_exists("getFontDownload")) {
 				case 'FONT_RESOURCES_RESOURCE':
 					if ($font['medium'] == 'FONT_RESOURCES_CACHE')
 					{
-						$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
+						$sessions = json_decode(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.json"), true);
 						if (!file_exists(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
 						{
 							mkdir(constant("FONT_RESOURCES_CACHE") . $row['path'], 0777, true);
@@ -2871,7 +2887,7 @@ if (!function_exists("getFontDownload")) {
 							if ($sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] < microtime(true) + ($next = mt_rand(1800*.3236, 2560*.5436)))
 								$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] + $next;
 						}
-						writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial", serialize($sessions));
+						writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.json", json_encode($sessions));
 					} elseif ($font['medium'] == 'FONT_RESOURCES_RESOURCE')
 					{
 						if (!file_exists(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
@@ -2883,7 +2899,7 @@ if (!function_exists("getFontDownload")) {
 					$resource = json_decode(getArchivedZIPFile($zip = constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'font-resource.json'), true);
 					break;
 				case 'FONT_RESOURCES_PEER':
-					$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
+					$sessions = json_decode(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.json"), true);
 					if (!file_exists(constant(FONT_RESOURCES_CACHE) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
 					{
 						$sql = "SELECT * FROM `peers` WHERE `peer-id` LIKE '%s'";
@@ -2900,7 +2916,7 @@ if (!function_exists("getFontDownload")) {
 							$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] + $next;
 					}
 					$zip = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]["resource"];
-					writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial", serialize($sessions));
+					writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.json", json_encode($sessions));
 					$resource = json_decode(getArchivedZIPFile($zip = FONT_RESOURCES_CACHE . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'font-resource.json'), true);
 					break;
 			}
@@ -2984,9 +3000,9 @@ if (!function_exists("getFontDownload")) {
 				foreach($ufofiles as $path => $values)
 				{
 					$glifs[basename($path)] = str_replace(".glif", "", basename($path));
-					if (substr($glifs[basename($path)], 0, 1) = "_")
+					if (substr($glifs[basename($path)], 0, 1) == "_")
 						$glifs[basename($path)] = substr($glifs[basename($path)], 1);
-						if (substr($glifs[basename($path)], strlen($glifs[basename($path)])-1, 1) = "_")
+						if (substr($glifs[basename($path)], strlen($glifs[basename($path)])-1, 1) == "_")
 							$glifs[basename($path)] = substr($glifs[basename($path)], 0, strlen($glifs[basename($path)])-2);
 							$working = dirname(dirname($path));
 				}
@@ -3183,7 +3199,7 @@ if (!function_exists("getFontUFORawData")) {
 	 */
 	function getFontUFORawData($mode = '', $clause = '', $state = '', $output = '', $ufofile = '')
 	{
-		if (!file_exists($cache = getCacheFilename(FONT_CACHE, '%sfont-ufo-by-id--%s.serial', sha1($clause.$ufofile), $output)))
+		if (!file_exists($cache = getCacheFilename(FONT_RESOURCES_CACHE, '%sfont-ufo-by-id--%s.json', sha1($clause.$ufofile), $output)))
 		{
 			$sql = "SELECT * from `fonts_archiving` WHERE (`font_id` = '$clause' OR `fingerprint` = '$clause')";
 			$result = $GLOBALS['FontsDB']->queryF($sql);
@@ -3200,7 +3216,7 @@ if (!function_exists("getFontUFORawData")) {
 						
 						if ($font['medium'] == 'FONT_RESOURCES_CACHE')
 						{
-							$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
+							$sessions = json_decode(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.json"), true);
 							if (!file_exists(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
 							{
 								mkdir(constant("FONT_RESOURCES_CACHE") . $row['path'], 0777, true);
@@ -3212,7 +3228,7 @@ if (!function_exists("getFontUFORawData")) {
 									$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] + $next;
 							}
 							$zip = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['resource'];
-							writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial", serialize($sessions));
+							writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.json", json_encode($sessions));
 						} elseif ($font['medium'] == 'FONT_RESOURCES_RESOURCE')
 						{
 							if (!file_exists($zip = constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
@@ -3224,7 +3240,7 @@ if (!function_exists("getFontUFORawData")) {
 						$json = json_decode(getArchivedZIPFile($zip = constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'font-resource.json'), true);
 						break;
 					case 'FONT_RESOURCES_PEER':
-						$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
+						$sessions = json_decode(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.json"), true);
 						if (!file_exists(constant(FONT_RESOURCES_CACHE) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
 						{
 							$sql = "SELECT * FROM `peers` WHERE `peer-id` LIKE '%s'";
@@ -3241,7 +3257,7 @@ if (!function_exists("getFontUFORawData")) {
 								$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] + $next;
 						}
 						$zip = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['resource'];
-						writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial", serialize($sessions));
+						writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.json", json_encode($sessions));
 						$json = json_decode(getArchivedZIPFile($zip = FONT_RESOURCES_CACHE . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'font-resource.json'), true);
 						break;
 				}
@@ -3362,7 +3378,7 @@ if (!function_exists("cleanResourcesCache")) {
 	 */
 	function cleanResourcesCache()
 	{
-		$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
+		$sessions = json_decode(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.json"), true);
 		foreach($sessions as $key => $values)
 		{
 			if ($values['dropped']<microtime(true))
@@ -3377,7 +3393,7 @@ if (!function_exists("cleanResourcesCache")) {
 				unset($sessions[$key]);
 			}
 		}
-		writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial", serialize($sessions));
+		writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.json", json_encode($sessions));
 		return true;
 	}
 }
@@ -3393,7 +3409,7 @@ if (!function_exists("getFontsByNodeListArray")) {
 	 */
 	function getFontsByNodeListArray($node_id = 0, $nochain = false)
 	{
-		if (!file_exists($cache = getCacheFilename(FONT_CACHE, '%snode-identities-by-id--%s.serial', sha1($node_id.$nochain), 'array')))
+		if (!file_exists($cache = getCacheFilename(FONT_RESOURCES_CACHE, '%snode-identities-by-id--%s.json', sha1($node_id.$nochain), 'array')))
 		{
 			$file = $archive = $fontsid = $fonts = array();
 			$sql = "SELECT * from `nodes_linking` WHERE `node_id` = '$node_id'";
@@ -3437,10 +3453,10 @@ if (!function_exists("getFontsByNodeListArray")) {
 						$fonts[$font['id']] = array('key' => $font['id'], 'peer-id' => $font['peer_id'], 'names' => $name[$font['id']], 'normal' => $font['normal'], 'italic' => $font['italic'], 'bold' => $font['bold'], 'condensed' => $font['condensed'], 'light' => $font['light'], 'semi' => $font['semi'], 'book' => $font['book'], 'body' => $font['body'], 'header' => $font['header'], 'heading' => $font['heading'], 'footer' => $font['footer'], 'graphic' => $font['graphic'], 'system' => $font['system'], 'block' => $font['block'], 'quote' => $font['quote'], 'message' => $font['message'], 'admin' => $font['admin'], 'logo' => $font['logo'], 'slogon' => $font['slogon'], 'legal' => $font['legal'], 'script' => $font['script'], 'medium' => $font['medium'], 'archive' => $archive[$font['id']], 'files'=> $file[$font['id']]);
 				}			
 			}
-			@writeRawFile($cache, serialize($fonts));
+			@writeRawFile($cache, json_encode($fonts));
 			return $fonts;
 		}
-		return unserialize(file_get_contents($cache));
+		return json_decode(file_get_contents($cache), true);
 	}
 }
 
@@ -3454,7 +3470,7 @@ if (!function_exists("getNodesByFontListArray")) {
 	 */
 	function getNodesByFontListArray($font_id = '', $nochain = false)
 	{
-		if (!file_exists($cache = getCacheFilename(FONT_CACHE, '%sfont-nodes-by-id--%s.serial', sha1($font_id.$nochain), 'array')))
+		if (!file_exists($cache = getCacheFilename(FONT_RESOURCES_CACHE, '%sfont-nodes-by-id--%s.json', sha1($font_id.$nochain), 'array')))
 		{
 			$nodes = array();
 			$sql = "SELECT * from `nodes_linking` WHERE `font_id` = '$font_id'";
@@ -3467,10 +3483,10 @@ if (!function_exists("getNodesByFontListArray")) {
 					$nodes[$node['type']][$node['node']] = array('node' => $node['node'], 'type' => $node['type'], 'usage' => $node['usage'], 'weight' => $node['weight'], 'fonts' => getFontsByNodeListArray($row['node_id'], $nochain));
 				}
 			}
-			@writeRawFile($cache, serialize($nodes));
+			@writeRawFile($cache, json_encode($nodes));
 			return $nodes;
 		}
-		return unserialize(file_get_contents($cache));
+		return json_decode(file_get_contents($cache), true);
 	}
 }
 
@@ -3484,7 +3500,7 @@ if (!function_exists("getFontsByNodesListArray")) {
 	 */
 	function getFontsByNodesListArray($node_id = '')
 	{
-		if (!file_exists($cache = getCacheFilename(FONT_CACHE, '%sfont-noding--%s.serial', sha1($node_id), 'array')))
+		if (!file_exists($cache = getCacheFilename(FONT_RESOURCES_CACHE, '%sfont-noding--%s.json', sha1($node_id), 'array')))
 		{
 			try {
 				$name = $file = $archive = $font_ids = $fonts = array();
@@ -3536,10 +3552,10 @@ if (!function_exists("getFontsByNodesListArray")) {
 			{
 				die($error);
 			}
-			@writeRawFile($cache, serialize($fonts));
+			@writeRawFile($cache, json_encode($fonts));
 			return $fonts;
 		}
-		return unserialize(file_get_contents($cache));
+		return json_decode(file_get_contents($cache), true);
 	}
 }
 
@@ -3558,9 +3574,9 @@ if (!function_exists("getRandomFontsFromStringList")) {
 	function getRandomFontsFromStringList($nodestring = '', $normal = '', $bold = '', $italic = '', $condensed = '')
 	{
 		$fonts_id = $nodes_id = array();
-		if (!isset($_SESSION["randoms"]['fontee'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])]))
+		if (!isset($_SESSION["randoms"]['fontee'][md5($_SERVER["REQUEST_URI"])]))
 		{
-			if (!file_exists($cache = getCacheFilename(FONT_CACHE, '%sfont-random-nodes--%s.serial', sha1($nodestring.$_SERVER["REQUEST_URI"]), 'array')))
+			if (!file_exists($cache = getCacheFilename(FONT_RESOURCES_CACHE, '%sfont-random-nodes--%s.json', sha1($nodestring.$_SERVER["REQUEST_URI"]), 'array')))
 			{
 				if (substr(strtolower($nodestring),0,3)!='any')
 				{
@@ -3588,22 +3604,22 @@ if (!function_exists("getRandomFontsFromStringList")) {
 					$fonteo = $GLOBALS['FontsDB']->queryF($sql);
 					while($fontee = $GLOBALS['FontsDB']->fetchArray($fonteo))
 					{
-						@writeRawFile($cache, serialize($fontee));
-						return $_SESSION["randoms"]['fontee'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])] = $fontee;
+						@writeRawFile($cache, json_encode($fontee));
+						return $_SESSION["randoms"]['fontee'][md5($_SERVER["REQUEST_URI"])] = $fontee;
 					}
 				} else {
 					$sql = "SELECT * from `fonts` WHERE 1 = 1 ". (!empty($normal)?" AND `normal` = $normal":"") . (!empty($normal)?" AND `bold` = $bold":"") . (!empty($italic)?" AND `italic` = $italic":"") . (!empty($condensed)?" AND `condensed` = $condensed":"") . " ORDER BY RAND() LIMIT 1";
 					$fonteo = $GLOBALS['FontsDB']->queryF($sql);
 					while($fontee = $GLOBALS['FontsDB']->fetchArray($fonteo))
 					{
-						@writeRawFile($cache, serialize($fontee));
-						return $_SESSION["randoms"]['fontee'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])] = $fontee;
+						@writeRawFile($cache, json_encode($fontee));
+						return $_SESSION["randoms"]['fontee'][md5($_SERVER["REQUEST_URI"])] = $fontee;
 					}
 				}
 			}
-			return $_SESSION["randoms"]['fontee'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])] = unserialize(file_get_contents($cache));
+			return $_SESSION["randoms"]['fontee'][md5($_SERVER["REQUEST_URI"])] = json_decode(file_get_contents($cache), true);
 		}
-		return $_SESSION["randoms"]['fontee'][$GLOBAL['ipid']][md5($_SERVER["REQUEST_URI"])];
+		return $_SESSION["randoms"]['fontee'][md5($_SERVER["REQUEST_URI"])];
 	}
 }
 
@@ -3618,9 +3634,9 @@ if (!function_exists("getRandomFontsIDFromNodesList")) {
 	 */
 	function getRandomFontsIDFromNodesList($nodestring = '', $toponly = false)
 	{
-		if (!isset($_SESSION["randoms"]['fontid'][$GLOBAL['ipid']][md5($toponly.$_SERVER["REQUEST_URI"])]))
+		if (!isset($_SESSION["randoms"]['fontid'][md5($toponly.$_SERVER["REQUEST_URI"])]))
 		{
-			if (!file_exists($cache = getCacheFilename(FONT_CACHE, '%sfont-fingerprint--%s.md5', sha1($nodestring.$toponly.$_SERVER["REQUEST_URI"]), 'hash')))
+			if (!file_exists($cache = getCacheFilename(FONT_RESOURCES_CACHE, '%sfont-fingerprint--%s.md5', sha1($nodestring.$toponly.$_SERVER["REQUEST_URI"]), 'hash')))
 			{
 				if (substr(strtolower($nodestring),0,3)!='any')
 				{
@@ -3645,7 +3661,7 @@ if (!function_exists("getRandomFontsIDFromNodesList")) {
 					while($node = $GLOBALS['FontsDB']->fetchArray($nodocity))
 					{
 						@writeRawFile($cache, $node['font_id']);
-						return $_SESSION["randoms"]['fontid'][$GLOBAL['ipid']][md5($toponly.$_SERVER["REQUEST_URI"])] = $node['font_id'];
+						return $_SESSION["randoms"]['fontid'][md5($toponly.$_SERVER["REQUEST_URI"])] = $node['font_id'];
 					}
 				} else {
 				
@@ -3654,13 +3670,13 @@ if (!function_exists("getRandomFontsIDFromNodesList")) {
 					while($node = $GLOBALS['FontsDB']->fetchArray($nodocity))
 					{
 						@writeRawFile($cache, $node['font_id']);
-						return $_SESSION["randoms"]['fontid'][$GLOBAL['ipid']][md5($toponly.$_SERVER["REQUEST_URI"])] = $node['font_id'];
+						return $_SESSION["randoms"]['fontid'][md5($toponly.$_SERVER["REQUEST_URI"])] = $node['font_id'];
 					}
 				}
 			}
-			return $_SESSION["randoms"]['fontid'][$GLOBAL['ipid']][md5($toponly.$_SERVER["REQUEST_URI"])] = file_get_contents($cache);
+			return $_SESSION["randoms"]['fontid'][md5($toponly.$_SERVER["REQUEST_URI"])] = file_get_contents($cache);
 		}
-		return $_SESSION["randoms"]['fontid'][$GLOBAL['ipid']][md5($toponly.$_SERVER["REQUEST_URI"])];
+		return $_SESSION["randoms"]['fontid'][md5($toponly.$_SERVER["REQUEST_URI"])];
 	}
 }
 
@@ -3675,11 +3691,11 @@ if (!function_exists("getFontsIDsFromNodesList")) {
 	 */
 	function getFontsIDsFromNodesList($nodestring = '', $toponly = false)
 	{
-		if (!file_exists($cache = getCacheFilename(FONT_CACHE, '%sfonts-identities-by-nodestring--%s.serial', sha1($nodestring.$toponly.$_SERVER["REQUEST_URI"]), 'array')))
+		if (!file_exists($cache = getCacheFilename(FONT_RESOURCES_CACHE, '%sfonts-identities-by-nodestring--%s.json', sha1($nodestring.$toponly.$_SERVER["REQUEST_URI"]), 'array')))
 		{
-			if (!isset($_SESSION["randoms"]['nodeids'][$GLOBAL['ipid']][md5($toponly.$_SERVER["REQUEST_URI"])]))
+			if (!isset($_SESSION["randoms"]['nodeids'][md5($toponly.$_SERVER["REQUEST_URI"])]))
 			{
-				if (!file_exists($cacheb = getCacheFilename(FONT_CACHE, '%sfonts-random-nodes--%s.serial', sha1($nodestring.$toponly.$_SERVER["REQUEST_URI"]), 'array')))
+				if (!file_exists($cacheb = getCacheFilename(FONT_RESOURCES_CACHE, '%sfonts-random-nodes--%s.json', sha1($nodestring.$toponly.$_SERVER["REQUEST_URI"]), 'array')))
 				{
 					if (substr(strtolower($nodestring),0,3)!='any')
 					{
@@ -3721,13 +3737,13 @@ if (!function_exists("getFontsIDsFromNodesList")) {
 									$ids[$node['font_id']]['count']++;
 						}		
 					}
-					@writeRawFile($cacheb, serialize($ids));
+					@writeRawFile($cacheb, json_encode($ids));
 				} else 
-					$ids = unserialize(file_get_contents($cacheb));
+					$ids = json_decode(file_get_contents($cacheb), true);
 				$count = 0;
 				if ($toponly==false)
 				{
-					@writeRawFile($cache, serialize($_SESSION["randoms"]['nodeids'][$GLOBAL['ipid']][md5($toponly.$_SERVER["REQUEST_URI"])]=array_keys($ids)));
+					@writeRawFile($cache, json_encode($_SESSION["randoms"]['nodeids'][md5($toponly.$_SERVER["REQUEST_URI"])]=array_keys($ids)));
 					return array_keys($ids);
 				}
 				else
@@ -3740,19 +3756,19 @@ if (!function_exists("getFontsIDsFromNodesList")) {
 							$idkey = $id;
 						}
 					}
-					@writeRawFile($cache, serialize($_SESSION["randoms"]['nodeids'][$GLOBAL['ipid']][md5($toponly.$_SERVER["REQUEST_URI"])]=$idkey));
+					@writeRawFile($cache, json_encode($_SESSION["randoms"]['nodeids'][md5($toponly.$_SERVER["REQUEST_URI"])]=$idkey));
 					return $idkey;
 				}
 			} else {
-				@writeRawFile($cache, serialize($_SESSION["randoms"]['nodeids'][$GLOBAL['ipid']][md5($toponly.$_SERVER["REQUEST_URI"])]));
-				return $_SESSION["randoms"]['nodeids'][$GLOBAL['ipid']][md5($toponly.$_SERVER["REQUEST_URI"])];
+				@writeRawFile($cache, json_encode($_SESSION["randoms"]['nodeids'][md5($toponly.$_SERVER["REQUEST_URI"])]));
+				return $_SESSION["randoms"]['nodeids'][md5($toponly.$_SERVER["REQUEST_URI"])];
 			}
 		}
 		if ($toponly==false)
 		{
-			return $_SESSION["randoms"]['nodeids'][$GLOBAL['ipid']][md5($toponly.$_SERVER["REQUEST_URI"])]=unserialize(file_get_contents($cache));
+			return $_SESSION["randoms"]['nodeids'][md5($toponly.$_SERVER["REQUEST_URI"])]=json_decode(file_get_contents($cache), true);
 		} else {
-			return $_SESSION["randoms"]['nodeids'][$GLOBAL['ipid']][md5($toponly.$_SERVER["REQUEST_URI"])]=file_get_contents($cache);
+			return $_SESSION["randoms"]['nodeids'][md5($toponly.$_SERVER["REQUEST_URI"])]=file_get_contents($cache);
 		}
 	}
 }
@@ -3765,17 +3781,17 @@ if (!function_exists("getFontsIDsNodeStringArray")) {
 	 */
 	function getFontsIDsNodeStringArray()
 	{
-		if (!file_exists($cache = getCacheFilename(FONT_CACHE, '%sfont-identities--%s.serial', sha1($_SERVER["REQUEST_URI"]), 'array')))
+		if (!file_exists($cache = getCacheFilename(FONT_RESOURCES_CACHE, '%sfont-identities--%s.json', sha1($_SERVER["REQUEST_URI"]), 'array')))
 		{
 			$ncity = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `fonts` ORDER BY `created` ASC");
 			while($font = $GLOBALS['FontsDB']->fetchArray($ncity))
 			{
 				$fonts[getNodesByFontString($font['id'])] = $font['id'];
 			}
-			@writeRawFile($cache, serialize($fonts));
+			@writeRawFile($cache, json_encode($fonts));
 			return $fonts;
 		}
-		return unserialize(file_get_contents($cache));
+		return json_decode(file_get_contents($cache), true);
 	}
 }
 
@@ -3800,7 +3816,7 @@ if (!function_exists("getFontsListArray")) {
 		{
 			$state = '';
 		}
-		if (!file_exists($cache = getCacheFilename(FONT_CACHE, '%sfonts-listings--%s.serial', sha1($clause.$state), 'array')))
+		if (!file_exists($cache = getCacheFilename(FONT_RESOURCES_CACHE, '%sfonts-listings--%s.json', sha1($clause.$state), 'array')))
 		{
 			$limits = "";
 			if (strpos($state, '-'))
@@ -3870,11 +3886,11 @@ if (!function_exists("getFontsListArray")) {
 						trigger_error($error, E_RECOVERABLE_ERROR);
 					}
 				}
-				@writeRawFile($cache, serialize($fonts));
+				@writeRawFile($cache, json_encode($fonts));
 				return $fonts;
 			}
 		}
-		return unserialize(file_get_contents($cache));
+		return json_decode(file_get_contents($cache), true);
 	}
 }
 
@@ -3897,9 +3913,9 @@ if (!function_exists("getNodesListArray")) {
 		}
 		if ($state=='cron')
 			$state = '';
-		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H", time() - 3600 *24 * 7) . 'nodes-listing--' . sha1($clause.$state).'.serial'))
+		if (file_exists($unlink = FONTS_CACHE . DIRECTORY_SEPARATOR . date("Y-m-W-H", time() - 3600 *24 * 7) . 'nodes-listing--' . sha1($clause.$state).'.json'))
 			unlink($unlink);
-		if (!file_exists($cache = getCacheFilename(FONT_CACHE, '%snodes-listings--%s.serial', sha1($clause.$state), 'array')))
+		if (!file_exists($cache = getCacheFilename(FONT_RESOURCES_CACHE, '%snodes-listings--%s.json', sha1($clause.$state), 'array')))
 		{
 			$limits = "";
 			if (strpos($state, '-'))
@@ -3933,10 +3949,10 @@ if (!function_exists("getNodesListArray")) {
 				}
 				
 			}
-			@writeRawFile($cache, serialize($nodes));
+			@writeRawFile($cache, json_encode($nodes));
 			return $nodes;
 		}
-		return unserialize(file_get_contents($cache));
+		return json_decode(file_get_contents($cache), true);
 	}
 }
 
@@ -4190,11 +4206,11 @@ if (!function_exists("writeRawFile")) {
 		if (is_file($file))
 			unlink($file);
 		SaveToFile($file, $data);
-		if (!strpos($file, 'caches-files-sessioning.serial') && strpos($file, '.serial'))
+		if (!strpos($file, 'caches-files-sessioning.json') && strpos($file, '.json'))
 		{
 			
-			if (file_exists(FONTS_CACHE . DIRECTORY_SEPARATOR . 'caches-files-sessioning.serial'))
-				$sessions = unserialize(file_get_contents(FONTS_CACHE . DIRECTORY_SEPARATOR . 'caches-files-sessioning.serial'));
+			if (file_exists(FONTS_CACHE . DIRECTORY_SEPARATOR . 'caches-files-sessioning.json'))
+				$sessions = json_decode(file_get_contents(FONTS_CACHE . DIRECTORY_SEPARATOR . 'caches-files-sessioning.json'), true);
 			else
 				$sessions = array();
 			if (!isset($sessions[basename($file)]))
@@ -4206,7 +4222,7 @@ if (!function_exists("writeRawFile")) {
 						unlink($values['file'])	;
 					unset($sessions[$file]);
 				}
-			SaveToFile(FONTS_CACHE . DIRECTORY_SEPARATOR . 'caches-files-sessioning.serial', serialize($sessions));
+			SaveToFile(FONTS_CACHE . DIRECTORY_SEPARATOR . 'caches-files-sessioning.json', json_encode($sessions));
 		}
 	}
 }
@@ -4551,8 +4567,21 @@ if (!function_exists("getFontPreviewText")) {
 		{
 			$texts = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'preview-texts.diz'));
 			shuffle($texts); shuffle($texts); shuffle($texts); shuffle($texts);
-			while(empty($text))
+			if (count($_SESSION['previewtxt'])>0 && count($_SESSION['previewtxt']) < count($texts))
+			{
+				foreach($texts as $key => $txt)
+					if (in_array($txt, $_SESSION['previewtxt']))
+						unset($texts[$key]);
+			} elseif(count($_SESSION['previewtxt'])==0 && count($_SESSION['previewtxt']) == count($texts)) {
+				$_SESSION['previewtxt'] = array();
+			}
+			$attempts = 0;
+			while(empty($text) && !in_array($text, $_SESSION['previewtxt']) || $attempts < 10)
+			{
+				$attempts++;
 				$text = $texts[mt_rand(0, count($texts)-1)];
+			}
+			$_SESSION['previewtxt'][] = $text;
 		}
 		return $text;
 	}
