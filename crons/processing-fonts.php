@@ -35,6 +35,7 @@ foreach(getCompleteDirListAsArray(constant("FONT_RESOURCES_UNPACKING")) as $path
 {
 	$folders[$dir] = getFileListAsArray($dir);
 }
+if (constant('API_DROPLONGUPLOAD_BUFFER')==true)
 foreach($folders as $path => $files) {
 	foreach($files as $ifd => $file)
 	{

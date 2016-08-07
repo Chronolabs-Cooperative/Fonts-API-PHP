@@ -57,6 +57,7 @@
 	define('API_LICENCE', 'gpl3');
 	define("API_SHORTENING_URL", "http://jump.labs.coop/"); // URL for your shortener API see: https://github.com/Chronolabs-Cooperative/Jump-API-PHP
 	define("API_SHORTENING_TYPE", "random"); // can be either random, domain, short, original
+	define("API_DROPLONGUPLOAD_BUFFER", true);
 	
 	// Email Default Definitions
 	define("API_EMAIL_ADDY", 'wishcraft@users.sourceforge.net');
@@ -87,7 +88,6 @@
 	define('FONT_RESOURCES_REPOMAP_GIT', 'https://github.com/Chronolabs-Cooperative/Fonting-Repository/raw/master/%s/%s--repository-mapping.json');
 	define('FONT_UPLOAD_PATH', '/tmp/Fonts-Uploads');
 	define('FONTS_CACHE', FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . '--dumps--');
-	
 
 	/******* DO NOT CHANGE THIS VARIABLE ****
 	 * @var string
@@ -108,4 +108,6 @@
 	$hourindx = floor(date("H") / CACHE_METER_USAGE);
 	$hourprev = floor(date("H", time() - (3600 * CACHE_METER_USAGE)) / CACHE_METER_USAGE);
 	if (API_DEBUG==true) echo (basename(__FILE__) . "::"  . __LINE__ . "<br/>\n");
+	
+	if (isset($_SERVER['HTTPS'])) { $GLOBALS['protocol'] = 'https://'; } else { $GLOBALS['protocol'] = 'http://'; }
 ?>

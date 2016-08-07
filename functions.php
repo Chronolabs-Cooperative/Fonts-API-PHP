@@ -2567,7 +2567,6 @@ if (!function_exists("getFontRawData")) {
 						switch($output)
 						{
 							default:
-								$GLOBALS['filename'] = $values['filename'];
 								if (!file_exists($font = FONTS_CACHE . DIRECTORY_SEPARATOR . '--data--' . DIRECTORY_SEPARATOR . md5($zip.sha1(date('Y-m-d'))) . ".$output"))
 								{
 									$data = getArchivedZIPFile($zip, $values['filename'], $row['font_id']);
@@ -2576,11 +2575,12 @@ if (!function_exists("getFontRawData")) {
 									writeRawFile($font, $data);
 									return $data;
 								}
+								$GLOBALS['filename'] = $values['filename'];
 								$data = file_get_contents($font);
 								break;
 							case "ufo":
-								$GLOBALS['filename'] = basename($ufofile);
 								$data =  getArchivedZIPFile($zip, $ufofile, $row['font_id']);
+								$GLOBALS['filename'] = basename($ufofile);
 								break;
 						}
 					}
@@ -2938,118 +2938,24 @@ if (!function_exists("getFontDownload")) {
 				mkdir(FONTS_CACHE . DIRECTORY_SEPARATOR . '--download--' . DIRECTORY_SEPARATOR, 0777, true);
 			if (!file_exists($cachefile))
 			{
-				mkdir($currently = FONT_RESOURCES_CONVERTING . DIRECTORY_SEPARATOR . md5(md5_file($zip).microtime(true).getRegionalFontName($row['font_id'])), 0777, true);
+				mkdir($currently = FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . md5(md5_file($zip).microtime(true).getRegionalFontName($row['font_id'])), 0777, true);
 				chdir($currently);
 				
 				// Generating Super Font
-				$fonts = getFontsListAsArray($currently);
-				$totalmaking = count(file(__DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts-glyphs.pe"))-1;
-				exec("cd $currently", $output, $return);
-				$covertscript = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts-glyphs.pe"));
-				$fonts = getFontsListAsArray($currently);
-				foreach($covertscript as $line => $value)
-					foreach($fonts as $file => $values)
-						if (strpos($value, $values['type'])&&$values['type']!=API_BASE)
-							unset($covertscript[$line]);
-				writeRawFile($script = FONT_RESOURCES_CACHE.DIRECTORY_SEPARATOR.md5(microtime(true).json_encode($fonts)).".pe", implode("\n", $covertscript));
-				foreach($fonts as $font)
-				{
-					exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", $script, $font), $output, $return);;
-				}
-				unlink($script);
-					
-				deleteFilesNotListedByArray($currently, array('.ufo', '.plist', '.fea', '.glif'));
-				$ufofiles = getCompleteFilesListAsArray($currently, '');
-				$retrieve = $fontsids = $missing = $glifs = array();
-				foreach($ufofiles as $path => $values)
-				{
-					$glifs[basename($path)] = basename($path);
-					$working = dirname($path);
-				}
-				$sql = "SELECT DISTINCT `filename` FROM `fonts_files` WHERE `filename` LIKE '%.glif' AND `filename` NOT IN ('".implode("', '", $glifs). "')";
-				$result =$GLOBALS['FontsDB']->queryF($sql);
-				while($row = $GLOBALS['FontsDB']->fetchArray($result))
-					$missing[$row['filename']] = $row['filename'];
-	
-				$sql = "SELECT count(*) as `rc`, `font_id` FROM `fonts_files` WHERE `filename` IN ('".implode("', '", $missing). "') ORDER BY `rc` DESC, RAND() ASC";
-				$result =$GLOBALS['FontsDB']->queryF($sql);
-				while($row = $GLOBALS['FontsDB']->fetchArray($result))
-					$fontsids[$row['font_id']] = $row['rc'];
-
-				$sql = "SELECT `font_id`, `filename` FROM `fonts_files` WHERE `filename` IN ('".implode("', '", $missing). "') AND `font_id` IN ('".implode("', '", $fontsids). "') ORDER BY `fonts_id` DESC, `filename` ASC, RAND() ASC";
-				$result =$GLOBALS['FontsDB']->queryF($sql);
-				while($row = $GLOBALS['FontsDB']->fetchArray($result))
-					if (in_array($row['filename'], $missing))
-					{
-						$retrieve[$row['font_id']][] = $row['filename'];
-						unset($missing[$row['filename']]);
-						if (empty($missing))
-							continue;
-					}
-					
-				foreach($retrieve as $fontid => $files)
-					foreach($files as $idx => $filename)
-					{
-						putRawFile($working . DIRECTORY_SEPARATOR . $filename, getFontRawData('', $fontid, 'ufo', $filename));
-					}
-					
-				$step = 1;
-				$glifmap = $glifs = array();
-				$ufofiles = getCompleteFilesListAsArray($currently, '');
-				$retrieve = $fontsids = $missing = $glifs = array();
-				foreach($ufofiles as $path => $values)
-				{
-					$glifs[basename($path)] = str_replace(".glif", "", basename($path));
-					if (substr($glifs[basename($path)], 0, 1) == "_")
-						$glifs[basename($path)] = substr($glifs[basename($path)], 1);
-						if (substr($glifs[basename($path)], strlen($glifs[basename($path)])-1, 1) == "_")
-							$glifs[basename($path)] = substr($glifs[basename($path)], 0, strlen($glifs[basename($path)])-2);
-							$working = dirname(dirname($path));
-				}
-				if (file_exists($file = $working . DIRECTORY_SEPARATOR . 'feature.fea'))
-					unlink($file);
-				sort($glifs);
-				foreach($glifs as $key => $glif)
-				{
-					$glifmap[$step] .= "\$glif ";
-					if (strlen($glifmap[$step])>80)
-					{
-						$step++;
-						$glifmap[$step] .= "\t\t\t\t";
-					}
-				}
-				putRawFile($file, str_replace("%glyphmaps", implode("\n", $glifmap, file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "feature.fea"))));
-				unset($glifmap);
-				unset($glifs);
-				unset($files);
-				unset($ufofiles);
-				unset($retrieve);
-				unset($missing);
-				foreach(getDirListAsArray($currently) as $folder)
-				{
-					exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", __DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts-upload.pe", $currently . DIRECTORY_SEPARATOR . $folder), $output, $return);;
-					echo "Executed: $exe<br/>\n\n$output\n\n<br/><br/>";
-				}
-				deleteFilesNotListedByArray($currently, array(".".API_BASE));
-
-				foreach(getArchivedZIPContentsArray($zip) as $crc => $file)
-					if (substr($file['filename'], strlen($file['filename']) - strlen(API_BASE)) == API_BASE)
-					{
-						$basefile = $file['filename'];
-						continue;
-					}
-				writeRawFile($font = $currently . DIRECTORY_SEPARATOR . $basefile, getArchivedZIPFile($zip, $basefile, $row['font_id']));
-				if (isset($resource['Font']))
-					writeFontResourceHeader($font, $resource["Font"]['licence'], $resource['Font']);
+				$data = getFontRawData('eot', $clause);
+				if (strlen($data)==0)
+					die('0 Data Master Font!');
+				else 
+					putRawFile($currently . DIRECTORY_SEPARATOR . $GLOBALS['filename'], $data);
 				$outt = array(); exec("cd $currently", $outt, $return);
 				$covertscript = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts-distribution.pe"));
 				foreach($covertscript as $line => $value)
 					if (strpos($value, API_BASE))
 						unset($covertscript[$line]);
 				writeRawFile($script = FONT_RESOURCES_CACHE.DIRECTORY_SEPARATOR.md5(microtime(true).API_URL).".pe", implode("\n", $covertscript));
-				$outt = array(); exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", $script, $font), $outt, $return);;
+				$outt = array(); exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", $script, $currently . DIRECTORY_SEPARATOR . $GLOBALS['filename']), $outt, $return);;
 				unlink($script);
-				$parts = explode('.', basename($font));
+				$parts = explode('.', basename($GLOBALS['filename']));
 				unset($parts[count($parts)-1]);
 				$fbase = implode(".", $parts);
 				if (file_exists($currently . DIRECTORY_SEPARATOR . $fbase . '.ttf') && file_exists($currently . DIRECTORY_SEPARATOR . $fbase . '.afm'))
@@ -4023,6 +3929,7 @@ if (!function_exists("getArchivedZIPFile")) {
         	while ($zip_entry = zip_read($zip)) {
             	if (strpos('  '.strtolower(zip_entry_name($zip_entry)), strtolower($zip_file)))
                 	if (zip_entry_open($zip, $zip_entry, "r")) {
+                		$GLOBALS['filename'] = zip_entry_name($zip_entry);
                     	$data = zip_entry_read($zip_entry, zip_entry_filesize($zip_entry));
                         zip_entry_close($zip_entry);
                         continue;

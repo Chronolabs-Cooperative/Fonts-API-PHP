@@ -39,6 +39,7 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 	if ($archive  = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql = "SELECT * from `fonts_archiving` WHERE `font_id` = '" . $upload['font_id'] . "'")))
 	{
 		$font  = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql = "SELECT * from `fonts` WHERE `id` = '" . $upload['font_id'] . "'"));
+		$files  = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql = "SELECT count(*) as `count`, sum(`bytes`) as `bytes` from `fonts_files` WHERE `font_id` = '" . $upload['font_id'] . "'"));
 		$naming = getRegionalFontName($upload['font_id']);
 		$tos = array();
 		$tos['to'][] = $upload['email'];
@@ -90,6 +91,7 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 					writeRawFile($font, $ttf);
 					$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_files` SET `cachings` = `cachings` + 1, `cached` = UNIX_TIMESTAMP() WHERE `type` = 'ttf AND `font_id` = '".$upload['font_id']."'");
 			}
+			$tweeted = false;
 			if (isset($font) && file_exists($font))
 			{
 				require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'class' . DIRECTORY_SEPARATOR . 'WideImage' . DIRECTORY_SEPARATOR . 'WideImage.php';
@@ -138,13 +140,14 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 						if(count($final = json_decode($twitter->buildOauth($url, $requestMethod)->setPostfields($postfields)->performRequest(), true))>0)
 						{
 							$url = "https://api.twitter.com/1.1/statuses/update.json";
-							$tweettxt = sprintf(API_TWITTER_RELEASES, $naming, $archive['files'], number_format($archive['bytes']/1024/1024,2), $downloadurl, $previewurl);
+							$tweettxt = sprintf(API_TWITTER_RELEASES, $naming, $files['count'], number_format($files['bytes']/1024/1024,2), $downloadurl, $previewurl);
 							$requestMethod = 'GET';
 							$getfields = array('status' => $tweettxt, array('media_ids' => array($final['media_id_string']=>$final['media_id_string'])));
 							$postfields = array();
 							$twitter = new TwitterAPIExchange($setting);
 							if(count($txt = json_decode($twitter->setGetfield($getfield)->buildOauth($url, $requestMethod)->setPostfields($postfields)->performRequest(), true))>0)
 							{
+								$tweeted = true;
 								echo "Successfully announced tweet: " . $txt['id_str'] . ' ~ font announced zero-dat release for: ' . $naming . "\n";
 							}
 						} else 
@@ -156,7 +159,23 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 				unlink($preview);
 			} else 
 				echo "Unsuccessfully announced font for zero-dat release on twitter: " . $naming . "\n";
+			
+			if ($tweeted != true)
+			{
+				$url = "https://api.twitter.com/1.1/statuses/update.json";
+				$tweettxt = sprintf(API_TWITTER_RELEASES, $naming, $files['count'], number_format($files['bytes']/1024/1024,2), $downloadurl, $previewurl);
+				$requestMethod = 'GET';
+				$getfields = array('status' => $tweettxt);
+				$postfields = array();
+				$twitter = new TwitterAPIExchange($setting);
+				if(count($txt = json_decode($twitter->setGetfield($getfield)->buildOauth($url, $requestMethod)->setPostfields($postfields)->performRequest(), true))>0)
+				{
+					$tweeted = true;
+					echo "Successfully announced tweet: " . $txt['id_str'] . ' ~ font announced zero-dat release for: ' . $naming . "\n";
+				}
+			}
 		}
+		
 	} else
 		echo("SQL Failed: $sql;\n");
 	$GLOBALS['FontsDB']->queryF($sql = "COMMIT");

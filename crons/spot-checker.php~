@@ -202,7 +202,7 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 		unset($missing);
 		foreach(getDirListAsArray($currently) as $folder)
 		{
-			exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts-upload.pe", $folder), $output, $return);;
+			exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts-upload.pe", $currently . DIRECTORY_SEPARATOR . $folder), $output, $return);;
 			echo "Executed: $exe<br/>\n\n$output\n\n<br/><br/>";
 		}
 		deleteFilesNotListedByArray($currently, array(".".API_BASE));
