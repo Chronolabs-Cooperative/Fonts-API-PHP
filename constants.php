@@ -27,7 +27,7 @@
 	 */
 	if (!defined('API_DEBUG'))
 		define('API_DEBUG', true);
-	define('API_VERSION', '2.4.3');
+	define('API_VERSION', '2.4.6');
 	define('MAXIMUM_QUERIES', 2600);
 	define('DEFAULT_VERSION', 2.001);
 	
@@ -51,14 +51,15 @@
 	define('API_URL', (!isset($_SERVER["HTTP_HOST"])?"http://fonts.labs.coop":(isset($_SERVER["HTTPS"])?"https://":"http://").$_SERVER["HTTP_HOST"]));
 	define('API_URL_CALLBACK', '/v2/%s/callback.api');
 	define('API_URL_ZIP', '/v2/data/%s/zip/download.api');
-	define('API_URL_FONTS', '/v2/fonts/all/json.api?local=only');
-	define('API_POLINATING', (strpos(API_URL, 'localhost')&&strpos(API_URL, 'labs.coop')&&strpos(API_URL, 'syd.labs.coop')?false:true));
+	define('API_URL_FONTS', '/v2/fonts/all/%s-%s/json.api?local=only');
+	define('API_POLINATING', (strpos(API_URL, 'localhost')||strpos(API_URL, 'labs.coop')?false:true));
 	define('API_REPOSITORY', 'git,svn'); // = git or svn or git,svn
 	define('API_BASE', 'eot');
 	define('API_LICENCE', 'gpl3');
 	define("API_SHORTENING_URL", "http://jump.labs.coop/"); // URL for your shortener API see: https://github.com/Chronolabs-Cooperative/Jump-API-PHP
 	define("API_SHORTENING_TYPE", "random"); // can be either random, domain, short, original
 	define("API_DROPLONGUPLOAD_BUFFER", false);
+	define("API_NETWORK_LOGISTICS", false);
 	
 	// Email Default Definitions
 	define("API_EMAIL_ADDY", 'wishcraft@users.sourceforge.net');

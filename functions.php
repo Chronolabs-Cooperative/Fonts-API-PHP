@@ -76,6 +76,8 @@ if (!function_exists("getCacheFilename")) {
 		}
 		if (empty($filename))
 			$filename = $path  . DIRECTORY_SEPARATOR . ".$output" . DIRECTORY_SEPARATOR . sprintf($ffiletemp, date('YmdHis---', $origin), $filehash);
+		if (file_exists($filename) && filesize($filename) == 0)
+			unlink($filename);
 		return $filename;
 	}
 }
@@ -972,7 +974,7 @@ if (!function_exists("getFontsReleased")) {
 	 */
 	function getFontsReleased()
 	{
-		list($total) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF("SELECT count(*) from `fonts`"));
+		list($total) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF("SELECT count(*) from `fonts` `a` INNER JOIN `fonts_archiving` `b` ON `a`.`id` =  `b`.`font_id` WHERE `a`.`state` = 'online'"));
 		return $total;
 	}
 }
@@ -1522,8 +1524,9 @@ if (!function_exists("getIPIdentity")) {
 		if (empty($ip))
 			$ip = whitelistGetIP(true);
 		
-		if (!isset($_SESSION['ipdata'][$ip]) || !isset($_SESSION['locality']))
+		if (!isset($_SESSION['ipdata'][$ip]) || empty($_SESSION['ipdata'][$ip]) || !isset($_SESSION['locality']))
 		{
+			
 			if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) === false)
 				$sql['selecta'] = "SELECT * from `networking` WHERE `ipaddy` LIKE '" . $ip . "' AND `type` = 'ipv6'";
 			else
@@ -1533,29 +1536,76 @@ if (!function_exists("getIPIdentity")) {
 				if (($ipaddypart[0] ===  $serverpart[0] && $ipaddypart[1] ===  $serverpart[1]) )
 				{
 					$_SESSION['locality'] = array();
-					$uris = cleanWhitespaces(file($file = __DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "lookups.diz"));
-					shuffle($uris); shuffle($uris); shuffle($uris); shuffle($uris);
-					if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE || FILTER_FLAG_NO_RES_RANGE) === false || substr($ip,3,0)=="10." || substr($ip,4,0)=="127.")
+					if (API_NETWORK_LOGISTICS==true)
 					{
-						$data = array();
-						foreach($uris as $uri)
+						$uris = cleanWhitespaces(file($file = __DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "lookups.diz"));
+						shuffle($uris); shuffle($uris); shuffle($uris); shuffle($uris);
+						if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE || FILTER_FLAG_NO_RES_RANGE) === false || substr($ip,3,0)=="10." || substr($ip,4,0)=="127.")
 						{
-							if ($_SESSION['locality']['ip']==$ip || $_SESSION['locality']['country']['iso'] == "-" || empty($_SESSION['locality']))
-								$_SESSION['locality'] = json_decode(getURIData(sprintf($uri, 'myself', 'json'), 120, 120), true);
-							if (count($_SESSION['locality']) > 1 &&  $_SESSION['locality']['country']['iso'] != "-")
-								continue;
-						}
-					} else{
-						foreach($uris as $uri)
-						{
-							if ($_SESSION['locality']['ip']!=$ip || $_SESSION['locality']['country']['iso'] == "-" || empty($_SESSION['locality']))
-								$_SESSION['locality'] = json_decode(getURIData(sprintf($uri, $ip, 'json'), 120, 120), true);
-							if (count($_SESSION['locality']) > 1 &&  $_SESSION['locality']['country']['iso'] != "-")
-								continue;
+							$data = array();
+							foreach($uris as $uri)
+							{
+								if ($_SESSION['locality']['ip']==$ip || $_SESSION['locality']['country']['iso'] == "-" || empty($_SESSION['locality']))
+									$_SESSION['locality'] = json_decode(getURIData(sprintf($uri, 'myself', 'json'), 5, 10), true);
+								if (count($_SESSION['locality']) > 1 &&  $_SESSION['locality']['country']['iso'] != "-")
+									continue;
+							}
+						} else{
+							foreach($uris as $uri)
+							{
+								if ($_SESSION['locality']['ip']!=$ip || $_SESSION['locality']['country']['iso'] == "-" || empty($_SESSION['locality']))
+									$_SESSION['locality'] = json_decode(getURIData(sprintf($uri, $ip, 'json'), 5, 10), true);
+								if (count($_SESSION['locality']) > 1 &&  $_SESSION['locality']['country']['iso'] != "-")
+									continue;
+							}
 						}
 					}
 					if (!isset($_SESSION['locality']['ip']))
 						$_SESSION['locality']['ip'] = $ip;
+					
+					$trace = $output = array();
+					if (API_NETWORK_LOGISTICS==true)
+					{
+						
+						$start = microtime(true);
+						exec("/usr/bin/traceroute --max-hops=100 $ip", $return, $output);
+						$took = microtime(true) - $start;
+						
+						if (!empty($output))
+						{
+							
+							foreach($output as $result)
+							{
+								foreach(array('ms', '(', ')') as $replace)
+									while (strpos($result, $replace))
+										$result = trim(str_replace($result, $replace, ''));
+								while (strpos($result, '  '))
+									$result = trim(str_replace($result, '  ', ' '));
+								$parts = explode(' ', $result);
+								if ($parts[0]=='traceroute')
+								{
+									$hosthop = $parts[2];
+									$iphop = $parts[3];
+								} elseif (is_numeric($parts[0]) && count($parts[3]) == 6) {
+									$trace[$when][$took][$iphop][$hosthop][$parts[0]][$parts[1]][$parts[2]][1]=$parts[3];
+									$trace[$when][$took][$iphop][$hosthop][$parts[0]][$parts[1]][$parts[2]][2]=$parts[4];
+									$trace[$when][$took][$iphop][$hosthop][$parts[0]][$parts[1]][$parts[2]][3]=$parts[5];
+								} elseif (is_numeric($parts[0]) && count($parts[3]) == 10 && is_string($parts[1]) && is_string($parts[4]) && !is_numeric($parts[4]) && is_string($parts[7]) && !is_numeric($parts[7])) {
+									$trace[$when][$took][$iphop][$hosthop][$parts[0]][$parts[1]][$parts[2]][1]=$parts[3];
+									$trace[$when][$took][$iphop][$hosthop][$parts[0]][$parts[4]][$parts[5]][2]=$parts[6];
+									$trace[$when][$took][$iphop][$hosthop][$parts[0]][$parts[7]][$parts[8]][3]=$parts[5];
+								} elseif (is_numeric($parts[0]) && count($parts[3]) == 8 && is_string($parts[1]) && is_string($parts[4]) && !is_numeric($parts[4])) {
+									$trace[$when][$took][$iphop][$hosthop][$parts[0]][$parts[1]][$parts[2]][1]=$parts[3];
+									$trace[$when][$took][$iphop][$hosthop][$parts[0]][$parts[4]][$parts[5]][2]=$parts[6];
+									$trace[$when][$took][$iphop][$hosthop][$parts[0]][$parts[1]][$parts[2]][3]=$parts[5];
+								} elseif (is_numeric($parts[0]) && count($parts[3]) == 8 && is_string($parts[1]) && is_string($parts[5]) && !is_numeric($parts[5])) {
+									$trace[$when][$took][$iphop][$hosthop][$parts[0]][$parts[1]][$parts[2]][1]=$parts[3];
+									$trace[$when][$took][$iphop][$hosthop][$parts[0]][$parts[1]][$parts[2]][2]=$parts[4];
+									$trace[$when][$took][$iphop][$hosthop][$parts[0]][$parts[5]][$parts[6]][3]=$parts[7];
+								}
+							}
+						}
+					}
 					
 					$_SESSION['ipdata'][$ip] = array();
 					$_SESSION['ipdata'][$ip]['ipaddy'] = $ip;
@@ -1564,51 +1614,58 @@ if (!function_exists("getIPIdentity")) {
 					else 
 						$_SESSION['ipdata'][$ip]['type'] = 'ipv4';
 					$_SESSION['ipdata'][$ip]['netbios'] = gethostbyaddr($ip);
-					$_SESSION['ipdata'][$ip]['data'] = array('ipstack' => gethostbynamel($_SESSION['ipdata'][$ip]['netbios']));
+					$_SESSION['ipdata'][$ip]['data'] = array('ipstack' => gethostbynamel($_SESSION['ipdata'][$ip]['netbios']), 'trace' => $trace);
 					$_SESSION['ipdata'][$ip]['domain'] = getBaseDomain("http://".$_SESSION['ipdata'][$ip]['netbios']);
-					$_SESSION['ipdata'][$ip]['country'] = $_SESSION['locality']['country']['iso'];
-					$_SESSION['ipdata'][$ip]['region'] = $_SESSION['locality']['location']['region'];
-					$_SESSION['ipdata'][$ip]['city'] = $_SESSION['locality']['location']['city'];
-					$_SESSION['ipdata'][$ip]['postcode'] = $_SESSION['locality']['location']['postcode'];
-					$_SESSION['ipdata'][$ip]['timezone'] = "GMT " . $_SESSION['locality']['location']['gmt'];
-					$_SESSION['ipdata'][$ip]['longitude'] = $_SESSION['locality']['location']['coordinates']['longitude'];
-					$_SESSION['ipdata'][$ip]['latitude'] = $_SESSION['locality']['location']['coordinates']['latitude'];
+					if (API_NETWORK_LOGISTICS==true)
+					{
+						$_SESSION['ipdata'][$ip]['country'] = $_SESSION['locality']['country']['iso'];
+						$_SESSION['ipdata'][$ip]['region'] = $_SESSION['locality']['location']['region'];
+						$_SESSION['ipdata'][$ip]['city'] = $_SESSION['locality']['location']['city'];
+						$_SESSION['ipdata'][$ip]['postcode'] = $_SESSION['locality']['location']['postcode'];
+						$_SESSION['ipdata'][$ip]['timezone'] = "GMT " . $_SESSION['locality']['location']['gmt'];
+						$_SESSION['ipdata'][$ip]['longitude'] = $_SESSION['locality']['location']['coordinates']['longitude'];
+						$_SESSION['ipdata'][$ip]['latitude'] = $_SESSION['locality']['location']['coordinates']['latitude'];
+					}
 					$_SESSION['ipdata'][$ip]['last'] = $_SESSION['ipdata'][$ip]['created'] = time();
 					$_SESSION['ipdata'][$ip]['downloads'] = 0;
 					$_SESSION['ipdata'][$ip]['uploads'] = 0;
-			
 					$_SESSION['ipdata'][$ip]['fonts'] = 0;
 					$_SESSION['ipdata'][$ip]['surveys'] = 0;
-					$whois = array();
-					$whoisuris = cleanWhitespaces(file(__DIR__  . DIRECTORY_SEPARATOR .  "data" . DIRECTORY_SEPARATOR . "whois.diz"));
-					shuffle($whoisuris); shuffle($whoisuris); shuffle($whoisuris); shuffle($whoisuris);
-					foreach($whoisuris as $uri)
+					
+					if (API_NETWORK_LOGISTICS==true)
 					{
-						if (empty($whois[$_SESSION['ipdata'][$ip]['type']]) || !isset($whois[$_SESSION['ipdata'][$ip]['type']]))
+						$whois = array();
+						$whoisuris = cleanWhitespaces(file(__DIR__  . DIRECTORY_SEPARATOR .  "data" . DIRECTORY_SEPARATOR . "whois.diz"));
+						shuffle($whoisuris); shuffle($whoisuris); shuffle($whoisuris); shuffle($whoisuris);
+						foreach($whoisuris as $uri)
 						{
-							$whois[$_SESSION['ipdata'][$ip]['type']] = json_decode(getURIData(sprintf($uri, $_SESSION['ipdata'][$ip]['ipaddy'], 'json'), 120, 120), true);
-						} elseif (empty($whois['domain']) || !isset($whois['domain']))
+							if (empty($whois[$_SESSION['ipdata'][$ip]['type']]) || !isset($whois[$_SESSION['ipdata'][$ip]['type']]))
+							{
+								$whois[$_SESSION['ipdata'][$ip]['type']] = json_decode(getURIData(sprintf($uri, $_SESSION['ipdata'][$ip]['ipaddy'], 'json'), 5, 10), true);
+							} elseif (empty($whois['domain']) || !isset($whois['domain']))
+							{
+								$whois['domain'] = json_decode(getURIData(sprintf($uri, $_SESSION['ipdata'][$ip]['domain'], 'json'), 5, 10), true);
+							} else
+								continue;
+						}
+						$sql = "SELECT count(*) FROM `whois` WHERE `id` = '".$wsid = md5(json_encode($whois))."'";
+						list($countb) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql));
+						if ($countb == 0)
 						{
-							$whois['domain'] = json_decode(getURIData(sprintf($uri, $_SESSION['ipdata'][$ip]['domain'], 'json'), 120, 120), true);
-						} else
-							continue;
+							$wsdata = array();
+							$wsdata['id'] = $wsid;
+							$wsdata['whois'] = $GLOBALS['FontsDB']->escape(json_encode($whois));
+							$wsdata['created'] = time();
+							$wsdata['last'] = time();
+							$wsdata['instances'] = 1;
+							if (!$GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `whois` (`" . implode('`, `', array_keys($wsdata)) . "`) VALUES ('" . implode("', '", $wsdata) . "')"))
+								@$GLOBALS['FontsDB']->queryF($sql = "UPDATE `whois` SET `instances` = `instances` + 1, `last` = unix_timestamp() WHERE `id` =  '$wsid'");
+						} else {
+							
+						}
+						$_SESSION['ipdata'][$ip]['whois'] = $wsid;
 					}
-					$sql = "SELECT count(*) FROM `whois` WHERE `id` = '".$wsid = md5(json_encode($whois))."'";
-					list($countb) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql));
-					if ($countb == 0)
-					{
-						$wsdata = array();
-						$wsdata['id'] = $wsid;
-						$wsdata['whois'] = $GLOBALS['FontsDB']->escape(json_encode($whois));
-						$wsdata['created'] = time();
-						$wsdata['last'] = time();
-						$wsdata['instances'] = 1;
-						if (!$GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `whois` (`" . implode('`, `', array_keys($wsdata)) . "`) VALUES ('" . implode("', '", $wsdata) . "')"))
-							@$GLOBALS['FontsDB']->queryF($sql = "UPDATE `whois` SET `instances` = `instances` + 1, `last` = unix_timestamp() WHERE `id` =  '$wsid'");
-					} else {
-						
-					}
-					$_SESSION['ipdata'][$ip]['whois'] = $wsid;
+					
 					$_SESSION['ipdata'][$ip]['ip_id'] = md5(json_encode($_SESSION['ipdata'][$ip]));
 					
 					$data = array();
@@ -1629,6 +1686,7 @@ if (!function_exists("getIPIdentity")) {
 						if (!$GLOBALS['FontsDB']->queryF($sql))
 							trigger_error("SQL Failed: ".$GLOBALS['FontsDB']->error() . " :: $sql");
 					}
+					
 				}
 			}
 		}
@@ -1652,55 +1710,60 @@ if (!function_exists("getBaseDomain")) {
 	{
 
 		static $fallout, $stratauris, $classes;
-
-		if (empty($classes))
+		
+		if (API_NETWORK_LOGISTICS==true)
 		{
-			if (empty($stratauris)) {
-				$stratauris = cleanWhitespaces(file(__DIR__  . DIRECTORY_SEPARATOR .  "data" . DIRECTORY_SEPARATOR . "stratas.diz"));
-				shuffle($stratauris); shuffle($stratauris); shuffle($stratauris); shuffle($stratauris);
-			}
-			shuffle($stratauris);
-			$attempts = 0;
-			while(empty($classes) || $attempts <= (count($stratauris) * 1.65))
+			if (empty($classes))
 			{
-				$attempts++;
-				$classes = array_keys(json_decode(getURIData($stratauris[mt_rand(0, count($stratauris)-1)] ."/v1/strata/serial.api", 120, 120), true));
+				if (empty($stratauris)) {
+					$stratauris = cleanWhitespaces(file(__DIR__  . DIRECTORY_SEPARATOR .  "data" . DIRECTORY_SEPARATOR . "stratas.diz"));
+					shuffle($stratauris); shuffle($stratauris); shuffle($stratauris); shuffle($stratauris);
+				}
+				shuffle($stratauris);
+				$attempts = 0;
+				while(empty($classes) || $attempts <= (count($stratauris) * 1.65))
+				{
+					$attempts++;
+					$classes = array_keys(json_decode(getURIData($stratauris[mt_rand(0, count($stratauris)-1)] ."/v1/strata/serial.api", 15, 10), true));
+				}
 			}
-		}
-		if (empty($fallout))
-		{
-			if (empty($stratauris)) {
-				$stratauris = cleanWhitespaces(file(__DIR__  . DIRECTORY_SEPARATOR .  "data" . DIRECTORY_SEPARATOR . "stratas.diz"));
-				shuffle($stratauris); shuffle($stratauris); shuffle($stratauris); shuffle($stratauris);
-			}
-			shuffle($stratauris);
-			$attempts = 0;
-			while(empty($fallout) || $attempts <= (count($stratauris) * 1.65))
+			if (empty($fallout))
 			{
-				$attempts++;
-				$fallout = array_keys(json_decode(getURIData($stratauris[mt_rand(0, count($stratauris)-1)] ."/v1/fallout/serial.api", 120, 120), true));
+				if (empty($stratauris)) {
+					$stratauris = cleanWhitespaces(file(__DIR__  . DIRECTORY_SEPARATOR .  "data" . DIRECTORY_SEPARATOR . "stratas.diz"));
+					shuffle($stratauris); shuffle($stratauris); shuffle($stratauris); shuffle($stratauris);
+				}
+				shuffle($stratauris);
+				$attempts = 0;
+				while(empty($fallout) || $attempts <= (count($stratauris) * 1.65))
+				{
+					$attempts++;
+					$fallout = array_keys(json_decode(getURIData($stratauris[mt_rand(0, count($stratauris)-1)] ."/v1/fallout/serial.api", 15, 10), true));
+				}
 			}
+			
+			// Get Full Hostname
+			$uri = strtolower($uri);
+			$hostname = parse_url($uri, PHP_URL_HOST);
+			if (!filter_var($hostname, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 || FILTER_FLAG_IPV4) === false)
+				return $hostname;
+	
+			// break up domain, reverse
+			$elements = explode('.', $hostname);
+			$elements = array_reverse($elements);
+	
+			// Returns Base Domain
+			if (in_array($elements[0], $classes))
+				return $elements[1] . '.' . $elements[0];
+			elseif (in_array($elements[0], $fallout) && in_array($elements[1], $classes))
+				return $elements[2] . '.' . $elements[1] . '.' . $elements[0];
+			elseif (in_array($elements[0], $fallout))
+				return  $elements[1] . '.' . $elements[0];
+			else
+				return  $elements[1] . '.' . $elements[0];
 		}
 		
-		// Get Full Hostname
-		$uri = strtolower($uri);
-		$hostname = parse_url($uri, PHP_URL_HOST);
-		if (!filter_var($hostname, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 || FILTER_FLAG_IPV4) === false)
-			return $hostname;
-
-		// break up domain, reverse
-		$elements = explode('.', $hostname);
-		$elements = array_reverse($elements);
-
-		// Returns Base Domain
-		if (in_array($elements[0], $classes))
-			return $elements[1] . '.' . $elements[0];
-		elseif (in_array($elements[0], $fallout) && in_array($elements[1], $classes))
-			return $elements[2] . '.' . $elements[1] . '.' . $elements[0];
-		elseif (in_array($elements[0], $fallout))
-			return  $elements[1] . '.' . $elements[0];
-		else
-			return  $elements[1] . '.' . $elements[0];
+		return parse_url($uri, PHP_URL_HOST);
 	}
 }
 
@@ -2044,7 +2107,7 @@ if (!function_exists("getRegionalFontName")) {
 	 *
 	 * @return string
 	 */
-	function getRegionalFontName($fontid = '', $latitude = 0, $longitude = 0, $getGistance = false)
+	function getRegionalFontName($fontid = '', $latitude = 0, $longitude = 0, $getGistance = false, $json = array())
 	{
 		static $variables = array();
 		if (!isset($variables[$fontid]))
@@ -2057,9 +2120,71 @@ if (!function_exists("getRegionalFontName")) {
 				$longitude = $iparray['longitude'];
 			}
 			list($name, $distance) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF("SELECT `name`, 3956 * 2 * ASIN(SQRT(POWER(SIN((" . abs($latitude) . " - abs(`latitude`)) * pi() / 180 / 2), 2) + COS(" . abs($latitude) . " * pi() / 180 ) * COS(abs(`latitude`) *  pi() / 180) * POWER(SIN((" . $longitude . " - `longitude`) *  pi() / 180 / 2), 2) )) as distance FROM `fonts_names` WHERE `font_id` = '$fontid' ORDER BY `distance` LIMIT 1"));
-			$variables[$fontid]['name'] = empty($name)?$fontid:$name;
+			if (empty($json)&&empty($name))
+			{
+				$sql = "SELECT * from `fonts_archiving` WHERE (`font_id` = '$fontid')";
+				if (!$result = $GLOBALS['FontsDB']->queryF($sql))
+					die("SQL Failed: $sql;");
+				while($row = $GLOBALS['FontsDB']->fetchArray($result))
+				{
+					$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts` SET `hits` = `hits` + 1 WHERE `id` = '" . $row['font_id'] . "'");
+					$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `accessings` = `accessings` + 1, `accessed` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
+					$sql = "SELECT * from `fonts` WHERE `id` = '" . $row['font_id'] . "'";
+					$font = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql));
+					switch($font['medium'])
+					{
+						case 'FONT_RESOURCES_CACHE':
+						case 'FONT_RESOURCES_RESOURCE':
+							if ($font['medium'] == 'FONT_RESOURCES_CACHE')
+							{
+								$sessions = json_decode(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.json"), true);
+								if (!file_exists(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
+								{
+									mkdir(constant("FONT_RESOURCES_CACHE") . $row['path'], 0777, true);
+									writeRawFile(constant("FONT_RESOURCES_CACHE") . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], getURIData(sprintf(FONT_RESOURCES_STORE, $row['path'] . DIRECTORY_SEPARATOR . $row['filename'])));
+									$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])] = array("opened" => microtime(true), "dropped" => microtime(true) + mt_rand(3600 * 0.785, 3600 * 1.896), "resource" => $font['path'] . DIRECTORY_SEPARATOR . $font['filename']);
+									$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `cachings` = `cachings` + 1, `cached` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
+								} else {
+									if ($sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] < microtime(true) + ($next = mt_rand(1800*.3236, 2560*.5436)))
+										$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] + $next;
+								}
+								writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.json", json_encode($sessions));
+							} elseif ($font['medium'] == 'FONT_RESOURCES_RESOURCE')
+							{
+								if (!file_exists(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
+								{
+									mkdir(constant($font['medium']) . $row['path'], 0777, true);
+									writeRawFile(constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], getURIData(sprintf(FONT_RESOURCES_STORE, $row['path'] . DIRECTORY_SEPARATOR . $row['filename'])));
+									$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `cachings` = `cachings` + 1, `cached` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
+								}
+							}
+							$json = json_decode(getArchivedZIPFile($zip = constant($font['medium']) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'font-resource.json'), true);
+							break;
+						case 'FONT_RESOURCES_PEER':
+							$sessions = json_decode(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.json"), true);
+							if (!file_exists(constant(FONT_RESOURCES_CACHE) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
+							{
+								$sql = "SELECT * FROM `peers` WHERE `peer-id` LIKE '%s'";
+								if ($GLOBALS['FontsDB']->getRowsNum($results = $GLOBALS['FontsDB']->queryF(sprintf($sql, $GLOBALS['FontsDB']->escape($font['peer_id']))))==1)
+								{
+									$peer = $GLOBALS['FontsDB']->fetchArray($results);
+									mkdir(constant("FONT_RESOURCES_CACHE") . $row['path'], 0777, true);
+									writeRawFile(constant("FONT_RESOURCES_CACHE") . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], getURIData(sprintf($peer['api-uri'].$peer['api-uri-zip'], $row['font_id'])));
+									$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])] = array("opened" => microtime(true), "dropped" => microtime(true) + mt_rand(3600 * 0.785, 3600 * 1.896), "resource" => $font['path'] . DIRECTORY_SEPARATOR . $font['filename']);
+								}
+							} else {
+								if ($sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] < microtime(true) + ($next = mt_rand(1800*.3236, 2560*.5436)))
+									$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] = $sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])]['dropped'] + $next;
+							}
+							writeRawFile(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.json", json_encode($sessions));
+							$json = json_decode(getArchivedZIPFile($zip = FONT_RESOURCES_CACHE . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'font-resource.json'), true);
+							break;
+					}
+				}
+			}
+			$variables[$fontid]['name'] = empty($name)?(isset($json['FontFullName'])&&!empty($json['FontFullName'])?$json['FontFullName']:$fontid):$name;
 			$variables[$fontid]['distance'] = $distance;
-		}
+		}	
 		return spacerName(!isset($variables[$fontid]['name'])||empty($variables[$fontid]['name'])?$fontid:($getGistance == false?$variables[$fontid]['name']:$variables[$fontid]['distance']));
 	}
 }
@@ -2432,6 +2557,21 @@ if (!function_exists("getFontRawData")) {
 				$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `accessings` = `accessings` + 1, `accessed` = UNIX_TIMESTAMP() WHERE `id` = '" . $row['id'] . "'");
 				$sql = "SELECT * from `fonts` WHERE `id` = '" . $row['font_id'] . "'";
 				$font = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql));
+				$eothd = array();
+				$eothd['licence'] = $font['licence'];
+				$eothd['company'] = $font['company'];
+				$eothd['matrix'] = $font['matrix'];
+				$eothd['bbox'] = $font['bbox'];
+				$eothd['painttype'] = $font['painttype'];
+				$eothd['info'] = $font['info'];
+				$eothd['family'] = $font['family'];
+				$eothd['weight'] = $font['weight'];
+				$eothd['fstype'] = $font['fstype'];
+				$eothd['italicangle'] = $font['italicangle'];
+				$eothd['fixedpitch'] = $font['fixedpitch'];
+				$eothd['underlineposition'] = $font['underlineposition'];
+				$eothd['underlinethickness'] = $font['underlinethickness'];
+				$eothd['version'] = $font['version'];
 				switch($font['medium'])
 				{
 					case 'FONT_RESOURCES_CACHE':
@@ -2481,7 +2621,8 @@ if (!function_exists("getFontRawData")) {
 						$json = json_decode(getArchivedZIPFile($zip = FONT_RESOURCES_CACHE . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], 'font-resource.json'), true);
 						break;
 				}
-				if ($output!="font-resource.json")
+				$eothd['title'] = getRegionalFontName($clause, 0, 0, false, $json);
+				if (!in_array($output, array("font-resource.json", "file.diz", "diz", "json", "diz", "jpg", "png", "gif")))
 				{
 					$found = false;
 					$cachefile = getCacheFilename(FONT_RESOURCES_CACHE, '%sfont-cached-data-by-hash--%s.zip', md5(getRegionalFontName($row['font_id']).$row['font_id']), 'zip');
@@ -2494,7 +2635,7 @@ if (!function_exists("getFontRawData")) {
 					}
 					if ($found != true)
 					{
-						mkdir($currently = FONT_RESOURCES_CONVERTING . DIRECTORY_SEPARATOR . sha1(md5_file($zip).$row['font_id']), 0777, true);
+						mkdir($currently = FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . sha1(md5_file($zip).$row['font_id']), 0777, true);
 						chdir($currently);
 						$basefile = '';
 						foreach(getArchivedZIPContentsArray($zip) as $crc => $file)
@@ -2518,9 +2659,8 @@ if (!function_exists("getFontRawData")) {
 								die("Failed to find convertable format in: *." . implode(", *.", $formats) . " for fonting in archive: " . basename($zip));
 						}
 
-						writeRawFile($font = $currently . DIRECTORY_SEPARATOR . $basefile, getArchivedZIPFile($zip, $basefile, $row['font_id']));					
-						if (isset($json['Font']))
-							writeFontResourceHeader($font, $json["Font"]['licence'], $json['Font']);
+						writeRawFile($fonteer = $currently . DIRECTORY_SEPARATOR . $basefile, getArchivedZIPFile($zip, $basefile, $row['font_id']));					
+						writeFontResourceHeader($fonteer, $eothd['licence'], $eothd);
 						$totalmaking = count(file(__DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"))-1;
 						$outt = array();exec("cd $currently", $outt, $return);
 						$covertscript = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"));
@@ -2530,7 +2670,7 @@ if (!function_exists("getFontRawData")) {
 							elseif(in_array($output, array('z', 'php') && substr($value,0,4)!='Open' && (!strpos($value, 'ttf')) && !strpos($value, 'afm')))
 								unset($covertscript[$line]);
 						writeRawFile($script = FONT_RESOURCES_CACHE.DIRECTORY_SEPARATOR.md5(microtime(true).$zip.$row['font_id']).".pe", implode("\n", $covertscript));
-						$outt = shell_exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", $script, $font));
+						$outt = shell_exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", $script, basename($fonteer)));
 						unlink($script);
 						if (in_array($output, array('z', 'php')))
 						{
@@ -2546,8 +2686,6 @@ if (!function_exists("getFontRawData")) {
 						$outt = shell_exec($cmda);
 						if (!file_exists($cachefile))
 							die("File not found: $cachefile ~~ Failed: $cmda\n\n$outt");
-						$output = array();
-						exec($cmd = "rm -Rfv $currently", $output);
 					}
 					$zip = $cachefile;
 				}
@@ -3506,16 +3644,18 @@ if (!function_exists("getRandomFontsFromStringList")) {
 					{
 						$fonts_id[$font['font_id']] = $font['font_id'];
 					}
-					$sql = "SELECT * from `fonts` WHERE `id` IN ('".implode("','", $fonts_id)."') " . (!empty($normal)?" AND `normal` = $normal":"") . (!empty($normal)?" AND `bold` = $bold":"") . (!empty($italic)?" AND `italic` = $italic":"") . (!empty($condensed)?" AND `condensed` = $condensed":"") . " ORDER BY RAND() LIMIT 1";
-					$fonteo = $GLOBALS['FontsDB']->queryF($sql);
+					$sql = "SELECT DISTINCT `a`.* FROM `fonts` `a` INNER JOIN `fonts_archiving` `b` ON `a`.`id` =  `b`.`font_id` WHERE `a`.`state` = 'online' AND `a`.`id` IN ('".implode("','", $fonts_id)."') " . (!empty($normal)?" AND `a`.`normal` = $normal":"") . (!empty($normal)?" AND `a`.`bold` = $bold":"") . (!empty($italic)?" AND `a`.`italic` = $italic":"") . (!empty($condensed)?" AND `a`.`condensed` = $condensed":"") . " ORDER BY RAND() LIMIT 1";
+					if (!$fonteo = $GLOBALS['FontsDB']->queryF($sql))
+						die("SQL Failed: $sql;");
 					while($fontee = $GLOBALS['FontsDB']->fetchArray($fonteo))
 					{
 						@writeRawFile($cache, json_encode($fontee));
 						return $_SESSION["randoms"]['fontee'][md5($_SERVER["REQUEST_URI"])] = $fontee;
 					}
 				} else {
-					$sql = "SELECT * from `fonts` WHERE 1 = 1 ". (!empty($normal)?" AND `normal` = $normal":"") . (!empty($normal)?" AND `bold` = $bold":"") . (!empty($italic)?" AND `italic` = $italic":"") . (!empty($condensed)?" AND `condensed` = $condensed":"") . " ORDER BY RAND() LIMIT 1";
-					$fonteo = $GLOBALS['FontsDB']->queryF($sql);
+					$sql = "SELECT DISTINCT `a`.* FROM `fonts` `a` INNER JOIN `fonts_archiving` `b` ON `a`.`id` =  `b`.`font_id` WHERE `a`.`state` = 'online'". (!empty($normal)?" AND `a`.`normal` = $normal":"") . (!empty($normal)?" AND `a`.`bold` = $bold":"") . (!empty($italic)?" AND `a`.`italic` = $italic":"") . (!empty($condensed)?" AND `a`.`condensed` = $condensed":"") . " ORDER BY RAND() LIMIT 1";
+					if (!$fonteo = $GLOBALS['FontsDB']->queryF($sql))
+						die("SQL Failed: $sql;");
 					while($fontee = $GLOBALS['FontsDB']->fetchArray($fonteo))
 					{
 						@writeRawFile($cache, json_encode($fontee));
@@ -3562,22 +3702,45 @@ if (!function_exists("getRandomFontsIDFromNodesList")) {
 					{
 						$node_id[$row['node_id']] = $row['node_id'];
 					}
-					$sql = "SELECT * from `nodes_linking` WHERE `node_id` IN ('".implode("','", $node_id)."') ORDER BY RAND() LIMIT 1";
-					$nodocity = $GLOBALS['FontsDB']->queryF($sql);
-					while($node = $GLOBALS['FontsDB']->fetchArray($nodocity))
+					$tries=-1;
+					while ($tries<20)
 					{
-						@writeRawFile($cache, $node['font_id']);
-						return $_SESSION["randoms"]['fontid'][md5($toponly.$_SERVER["REQUEST_URI"])] = $node['font_id'];
+						$sql = "SELECT * from `nodes_linking` WHERE `node_id` IN ('".implode("','", $node_id)."') ORDER BY RAND() LIMIT 1";
+						$nodocity = $GLOBALS['FontsDB']->queryF($sql);
+						while($node = $GLOBALS['FontsDB']->fetchArray($nodocity))
+						{
+							$sql = "SELECT DISTINCT count(*) FROM `fonts` `a` INNER JOIN `fonts_archiving` `b` ON `a`.`id` =  `b`.`font_id` WHERE `a`.`state` = 'online' AND `a`.`id` LIKE '".$node['font_id']."'";
+							list($count) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql));
+							if ($count>0)
+							{
+								@writeRawFile($cache, $node['font_id']);
+								return $_SESSION["randoms"]['fontid'][md5($toponly.$_SERVER["REQUEST_URI"])] = $node['font_id'];
+							} else 
+								die("SQL Failed: $sql;");
+						}
+						$tries++;
 					}
+					return $_SESSION["randoms"]['fontid'][md5($toponly.$_SERVER["REQUEST_URI"])];
 				} else {
-				
-					$sql = "SELECT * from `nodes_linking` ORDER BY RAND() LIMIT 1";
-					$nodocity = $GLOBALS['FontsDB']->queryF($sql);
-					while($node = $GLOBALS['FontsDB']->fetchArray($nodocity))
-					{
-						@writeRawFile($cache, $node['font_id']);
-						return $_SESSION["randoms"]['fontid'][md5($toponly.$_SERVER["REQUEST_URI"])] = $node['font_id'];
+					$tries=-1;
+					while ($tries<20)
+					{				
+						$sql = "SELECT * from `nodes_linking` ORDER BY RAND() LIMIT 1";
+						$nodocity = $GLOBALS['FontsDB']->queryF($sql);
+						while($node = $GLOBALS['FontsDB']->fetchArray($nodocity))
+						{
+							$sql = "SELECT DISTINCT count(*) FROM `fonts` `a` INNER JOIN `fonts_archiving` `b` ON `a`.`id` =  `b`.`font_id` WHERE `a`.`state` = 'online' AND `a`.`id` LIKE '".$node['font_id']."'";
+							list($count) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql));
+							if ($count>0)
+							{
+								@writeRawFile($cache, $node['font_id']);
+								return $_SESSION["randoms"]['fontid'][md5($toponly.$_SERVER["REQUEST_URI"])] = $node['font_id'];
+							} else 
+								die("SQL Failed: $sql;");
+						}
+						$tries++;
 					}
+					return $_SESSION["randoms"]['fontid'][md5($toponly.$_SERVER["REQUEST_URI"])];
 				}
 			}
 			return $_SESSION["randoms"]['fontid'][md5($toponly.$_SERVER["REQUEST_URI"])] = file_get_contents($cache);
@@ -3888,7 +4051,7 @@ if (!function_exists("getExampleFingerprint")) {
 	function getExampleFingerprint()
 	{
 		$nodes = array();
-		$result = $GLOBALS['FontsDB']->queryF("SELECT * from `fonts` ORDER BY RAND() LIMIT 1");
+		$result = $GLOBALS['FontsDB']->queryF("SELECT DISTINCT `a`.* from `fonts` `a` INNER JOIN `fonts_archiving` `b` ON `a`.`id` =  `b`.`font_id` WHERE `a`.`state` = 'online' ORDER BY RAND() LIMIT 1");
 		while($row = $GLOBALS['FontsDB']->fetchArray($result))
 		{
 			return $row;
@@ -4343,7 +4506,7 @@ if (!function_exists("writeFontResourceHeader")) {
 
 			$output = file(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . $licence . DIRECTORY_SEPARATOR . strtoupper(API_BASE) . '-HEADER');
 			$buffer = false;
-			foreach($file($font) as $line)
+			foreach(file($font) as $line)
 			{
 				if ($buffer == true)
 					$output[] = $line;

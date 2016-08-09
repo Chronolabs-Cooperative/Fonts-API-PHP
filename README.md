@@ -15,7 +15,7 @@ Download the API archive of PHP files from: https://sourceforge.net/p/chronolabs
 You will first have to set up the environment running the following script at root on Ubuntu or Debian Server it will install all the system environment variables you require to do an installation:-
 
     
-    $ sudo apt-get install p7zip-rar p7zip-full unace unrar zip unzip sharutils rar sharutils unrar uudeview mpack arj cabextract file-roller lmza fontforge tasksel ntpdate nano lzma bzip2
+    $ sudo apt-get install traceroute rar* p7zip-full unace unrar* zip unzip sharutils sharutils uudeview mpack arj cabextract file-roller fontforge tasksel nano bzip2
     
 
 Now you will have to execute 'tasksel' in root with the 'sudo' precursor for this to install the LAMP environment; run the following command and install the LAMP environment.
