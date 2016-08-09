@@ -24,7 +24,7 @@ set_time_limit(1999);
 require_once dirname(dirname(__DIR__)).'/functions.php';
 require_once dirname(dirname(__DIR__)).'/class/fontages.php';
 
-if (!$GLOBALS['FontsDB']->queryF($sql = "ALTER TABLE `fonts` ADD `barcode_id` VARCHAR(13) NOT NULL DEFAULT '-------------' AFTER `id`, ADD `referee_id` VARCHAR(8) NOT NULL DEFAULT '--------' AFTER `barcode_id`;"))
+if (!$GLOBALS['FontsDB']->queryF($sql = "ALTER TABLE `fonts` ADD `barcode_id` VARCHAR(22) NOT NULL DEFAULT '-------------' AFTER `id`, ADD `referee_id` VARCHAR(8) NOT NULL DEFAULT '--------' AFTER `barcode_id`;"))
 	echo "SQL Failed: $sql;\n<br/>";
 	
 if (!$GLOBALS['FontsDB']->queryF($sql = "ALTER TABLE `fonts_glyphs` CHANGE `glyph-id` `glyph_id` VARCHAR(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '--------------------------------', CHANGE `font-id` `font_id` VARCHAR(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '--------------------------------', CHANGE `addon-glyph-id` `addon_glyph_id` VARCHAR(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '', CHANGE `addon-font-id` `addon_font_id` VARCHAR(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '';"))
@@ -36,4 +36,5 @@ if (!$GLOBALS['FontsDB']->queryF($sql = "ALTER TABLE `fonts_glyphs_contours` CHA
 if (!$GLOBALS['FontsDB']->queryF($sql = "ALTER TABLE `fonts` ADD `added` INT(12) NOT NULL DEFAULT '0' AFTER `nodes`;"))
 	echo "SQL Failed: $sql;\n<br/>";
 	
-	
+if (!$GLOBALS['FontsDB']->queryF($sql = "ALTER TABLE `fonts_archiving` ADD `hits` INT(12) NOT NULL DEFAULT '0' AFTER `fingerprint`;"))
+	echo "SQL Failed: $sql;\n<br/>";

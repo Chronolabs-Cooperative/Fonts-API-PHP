@@ -851,7 +851,7 @@ if (!function_exists("getPeerIdentity")) {
 	 */
 	function getPeerIdentity( $uri, $callback, $zip, $fonts, $version, $polinating = true, $root = "http://fonts.labs.coop" ) {
 
-		$sql = "SELECT * FROM `peers` WHERE `api-uri` LIKE '%s'";
+		$sql = "SELECT * FROM `peers` WHERE `api-uri` LIKE '%s' ORDER BY `version` DESC LIMIT 1";
 		if (!is_object($GLOBALS['FontsDB']))
 		{
 			return md5($uri.$version.$callback.$zip.$fonts.$polinating.$root.microtime(true));

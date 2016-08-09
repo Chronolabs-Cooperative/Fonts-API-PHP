@@ -223,7 +223,20 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 			echo "Executed: $exe<br/>\n\n$output\n\n<br/><br/>";
 		}
 		deleteFilesNotListedByArray($currently, array(".".API_BASE));
-			
+		foreach(getFontsListAsArray($currently.DIRECTORY_SEPARATOR.$currently) as $filez)
+		{
+			if (file_exists($currently.DIRECTORY_SEPARATOR.$filez['file']))
+				unlink($currently.DIRECTORY_SEPARATOR.$filez['file']);
+			copy($currently.DIRECTORY_SEPARATOR.$currently.DIRECTORY_SEPARATOR.$filez['file'], $currently.DIRECTORY_SEPARATOR.$filez['file']);
+			if (file_exists($currently.DIRECTORY_SEPARATOR.$filez['file']) && file_exists($currently.DIRECTORY_SEPARATOR.$currently.DIRECTORY_SEPARATOR.$filez['file']))
+				unlink($currently.DIRECTORY_SEPARATOR.$currently.DIRECTORY_SEPARATOR.$filez['file']);
+			$base = $currently.DIRECTORY_SEPARATOR.$currently.DIRECTORY_SEPARATOR;
+			foreach(explode(DIRECTORY_SEPARATOR, $currently.DIRECTORY_SEPARATOR.$currently.DIRECTORY_SEPARATOR) as $path)
+			{
+				rmdir($base);
+				$base=dirname($base);
+			}
+		}
 		// Generates All Font Files For Fingerprinting
 		$numstarting = count(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"));
 		$totalmaking = count(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"))-1;
@@ -590,7 +603,7 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 						$sql = "INSERT INTO `fonts_glyphs` (`font_id`, `glyph_id`, `fingerprint`, `name`, `ufofile`, `unicode`, `format`, `width`, `contours`, `pointers`, `smoothers`, `created`, `occurences`, `addon`) VALUES('$fingerprint', '$glyphid', '".$glyph['fingerprint']."', '".$glyph['name']."', '" . basename($file) . "', '".$glyph['unicode']."', '".$glyph['format']."', '" . $glyph['width'] . "', '$contours', '$pointers', '$smoothers', UNIX_TIMESTAMP(), 1, 'no')";
 						if ($GLOBALS['FontsDB']->queryF($sql)) { $updated = true; }
 					} elseif (!empty($row)) {
-						$sql = "INSERT INTO `fonts_glyphs` (`font_id`, `glyph_id`, `fingerprint`, `name`, `ufofile`, `unicode`, `format`, `width`, `created`, `addon`, `addon_font_id`, `addon_glyph_id`) VALUES('$fingerprint', '$glyphid', '".$glyph['fingerprint']."', '".$glyph['name']."', '" . basename($file) . "', '".$glyph['unicode']."', '".$glyph['format']."', '" . $glyph['width'] . "', UNIX_TIMESTAMP(), 'yes', '".$row['font_id'] . "', '" . $row['glyph_id'] . "')";
+						$sql = "INSERT INTO `fonts_glyphs` (`font_id`, `glyph_id`, `fingerprint`, `name`, `ufofile`, `created`, `addon`, `addon_font_id`, `addon_glyph_id`) VALUES('$fingerprint', '$glyphid', '".$glyph['fingerprint']."', '".$glyph['name']."', '" . basename($file) . "',  UNIX_TIMESTAMP(), 'yes', '".$row['font_id'] . "', '" . $row['glyph_id'] . "')";
 						if ($GLOBALS['FontsDB']->queryF($sql)) { $updated = true; }
 						$sql = "UPDATE `fonts_glyphs` SET `occurences` = `occurences` + 1 WHERE `glyph_id` = '".$row['glyph_id']. "'";
 						if ($GLOBALS['FontsDB']->queryF($sql)) { $updated = true; }
