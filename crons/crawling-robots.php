@@ -49,7 +49,7 @@ foreach($keywords as $keyword)
 		foreach($urls as $url)
 		{
 			$crawl = sprintf($url, urlencode($keyword));
-			$scripts[] = "/usr/bin/wget --span-host --level=" . (!isset($_GET['level'])&&!is_numeric($_GET['level'])?API_CRAWLERS_LEVELS:(integer)$_GET['level']) . " --recursive -x -k --continue --accept=" . implode(",", $metas) . " \"$crawl\" \"%s\"";
+			$scripts[] = "/usr/bin/wget --span-host --bind-address=".parse_url(API_URL, PHP_URL_HOST)." --referer=".API_URL." --level=" . (!isset($_GET['level'])&&!is_numeric($_GET['level'])?API_CRAWLERS_LEVELS:(integer)$_GET['level']) . " --recursive -x -k --continue --accept=" . implode(",", $metas) . " \"$crawl\" \"%s\"";
 		}
 	} else {
 		$filtered = array();
