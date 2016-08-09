@@ -720,6 +720,20 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 					writeFontRepositoryHeader($currently . DIRECTORY_SEPARATOR . $file, $data['Font']['licence'], $data['Font']);
 			if (!file_exists($currently . DIRECTORY_SEPARATOR . 'LICENCE'))
 				copy(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . $data['Font']['licence'] . DIRECTORY_SEPARATOR . 'LICENCE', $currently . DIRECTORY_SEPARATOR . 'LICENCE');
+			foreach(getFontsListAsArray($currently.$currently) as $filez)
+			{
+				if (file_exists($currently.DIRECTORY_SEPARATOR.$filez['file']))
+					unlink($currently.DIRECTORY_SEPARATOR.$filez['file']);
+				copy($currently.$currently.DIRECTORY_SEPARATOR.$filez['file'], $currently.DIRECTORY_SEPARATOR.$filez['file']);
+				if (file_exists($currently.DIRECTORY_SEPARATOR.$filez['file']) && file_exists($currently.$currently.DIRECTORY_SEPARATOR.$filez['file']))
+					unlink($currently.$currently.DIRECTORY_SEPARATOR.$filez['file']);
+				$base = $currently.$currently.DIRECTORY_SEPARATOR;
+				foreach(explode(DIRECTORY_SEPARATOR, $currently.$currently.DIRECTORY_SEPARATOR) as $path)
+				{
+					rmdir($base);
+					$base=dirname($base);
+				}
+			}
 			foreach(getCompleteFilesListAsArray($currently) as $file)
 				if (substr($file, strlen($file)-strlen(API_BASE), strlen(API_BASE)) == API_BASE)
 				{

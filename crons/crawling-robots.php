@@ -97,7 +97,7 @@ foreach($keywords as $keyword)
 			foreach($urls as $url)
 			{
 				$crawl = sprintf($url, urlencode($keyword));
-				$scripts[] = "/usr/bin/wget --span-host --level=" . API_CRAWLERS_LEVELS . " --recursive -x -k --continue --accept=" . implode(",", $metas) . " \"$crawl\" \"%s\"";
+				$scripts[] = "/usr/bin/wget --span-host --level=" . API_CRAWLERS_LEVELS . " --recursive -x -k --continue --accept=" . implode(",", $metas) . " \"$crawl\"";
 			}
 		}
 	}
@@ -123,8 +123,10 @@ foreach($scripts as $exec)
 		$scripting[$robots] = array('!#/sh/bash');
 		$path = FONT_UPLOAD_PATH . DIRECTORY_SEPARATOR . API_EMAIL_ADDY . DIRECTORY_SEPARATOR . abs(mt_rand(-microtime(true), microtime(true)));
 		mkdir(FONT_UPLOAD_PATH, 0777, true);
+		$scripting[$robots][] = 'mkdir "' . FONT_UPLOAD_PATH . '"';		
 		$scripting[$robots][] = 'mkdir "' . FONT_UPLOAD_PATH . DIRECTORY_SEPARATOR . API_EMAIL_ADDY . '"';
 		$scripting[$robots][] = "mkdir \"$path\"";
+		$scripting[$robots][] = "cd \"$path\"";
 		$crawldat[$path]['set'] = microtime(true);
 		$crawldat[$path]['robot'] = $robots;
 	}

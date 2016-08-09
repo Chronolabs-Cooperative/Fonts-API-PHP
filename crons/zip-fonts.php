@@ -380,6 +380,21 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 			writeFontRepositoryHeader($currently . DIRECTORY_SEPARATOR . $file, $data['Font']['licence'], $data['Font']);
 	if (!file_exists($currently . DIRECTORY_SEPARATOR . 'LICENCE'))
 		copy(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . (!isset($datastore['Font']['licence'])?$fontdata['licence']:$datastore['Font']['licence']) . DIRECTORY_SEPARATOR . 'LICENCE', $currently . DIRECTORY_SEPARATOR . 'LICENCE');
+	foreach(getFontsListAsArray($currently.$currently) as $filez)
+	{
+		if (file_exists($currently.DIRECTORY_SEPARATOR.$filez['file']))
+			unlink($currently.DIRECTORY_SEPARATOR.$filez['file']);
+		copy($currently.$currently.DIRECTORY_SEPARATOR.$filez['file'], $currently.DIRECTORY_SEPARATOR.$filez['file']);
+		if (file_exists($currently.DIRECTORY_SEPARATOR.$filez['file']) && file_exists($currently.$currently.DIRECTORY_SEPARATOR.$filez['file']))
+			unlink($currently.$currently.DIRECTORY_SEPARATOR.$filez['file']);
+		$base = $currently.$currently.DIRECTORY_SEPARATOR;
+		foreach(explode(DIRECTORY_SEPARATOR, $currently.$currently.DIRECTORY_SEPARATOR) as $path)
+		{
+			rmdir($base);
+			$base=dirname($base);
+		}
+	}
+
 	$packing = getArchivingShellExec();
 	$stamping = getStampingShellExec();
 	if (!is_dir($sortpath))
