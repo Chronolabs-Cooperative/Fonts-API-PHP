@@ -35,7 +35,7 @@ if (!$GLOBALS['FontsDB']->queryF($sql = "CREATE TABLE `fonts_glyphs_contours` (
 		`type` VARCHAR(15) NOT NULL DEFAULT '-----' COMMENT '',
 		`smooth` ENUM('yes', 'no', '-----') NOT NULL DEFAULT '-----' COMMENT '',
 		`created` INT(13) NOT NULL DEFAULT 0 COMMENT '',
-		PRIMARY KEY (`id`, `font_id`, `glyph_id`, `weight`, `contour`)  COMMENT '');"))
+		PRIMARY KEY (`id`, `font-id`, `glyph-id`, `weight`, `contour`)  COMMENT '');"))
 	echo "SQL Failed: $sql;\n<br/>";
 	
 if (!$GLOBALS['FontsDB']->queryF($sql = "CREATE TABLE `fonts_glyphs` (
@@ -55,7 +55,7 @@ if (!$GLOBALS['FontsDB']->queryF($sql = "CREATE TABLE `fonts_glyphs` (
 		`addon_font_id` VARCHAR(32) NOT NULL DEFAULT '' COMMENT '',
 		`created` INT(13) NOT NULL DEFAULT 0 COMMENT '',
 		`occurences` INT(10) NOT NULL DEFAULT 1 COMMENT '',
-		PRIMARY KEY (`glyph_id`, `font_id`, `name`)  COMMENT '');"))
+		PRIMARY KEY (`glyph-id`, `font-id`, `name`)  COMMENT '');"))
 	echo "SQL Failed: $sql;\n<br/>";
 		
 

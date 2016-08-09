@@ -95,7 +95,7 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 			writeRawFile($script = FONT_RESOURCES_CACHE.DIRECTORY_SEPARATOR.md5(microtime(true).json_encode($fonts)).".pe", implode("\n", $covertscript));
 			foreach($fonts as $font)
 			{
-				exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", $script, $font), $output, $return);;
+				exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", $script, $font['file']), $output, $return);;
 				echo "Executed: $exe<br/>\n\n$output\n\n<br/><br/>";
 			}
 			unlink($script);
@@ -113,7 +113,7 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 			while($row = $GLOBALS['FontsDB']->fetchArray($result))
 				$missing[$row['filename']] = $row['filename'];
 			
-			$sql = "SELECT count(*) as `rc`, `font_id` FROM `fonts_files` WHERE `filename` IN ('".implode("', '", $missing). "') ORDER BY `rc` DESC, RAND() ASC";
+			$sql = "SELECT count(*) as `rc`, `font_id` FROM `fonts_files` WHERE `filename` IN ('".implode("', '", $missing). "') ORDER BY `rc` ASC, RAND() ASC";
 			$result =$GLOBALS['FontsDB']->queryF($sql);
 			while($row = $GLOBALS['FontsDB']->fetchArray($result))
 				$fontsids[$row['font_id']] = $row['rc'];
@@ -169,7 +169,7 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 			unset($missing);
 			foreach(getDirListAsArray($currently) as $folder)
 			{
-				exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts-upload.pe", $currently . DIRECTORY_SEPARATOR . $folder), $output, $return);;
+				exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts-upload.pe", $folder), $output, $return);;
 				echo "Executed: $exe<br/>\n\n$output\n\n<br/><br/>";
 			}
 			deleteFilesNotListedByArray($currently, array(".".API_BASE));
@@ -199,7 +199,7 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 				writeRawFile($script = FONT_RESOURCES_CACHE.DIRECTORY_SEPARATOR.md5(microtime(true).json_encode($fonts)).'.pe', implode("\n", $covertscript));
 				foreach($fontfiles as $file => $values)
 				{
-					@exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", $script, $currently . DIRECTORY_SEPARATOR . $values['file']), $output, $return);
+					@exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", $script, $values['file']), $output, $return);
 					echo "Executed: $exe<br/>\n\n$output\n\n<br/><br/>";
 				}
 				unlink($script);

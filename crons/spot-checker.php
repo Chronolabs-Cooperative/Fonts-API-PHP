@@ -30,6 +30,7 @@ define('MAXIMUM_QUERIES', 25);
 ini_set('memory_limit', '315M');
 include_once dirname(dirname(__FILE__)).'/functions.php';
 include_once dirname(dirname(__FILE__)).'/class/fontages.php';
+include_once dirname(dirname(__FILE__)).'/class/xcp.class.php';
 set_time_limit(7200);
 
 $pool = $GLOBALS['FontsDB']->queryF($sql = "SELECT `a`.* from `fonts_archiving` as `a` INNER JOIN `fonts` as `b` ON `a`.`font_id` = `b`.`id` WHERE `b`.`medium` IN ('FONT_RESOURCES_RESOURCE', 'FONT_RESOURCES_CACHE') ORDER BY `a`.`checked` ASC LIMIT 12");
@@ -46,6 +47,19 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 	$upload = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql = "SELECT * from `uploads` WHERE `font_id` = '" . $archive['font_id'] . "'"));
 	$datastore = json_decode($upload['datastore'], true);
 	
+	if (empty($font['barcode_id']))
+	{
+		$barcode = new xcp($archive['font_id'], mt_rand(0,254), 12);
+		$font['barcode_id'] = $barcode->crc;
+		unset($barcode);
+	}
+
+	if (empty($font['referee_id']))
+	{
+		$referee = new xcp($archive['font_id'], mt_rand(0,254), mt_rand(4,7));
+		$font['referee_id'] = $referee->crc;
+		unset($referee);
+	}					
 	$file = '';
 	switch($font['medium'])
 	{
@@ -163,11 +177,14 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 			}
 			
 		foreach($retrieve as $fontid => $files)
+		{
 			foreach($files as $idx => $filename)
 			{
 				putRawFile($working . DIRECTORY_SEPARATOR . $filename, getFontRawData('', $fontid, 'ufo', $filename));
+				$fontdata['version'] = $fontdata['version'] + 0.001;
 			}
-			
+			$fontdata['version'] = $fontdata['version'] + 0.010;
+		}	
 		$step = 1;
 		$glifmap = $glifs = array();
 		$ufofiles = getCompleteFilesListAsArray($currently, '');
@@ -484,7 +501,7 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 					,'Table' => $fontage->getTable(), "UnicodeCharMap" => $fontage->getUnicodeCharMap(),
 					"Reserves" => $reserves, 'Names' => removeIdentities($names), 'Nodes' => removeIdentities($nodes),
 					"Contributors" => removeIdentities($contributors), 'FontIdentity' => $fingerprint, 'Bytes' => $expanded,
-					"Networking" => $networking);
+					"Networking" => $networking, "barcode" => $font['barcode_id'], "referee" => $font['referee_id']);
 				writeRawFile($currently . DIRECTORY_SEPARATOR . "font-resource.json", json_encode($data));
 				$filecount++;
 				$css[] = "/** " .$fontage->getFontFullName(). " (".$fontage->getFontSubfamily().") */";
@@ -555,7 +572,7 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 				if (!empty($glyph))
 				{
 					$sql = "SELECT * FROM `fonts_glyphs` WHERE `fingerprint` LIKE '" . $glyph['fingerprint'] . "'";
-					$glyphid = md5($glyph['fingerprint'].$fingerprint);
+					$glyphid = md5($fingerprint.$glyph['fingerprint'].json_encode($glyph));
 					if (!$row = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql)))
 					{
 						$contours = $pointers = $smoothers = 0;
@@ -573,9 +590,9 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 						$sql = "INSERT INTO `fonts_glyphs` (`font_id`, `glyph_id`, `fingerprint`, `name`, `ufofile`, `unicode`, `format`, `width`, `contours`, `pointers`, `smoothers`, `created`, `occurences`, `addon`) VALUES('$fingerprint', '$glyphid', '".$glyph['fingerprint']."', '".$glyph['name']."', '" . basename($file) . "', '".$glyph['unicode']."', '".$glyph['format']."', '" . $glyph['width'] . "', '$contours', '$pointers', '$smoothers', UNIX_TIMESTAMP(), 1, 'no')";
 						if ($GLOBALS['FontsDB']->queryF($sql)) { $updated = true; }
 					} elseif (!empty($row)) {
-						$sql = "INSERT INTO `fonts_glyphs` (`font_id`, `glyph_id`, `fingerprint`, `name`, `ufofile`, `unicode`, `format`, `width`, `created`, `addon`, `addon-font-id`, `addon-glyph-id`) VALUES('$fingerprint', '$glyphid', '".$glyph['fingerprint']."', '".$glyph['name']."', '" . basename($file) . "', '".$glyph['unicode']."', '".$glyph['format']."', '" . $glyph['width'] . "', UNIX_TIMESTAMP(), 'yes', '".$row['font-id'] . "', '" . $row['glyph-id'] . "')";
+						$sql = "INSERT INTO `fonts_glyphs` (`font_id`, `glyph_id`, `fingerprint`, `name`, `ufofile`, `unicode`, `format`, `width`, `created`, `addon`, `addon_font_id`, `addon_glyph_id`) VALUES('$fingerprint', '$glyphid', '".$glyph['fingerprint']."', '".$glyph['name']."', '" . basename($file) . "', '".$glyph['unicode']."', '".$glyph['format']."', '" . $glyph['width'] . "', UNIX_TIMESTAMP(), 'yes', '".$row['font_id'] . "', '" . $row['glyph_id'] . "')";
 						if ($GLOBALS['FontsDB']->queryF($sql)) { $updated = true; }
-						$sql = "UPDATE `fonts_glyphs` SET `occurences` = `occurences` + 1 WHERE `glyph-id` = '".$row['glyph-id']. "'";
+						$sql = "UPDATE `fonts_glyphs` SET `occurences` = `occurences` + 1 WHERE `glyph_id` = '".$row['glyph_id']. "'";
 						if ($GLOBALS['FontsDB']->queryF($sql)) { $updated = true; }
 					}
 				}
@@ -722,7 +739,7 @@ while($archive = $GLOBALS['FontsDB']->fetchArray($pool))
 								die("Failed SQL: $sql;\n");
 						}
 						list($nodecount) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF("SELECT count(*) FROM  `nodes_linking` WHERE `font_id` = '" . $fingerprint . "'"));
-						if (!$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts` SET `nodes` = '$nodecount', `medium` = 'FONT_RESOURCES_RESOURCE', `version` = '" . $data['Font']['version'] . "', `date` = '" . $data['Font']['date'] . "', `uploaded` = '" . $data['Font']['uploaded'] . "', `licence` = '" . $data['Font']['licence'] . "', `company` = '" . $data['Font']['company'] . "', `matrix` = '" . $data['Font']['matrix'] . "', `bbox` = '" . $data['Font']['bbox'] . "', `painttype` = '" . $data['Font']['painttype'] . "', `info` = '" . $data['Font']['info'] . "', `family` = '" . $data['Font']['family'] . "', `weight` = '" . $data['Font']['weight'] . "', `fstype` = '" . $data['Font']['fstype'] . "', `italicangle` = '" . $data['Font']['italicangle'] . "', `fixedpitch` = '" . $data['Font']['fixedpitch'] . "', `underlineposition` = '" . $data['Font']['underlineposition'] . "', `underlinethickness` = '" . $data['Font']['underlinethickness'] . "' WHERE `id` = '$fingerprint'"))
+						if (!$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts` SET `nodes` = '$nodecount', `medium` = 'FONT_RESOURCES_RESOURCE', `version` = '" . $data['Font']['version'] . "', `date` = '" . $data['Font']['date'] . "', `uploaded` = '" . $data['Font']['uploaded'] . "', `licence` = '" . $data['Font']['licence'] . "', `company` = '" . $data['Font']['company'] . "', `matrix` = '" . $data['Font']['matrix'] . "', `bbox` = '" . $data['Font']['bbox'] . "', `painttype` = '" . $data['Font']['painttype'] . "', `info` = '" . $data['Font']['info'] . "', `family` = '" . $data['Font']['family'] . "', `weight` = '" . $data['Font']['weight'] . "', `fstype` = '" . $data['Font']['fstype'] . "', `italicangle` = '" . $data['Font']['italicangle'] . "', `fixedpitch` = '" . $data['Font']['fixedpitch'] . "', `underlineposition` = '" . $data['Font']['underlineposition'] . "', `underlinethickness` = '" . $data['Font']['underlinethickness'] . "', `barcode_id` = '" . $data['barcode'] . "', `referee_id` = '" . $data['referee'] . "' WHERE `id` = '$fingerprint'"))
 							die("Failed SQL: $sql;\n");
 						if (!$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `repacked` = UNIX_TIMESTAMP() WHERE `id` = '" . $archive['id'] . "'"))
 							die("Failed SQL: $sql;\n");

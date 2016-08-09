@@ -3955,6 +3955,23 @@ if (!function_exists('sef'))
 	 */
 	function sef($value = '', $stripe ='-')
 	{
+		return(strtolower(getOnlyAlpha($result, $stripe)));
+	}
+}
+
+
+if (!function_exists('getOnlyAlpha'))
+{
+	/**
+	 * Safe encoded paths elements
+	 *
+	 * @param unknown $datab
+	 * @param string $char
+	 * 
+	 * @return string
+	 */
+	function getOnlyAlpha($value = '', $stripe ='-')
+	{
 		$value = str_replace('&', 'and', $value);
 		$value = str_replace(array("'", '"', "`"), 'tick', $value);
 		$replacement_chars = array();
@@ -3964,14 +3981,14 @@ if (!function_exists('sef'))
 			if (!in_array(strtolower(chr($i)),$accepted))
 				$replacement_chars[] = chr($i);
 		}
-		$result = (str_replace($replacement_chars, $stripe, ($value)));
+		$result = trim(str_replace($replacement_chars, $stripe, ($value)));
+		while(strpos($result, $stripe.$stripe, 0))
+			$result = (str_replace($stripe.$stripe, $stripe, $result));
 		while(substr($result, 0, strlen($stripe)) == $stripe)
 			$result = substr($result, strlen($stripe), strlen($result) - strlen($stripe));
 		while(substr($result, strlen($result) - strlen($stripe), strlen($stripe)) == $stripe)
 			$result = substr($result, 0, strlen($result) - strlen($stripe));
-		while(strpos($result, $stripe . $stripe))
-			$result = str_replace($stripe . $stripe, $stripe, $result);
-		return(strtolower($result));
+		return($result);
 	}
 }
 
@@ -4025,7 +4042,7 @@ if (!function_exists("spacerName")) {
 	 */
 	function spacerName($name = '')
 	{
-		$name = str_replace(array('-', ':', ',', '<', '>', ';', '+', '_', '(', ')', '[', ']', '{', '}', '='), ' ', $name);
+		$name = getOnlyAlpha(str_replace(array('-', ':', ',', '<', '>', ';', '+', '_', '(', ')', '[', ']', '{', '}', '='), ' ', $name), ' ');
 		$nname = '';
 		$previous = $last = '';
 		for($i=0; $i<strlen($name); $i++)
@@ -4513,7 +4530,10 @@ if (!function_exists("getBaseFontValueStore")) {
 				$result['title'] = spacerName(trim(substr($line, $from-1, strlen($line) - $from + 1)));
 			} elseif (substr($line,0, $from = strlen('%Version: ')) == '%Version: ')
 			{
-				$result['version'] = floatval(trim(substr($line, $from-1, strlen($line) - $from + 1)));
+				$version = trim(substr($line, $from-1, strlen($line) - $from + 1));
+				if (is_string($version))
+					$version = DEFAULT_VERSION;
+				$result['version'] = floatval($version);
 			} elseif (substr($line,0, $from = strlen('%%CreationDate: ')) == '%%CreationDate: ')
 			{
 				$result['date'] = trim(substr($line, $from-1, strlen($line) - $from + 1));

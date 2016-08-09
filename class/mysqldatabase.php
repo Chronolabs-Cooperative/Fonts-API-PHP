@@ -35,6 +35,7 @@ class DebauchMySQLDatabase extends DebauchDatabase
 	 * destructor
 	 */
 	function __destruct() {
+		$this->queryF("COMMIT");
 		if ($this->conn) {
 			self::close();
 		}

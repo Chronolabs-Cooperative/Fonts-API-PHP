@@ -27,8 +27,9 @@
 	 */
 	if (!defined('API_DEBUG'))
 		define('API_DEBUG', true);
-	define('API_VERSION', '2.4.1');
+	define('API_VERSION', '2.4.3');
 	define('MAXIMUM_QUERIES', 2600);
+	define('DEFAULT_VERSION', 2.001);
 	
 	/**
 	 * Twitter Setting for Releases Announces etc
@@ -57,7 +58,7 @@
 	define('API_LICENCE', 'gpl3');
 	define("API_SHORTENING_URL", "http://jump.labs.coop/"); // URL for your shortener API see: https://github.com/Chronolabs-Cooperative/Jump-API-PHP
 	define("API_SHORTENING_TYPE", "random"); // can be either random, domain, short, original
-	define("API_DROPLONGUPLOAD_BUFFER", true);
+	define("API_DROPLONGUPLOAD_BUFFER", false);
 	
 	// Email Default Definitions
 	define("API_EMAIL_ADDY", 'wishcraft@users.sourceforge.net');
@@ -65,7 +66,7 @@
 	
 	// Crawler Robot's Definitions
 	define('API_CRAWLERS_ROBOTS', 60);
-	define('API_CRAWLERS_LEVELS', 6);
+	define('API_CRAWLERS_LEVELS', 17);
 	
 	// Prefix for Identity Tags for Fonts..
 	define('API_IDENTITY_TAG', 'labscoop:');
