@@ -1259,6 +1259,17 @@ if (!function_exists("getHTMLForm")) {
 				$form[] = "\t\t\t<td>&nbsp;</td>";
 				$form[] = "\t\t</tr>";
 				$form[] = "\t\t<tr>";
+				$form[] = "\t\t\t<td style='width: 320px;'>";
+				$form[] = "\t\t\t\t<label for='prefix'>Identity Hash Prefix:&nbsp;<font style='color: rgb(250,0,0); font-size: 139%; font-weight: bold'>*</font></label>";
+				$form[] = "\t\t\t</td>";
+				$form[] = "\t\t\t<td>";
+				$form[] = "\t\t\t\t<input type='textbox' name='prefix' id='prefix' maxlen='11' size='13' value='".API_IDENTITY_TAG."' />&nbsp;&nbsp;";
+				$form[] = "\t\t\t</td>";
+				$form[] = "\t\t\t<td>";
+				$form[] = "\t\t\t\t&nbsp;";
+				$form[] = "\t\t\t</td>";
+				$form[] = "\t\t</tr>";
+				$form[] = "\t\t<tr>";
 				$form[] = "\t\t\t<td>";
 				$form[] = "\t\t\t\t<label for='email-cc'>Font-naming Selective Survey's <strong>To's</strong>:</label>";
 				$form[] = "\t\t\t</td>";
@@ -4618,6 +4629,7 @@ if (!function_exists("writeFontRepositoryHeader")) {
 	 */
 	function writeFontRepositoryHeader($font, $licence = 'gpl3', $values = array())
 	{
+		return false;
 		$baseheader = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . $licence . DIRECTORY_SEPARATOR . strtoupper(API_BASE) . '-HEADER'));
 		if (count($baseheader)>0)
 		{

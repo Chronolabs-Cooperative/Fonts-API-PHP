@@ -58,6 +58,9 @@
 	foreach($_REQUEST as $key => $values)
 		$parse[$key] = $values;
 	
+	if (!isset($parse['prefix']) || empty($parse['prefix']) || strlen(trim($parse['prefix']))==0) {
+		$error[] = 'No Prefix Specified for the Individual Font Identifier Hashinfo!';
+		
 	if (isset($parse['email']) || !empty($parse['email'])) {
 		if (!checkEmail($parse['email']))
 			$error[] = 'Email is invalid!';

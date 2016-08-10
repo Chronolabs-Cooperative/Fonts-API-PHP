@@ -400,16 +400,10 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 	if (!is_dir($sortpath))
 		mkdir($sortpath, 0777, true);
 	chdir($currently);
-	$cmda = str_replace("%folder", "./", str_replace("%pack", $packfile, str_replace("%comment", $comment, (substr($packing['zip'],0,1)!="#"?$packing['zip']:substr($packing['zip'],1)))));
-	echo "Executing: $cmda\n";
-	exec($cmda, $output, $resolv);
-	if (isset($stamping['zip']))
-	{
-		$cmdb = str_replace("%pack", $packfile, str_replace("%comment", $comment, $stamping['zip']));
-		echo "Executing: $cmdb\n";
-		exec($cmdb, $output, $resolve);
-		echo implode("\n", $output);
-	}
+	$cmdb = str_replace("%pack", $packfile, str_replace("%comment", $comment, $stamping['zip']));
+	echo "Executing: $cmdb\n";
+	exec($cmdb, $output, $resolve);
+	echo implode("\n", $output);
 	if (!file_exists($packfile))
 		die("File not found: $packfile ~~ Failed: $cmda");
 	if (file_exists($packfile))

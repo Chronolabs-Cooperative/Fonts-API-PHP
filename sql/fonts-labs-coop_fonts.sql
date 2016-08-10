@@ -1,10 +1,10 @@
 CREATE DATABASE  IF NOT EXISTS `fonts-labs-coop` /*!40100 DEFAULT CHARACTER SET utf8 */;
 USE `fonts-labs-coop`;
--- MySQL dump 10.13  Distrib 5.7.12, for Linux (x86_64)
+-- MySQL dump 10.13  Distrib 5.6.28, for debian-linux-gnu (i686)
 --
 -- Host: localhost    Database: fonts-labs-coop
 -- ------------------------------------------------------
--- Server version	5.7.12-0ubuntu1.1
+-- Server version	5.6.28-0ubuntu0.15.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -26,6 +26,8 @@ DROP TABLE IF EXISTS `fonts`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `fonts` (
   `id` varchar(32) NOT NULL DEFAULT '',
+  `barcode_id` varchar(22) NOT NULL DEFAULT '-------------',
+  `referee_id` varchar(8) NOT NULL DEFAULT '--------',
   `archive_id` mediumint(24) NOT NULL DEFAULT '0',
   `type` enum('local','peer') NOT NULL DEFAULT 'local',
   `state` enum('online','offline','historical','onhold') NOT NULL DEFAULT 'online',
@@ -35,6 +37,7 @@ CREATE TABLE `fonts` (
   `fingers` int(8) DEFAULT '0',
   `bytes` int(8) DEFAULT '0',
   `nodes` int(8) DEFAULT '0',
+  `added` int(12) NOT NULL DEFAULT '0',
   `created` int(12) DEFAULT '0',
   `accessed` int(12) DEFAULT '0',
   `cached` int(12) DEFAULT '0',
@@ -107,4 +110,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-06-28 17:12:11
+-- Dump completed on 2016-08-10 22:05:07

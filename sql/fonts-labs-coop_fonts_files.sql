@@ -1,10 +1,10 @@
 CREATE DATABASE  IF NOT EXISTS `fonts-labs-coop` /*!40100 DEFAULT CHARACTER SET utf8 */;
 USE `fonts-labs-coop`;
--- MySQL dump 10.13  Distrib 5.7.12, for Linux (x86_64)
+-- MySQL dump 10.13  Distrib 5.6.28, for debian-linux-gnu (i686)
 --
 -- Host: localhost    Database: fonts-labs-coop
 -- ------------------------------------------------------
--- Server version	5.7.12-0ubuntu1.1
+-- Server version	5.6.28-0ubuntu0.15.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -46,7 +46,7 @@ CREATE TABLE `fonts_files` (
   PRIMARY KEY (`id`),
   KEY `SEARCH` (`font_id`(14),`archive_id`,`type`,`extension`,`filename`(12),`path`,`id`),
   KEY `CHRONOLOGISTIC` (`updated`,`cached`,`sourced`,`accessed`,`created`,`bytes`,`path`,`filename`,`extension`,`font_id`,`id`,`archive_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=25407 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -67,4 +67,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-06-28 17:12:10
+-- Dump completed on 2016-08-10 22:05:05

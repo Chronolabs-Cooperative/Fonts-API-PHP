@@ -149,7 +149,7 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 						}
 					}
 				}
-				$fingerprint = API_IDENTITY_TAG . substr($fingerprint, strlen(API_IDENTITY_TAG)-1);
+				$fingerprint = $row['prefix'] . substr($fingerprint, mt_rand(0, strlen($row['prefix'])-1), 32 - strlen($row['prefix']));
 				$grader = array();
 				foreach($files as $id => $values)
 				{
