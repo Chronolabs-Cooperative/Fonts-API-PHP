@@ -27,7 +27,7 @@
 	 */
 	if (!defined('API_DEBUG'))
 		define('API_DEBUG', true);
-	define('API_VERSION', '2.4.7');
+	define('API_VERSION', '2.4.8');
 	define('MAXIMUM_QUERIES', 2600);
 	define('DEFAULT_VERSION', 2.001);
 	

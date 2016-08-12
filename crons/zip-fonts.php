@@ -37,7 +37,6 @@ $result = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `uploads` WHERE `upl
 while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 {
 	sleep(mt_rand(20,90));
-	$GLOBALS['FontsDB']->queryF("START TRANSACTION");
 	$datastore = json_decode($upload['datastore'], true);
 	echo "Packing Font: " . ($datastore["FontName"] = spacerName($datastore["FontName"])) . "\n";
 	$ipnet = array();
@@ -282,7 +281,7 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 			continue;
 		}
 	}
-	
+	$GLOBALS['FontsDB']->queryF("START TRANSACTION");
 	foreach(getCompleteFilesListAsArray($currently) as $file)
 		if (substr($file, strlen($file)-5) == '.glif')
 		{
@@ -315,7 +314,8 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 				}
 			}
 		}
-	
+	$GLOBALS['FontsDB']->queryF("COMMIT");
+	$GLOBALS['FontsDB']->queryF("START TRANSACTION");
 	$filez = array();
 	foreach(getCompleteDirListAsArray($currently) as $path)
 	{
@@ -371,29 +371,9 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 		}
 	}
 	$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
-	$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 	// Writes file.diz
 	writeRawFile($comment = $currently . DIRECTORY_SEPARATOR . "file.diz", getFileDIZ(0, $upload['id'], $fingerprint, $filename = $packname.'.zip', $expanded, $filez)."\n.");
 	deleteFilesNotListedByArray($currently, array(API_BASE, 'file.diz', 'resource.json', 'LICENCE'));
-	foreach(getCompleteFilesListAsArray($currently) as $file)
-		if (substr($file, strlen($file)-3) == API_BASE)
-			writeFontRepositoryHeader($currently . DIRECTORY_SEPARATOR . $file, $data['Font']['licence'], $data['Font']);
-	if (!file_exists($currently . DIRECTORY_SEPARATOR . 'LICENCE'))
-		copy(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . (!isset($datastore['Font']['licence'])?$fontdata['licence']:$datastore['Font']['licence']) . DIRECTORY_SEPARATOR . 'LICENCE', $currently . DIRECTORY_SEPARATOR . 'LICENCE');
-	foreach(getFontsListAsArray($currently.$currently) as $filez)
-	{
-		if (file_exists($currently.DIRECTORY_SEPARATOR.$filez['file']))
-			unlink($currently.DIRECTORY_SEPARATOR.$filez['file']);
-		copy($currently.$currently.DIRECTORY_SEPARATOR.$filez['file'], $currently.DIRECTORY_SEPARATOR.$filez['file']);
-		if (file_exists($currently.DIRECTORY_SEPARATOR.$filez['file']) && file_exists($currently.$currently.DIRECTORY_SEPARATOR.$filez['file']))
-			unlink($currently.$currently.DIRECTORY_SEPARATOR.$filez['file']);
-		$base = $currently.$currently.DIRECTORY_SEPARATOR;
-		foreach(explode(DIRECTORY_SEPARATOR, $currently.$currently.DIRECTORY_SEPARATOR) as $path)
-		{
-			rmdir($base);
-			$base=dirname($base);
-		}
-	}
 
 	$packing = getArchivingShellExec();
 	$stamping = getStampingShellExec();
@@ -408,13 +388,15 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 		die("File not found: $packfile ~~ Failed: $cmda");
 	if (file_exists($packfile))
 	{
+		$GLOBALS['FontsDB']->queryF("START TRANSACTION");
 		$output = array(); 
 		exec($cmd = "rm -Rfv $currently", $output);
 		echo "Executing: $cmd\n".implode("\n", $output);
 		$GLOBALS['FontsDB']->queryF("UPDATE `uploads` SET `cleaned` = '".time()."', `datastore` = \"".$GLOBALS['FontsDB']->escape(json_encode($datastore))."\" WHERE `id` = " . $upload['id']);
 		chdir($cmd = FONT_RESOURCES_RESOURCE);
 		echo "Path Set: $cmd\n";
-		$GLOBALS['FontsDB']->queryF("UPDATE `fonts_archiving` SET `files` = '$ffls', `bytes` = '" . filesize($packfile) . "', `added` = UNIX_TIMESTAMP(), `packed` = UNIX_TIMESTAMP() WHERE `archive_id` = $archive_id");
+		if (!$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `files` = '$ffls', `bytes` = '" . filesize($packfile) . "', `added` = UNIX_TIMESTAMP(), `packed` = UNIX_TIMESTAMP(), `path` = '".str_replace(FONT_RESOURCES_RESOURCE, '', dirname($packfile))."', `filename` = '".basename($packfile). "', `fingerprint` = '".md5_file($packfile). "' WHERE `id` = $archive_id"))
+			die("Failed SQL: $sql;\n");
 		if (!$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_fingering` SET `font_id` = '$fingerprint', `archive_id` = '$archive_id' WHERE `upload_id` = " . $upload['id']))
 			die("Failed SQL: $sql;\n");
 		if (!$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_contributors` SET `font_id` = '$fingerprint', `archive_id` = '$archive_id' WHERE `upload_id` = " . $upload['id']))
@@ -559,7 +541,6 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 			writeRawFile(dirname(FONT_RESOURCES_RESOURCE) . DIRECTORY_SEPARATOR . 'git-add.sh', implode("\n", $bash));
 			unset($bash);
 		}
-		$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
 	} else 
 		echo("Error: Failed generated archived pack font file!!\n");
 	
