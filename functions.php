@@ -4507,6 +4507,7 @@ if (!function_exists("writeFontResourceHeader")) {
 	 */
 	function writeFontResourceHeader($font, $licence = 'gpl3', $values = array())
 	{
+		/*
 		$baseheader = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . $licence . DIRECTORY_SEPARATOR . strtoupper(API_BASE) . '-HEADER'));
 		if (count($baseheader)>0)
 		{
@@ -4612,6 +4613,7 @@ if (!function_exists("writeFontResourceHeader")) {
 			}				
 			putRawFile($font, $data);
 		}
+		*/
 	}
 }
 
@@ -4629,7 +4631,8 @@ if (!function_exists("writeFontRepositoryHeader")) {
 	 */
 	function writeFontRepositoryHeader($font, $licence = 'gpl3', $values = array())
 	{
-		return false;
+		/*
+		 
 		$baseheader = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . $licence . DIRECTORY_SEPARATOR . strtoupper(API_BASE) . '-HEADER'));
 		if (count($baseheader)>0)
 		{
@@ -4650,6 +4653,7 @@ if (!function_exists("writeFontRepositoryHeader")) {
 			$data = implode("", $output);
 			writeRawFile($font, $data);
 		}
+		*/
 	}
 }
 
