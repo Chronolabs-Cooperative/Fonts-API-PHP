@@ -41,22 +41,6 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 		{
 			$copypath = $row['uploaded_path'];
 			$uploadfile = $copypath . DIRECTORY_SEPARATOR . $row['uploaded_file'];
-			@exec("cd $copypath", $out, $return);
-			@exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", dirname(__DIR__ ) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts-upload.pe", $uploadfile), $out, $return);
-			deleteFilesNotListedByArray($copypath, array(API_BASE=>API_BASE));
-			unlink($fontfile);
-			foreach(getFontsListAsArray($copypath) as $file)
-				if ($file['type']==API_BASE)
-					$uploadfile = $copypath . DIRECTORY_SEPARATOR . $file['file'];
-			$row['uploaded_file'] = basename($uploadfile);
-			$upldata['font'] = getBaseFontValueStore($uploadfile);
-			if (isset($upldata['font']['version']))
-				$upldata['font']['version'] = $fontdata['version'] + 1.001;
-			$upldata['font']['person'] = $upldata['name'];
-			$upldata['font']['company'] = $upldata['bizo'];
-			$upldata['font']['uploaded'] = $row['uploaded'];
-			$upldata['font']['licence'] = API_LICENCE;
-			writeFontRepositoryHeader($uploadfile, API_LICENCE, $fontdata);
 			$fingerprint = md5_file($uploadfile);
 			$sql = "SELECT count(*) FROM `fonts_fingering` WHERE `fingerprint` LIKE '" . $fingerprint . "'";
 			list($fingers) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql));
@@ -68,7 +52,7 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 		
 		if ($skip==false)
 		{
-			writeFontResourceHeader($row['uploaded_path'] . DIRECTORY_SEPARATOR . $row['uploaded_file'], $upldata['font']['licence'], $upldata['font']);
+			
 			mkdir($currently = FONT_RESOURCES_CONVERTING . DIRECTORY_SEPARATOR . md5_file($row['uploaded_path'] . DIRECTORY_SEPARATOR . $row['uploaded_file']), 0777, true);
 			foreach(cleanWhitespaces(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'font-preferences.diz')) as $type)
 			{
@@ -82,8 +66,6 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 					continue;
 				}
 			}
-			
-			deleteFilesNotListedByArray($currently, array(".".API_BASE));
 			
 			// Generates All Font Files For Fingerprinting
 			$fonts = getFontsListAsArray($currently);
@@ -172,7 +154,7 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 						
 						$fontage = Font::load($grader[$type]);
 						$reserves = getReserves($fontage->getFontFullName());
-						$data = array(	"CSS"=>array($fontage->getFontFullName() => $fontage->getFontFullName() . ".css"),'FontType' => $fontage->getFontType(), 'FontCopyright' => $fontage->getFontCopyright(), "getFontName" => $fontage->getFontName(),
+						$data = array(	"CSS"=>array($fontage->getFontFullName() => $fontage->getFontFullName() . ".css"),'FontType' => $fontage->getFontType(), 'FontCopyright' => $fontage->getFontCopyright(), "FontName" => $fontage->getFontFullName(),
 										'FontSubfamily' => $fontage->getFontSubfamily(), "FontSubfamilyID" => $fontage->getFontSubfamilyID(),
 										'FontFullName' => $fontage->getFontFullName(), "FontVersion" => $fontage->getFontVersion(),
 										'FontWeight' => $fontage->getFontWeight(), "FontPostscriptName" => $fontage->getFontPostscriptName(),'Table' => $fontage->getTable(),

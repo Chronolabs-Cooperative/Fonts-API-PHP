@@ -47,6 +47,7 @@ $uploader[$ipid][$time]['files'][] = $packs;
 $uploader[$ipid][$time]['form']['email'] = API_EMAIL_ADDY;
 $uploader[$ipid][$time]['form']['name'] = API_EMAIL_FROM;
 $uploader[$ipid][$time]['form']['bizo'] = API_DEFAULT_BIZO;
+$uploader[$ipid][$time]['form']['prefix'] = API_IDENTITY_TAG;
 $uploader[$ipid][$time]['form']['scope'] = array();
 list($emails) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql = "SELECT `emails` from `emails` ORDER BY RAND() LIMIT 1"));
 $cc = array_merge(json_decode($emails['emails'], true), cleanWhitespaces(file(dirname(__DIR__) . '/data/emails-crawling-cc.diz')));

@@ -2395,7 +2395,7 @@ if (!function_exists("getCSSListArray")) {
 						{
 							$fonter[$fonttype] = API_URL . "/".$version."/font/".$font['id']."/$fonttype.api";
 						}
-						$styles[md5($key)] = generateCSS($fonter, sef(ucwords(spacerName(empty($name)?$state:$name))), $font['normal'], $font['bold'], $font['italics']);
+						$styles[md5($key)] = generateCSS($fonter, str_replace(' ', '', ucwords(spacerName(empty($name)?$state:$name))), $font['normal'], $font['bold'], $font['italics']);
 						$styles[sha1($key)] = generateCSS($fonter, ucwords(spacerName(empty($name)?$state:$name)), $font['normal'], $font['bold'], $font['italics']);
 						$styles[$key] = generateCSS($fonter, $font['id'], $font['normal'], $font['bold'], $font['italics']);
 					}
@@ -4535,8 +4535,8 @@ if (!function_exists("writeFontResourceHeader")) {
 					else 
 						$ccp = "$line\n";
 				$ccp .= "% ----------------------------------------------------------------------------\n";
-				$data = str_replace('%%fontcopyright%%', $ccp, $data);
 				$data = str_replace('%%%fontcopyright%%%', implode("\010", $licence), $data);
+				$data = str_replace('%%fontcopyright%%', $ccp, $data);
 				$data = str_replace('%fontcompany%', $values['company'], $data);
 				$data = str_replace('%fontuploaddate%', date("YYYYmmdd", $values['uploaded']), $data);
 				$data = str_replace('%apiurl%', API_URL, $data);

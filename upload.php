@@ -23,7 +23,7 @@
 		
 	global $domain, $protocol, $business, $entity, $contact, $referee, $peerings, $source, $ipid;
 	require_once __DIR__ . DIRECTORY_SEPARATOR . 'header.php';
-
+	
 	set_time_limit(3600*36*9*14*28);
 	$time = time();
 	$error = array();
@@ -60,6 +60,7 @@
 	
 	if (!isset($parse['prefix']) || empty($parse['prefix']) || strlen(trim($parse['prefix']))==0) {
 		$error[] = 'No Prefix Specified for the Individual Font Identifier Hashinfo!';
+	}
 		
 	if (isset($parse['email']) || !empty($parse['email'])) {
 		if (!checkEmail($parse['email']))
@@ -80,6 +81,19 @@
 		$error[] = 'No Survey addressee To by survey bcc participants email\'s specified when survey scope is selected!';
 	}
 	
+	$uploadpath = DIRECTORY_SEPARATOR . $parse['email'] . DIRECTORY_SEPARATOR . microtime(true);
+	if (!is_dir(constant("FONT_UPLOAD_PATH") . $uploadpath)) {
+		if (!mkdir(constant("FONT_UPLOAD_PATH") . $uploadpath, 0777, true)) {
+			$error[] = 'Unable to make path: '.constant("FONT_UPLOAD_PATH") . $uploadpath;
+		}
+	}
+	
+	if (!is_dir(constant("FONT_RESOURCES_UNPACKING") . $uploadpath)) {
+		if (!mkdir(constant("FONT_RESOURCES_UNPACKING") . $uploadpath, 0777, true)) {
+			$error[] = 'Unable to make path: '.constant("FONT_RESOURCES_UNPACKING") . $uploadpath;	
+		}
+	}
+	
 	if (!empty($error))
 	{
 		redirect(isset($parse['return'])&&!empty($parse['return'])?$parse['return']:'http://'. $_SERVER["HTTP_HOST"], 9, "<center><h1 style='color:rgb(198,0,0);'>Error Has Occured</h1><br/><p>" . implode("<br />", $error) . "</p></center>");
@@ -92,20 +106,13 @@
 	switch ($filetype)
 	{
 		case "font":
-			$uploadpath = DIRECTORY_SEPARATOR . $parse['email'] . DIRECTORY_SEPARATOR . microtime(true);
-			if (!is_dir(constant("FONT_UPLOAD_PATH") . $uploadpath))
-				mkdir(constant("FONT_UPLOAD_PATH") . $uploadpath, 0777, true);
 			if (!move_uploaded_file($_FILES[$_GET['field']]['tmp_name'], $file[] = constant("FONT_UPLOAD_PATH") . $uploadpath . DIRECTORY_SEPARATOR . ($uploader[$ipid][$time]['file'] = $_FILES[$_GET['field']]['name']))) {
 				redirect(isset($parse['return'])&&!empty($parse['return'])?$parse['return']:'http://'. $_SERVER["HTTP_HOST"], 9, "<center><h1 style='color:rgb(198,0,0);'>Uploading Error Has Occured</h1><br/><p>Fonts API was unable to recieve and store: <strong>".$_FILES[$_GET['field']]['name']."</strong>!</p></center>");
 				exit(0);
 			} else 
 				$success = array($_FILES[$_GET['field']]['name'] => $_FILES[$_GET['field']]['name']);
+			break;
 		case "pack":
-			$uploadpath = DIRECTORY_SEPARATOR . $parse['email'] . DIRECTORY_SEPARATOR . microtime(true);
-			if (!is_dir(constant("FONT_UPLOAD_PATH") . $uploadpath))
-				mkdir(constant("FONT_UPLOAD_PATH") . $uploadpath, 0777, true);
-			if (!is_dir(constant("FONT_RESOURCES_UNPACKING") . $uploadpath))
-				mkdir(constant("FONT_RESOURCES_UNPACKING") . $uploadpath, 0777, true);
 			if (!move_uploaded_file($_FILES[$_GET['field']]['tmp_name'], $file[] = constant("FONT_UPLOAD_PATH") . $uploadpath . DIRECTORY_SEPARATOR . ($uploader[$ipid][$time]['pack'] = $_FILES[$_GET['field']]['name']))) {
 				redirect(isset($parse['return'])&&!empty($parse['return'])?$parse['return']:'http://'. $_SERVER["HTTP_HOST"], 9, "<center><h1 style='color:rgb(198,0,0);'>Uploading Error Has Occured</h1><br/><p>Fonts API was unable to recieve and store: <strong>".$_FILES[$_GET['field']]['name']."</strong>!</p></center>");
 				exit(0);
