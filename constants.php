@@ -27,7 +27,7 @@
 	 */
 	if (!defined('API_DEBUG'))
 		define('API_DEBUG', true);
-	define('API_VERSION', '2.4.8');
+	define('API_VERSION', '2.4.9');
 	define('MAXIMUM_QUERIES', 2600);
 	define('DEFAULT_VERSION', 2.001);
 	
@@ -63,6 +63,7 @@
 	
 	// Email Default Definitions
 	define("API_EMAIL_ADDY", 'wishcraft@users.sourceforge.net');
+	define("API_EMAIL_ADMIN", 'simon@staff.labs.coop');
 	define("API_EMAIL_FROM", 'Fonting Repository Services');
 	
 	// Crawler Robot's Definitions

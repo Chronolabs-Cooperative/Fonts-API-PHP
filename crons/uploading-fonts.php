@@ -286,6 +286,7 @@ foreach($uploader[$ipid] as $time => $data) {
 											$uploader[$ipid][$time] = $data;
 											file_put_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($uploader));
 											$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
+											unlink(constant("FONT_RESOURCES_UNPACKING") . $data['path'] . DIRECTORY_SEPARATOR . "upload.json");
 											die("Scheduling of font limit; reached, $ffile files for font's processed in this session!!\n");
 										}
 									} else {
@@ -336,6 +337,7 @@ foreach($uploader[$ipid] as $time => $data) {
 		$uploaders = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
 		$uploaders[$ipid][$time] = $data;
 		file_put_contents(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($data)));
+		unlink(constant("FONT_RESOURCES_UNPACKING") . $data['path'] . DIRECTORY_SEPARATOR . "upload.json");
 	}
 }
 

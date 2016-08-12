@@ -1,4 +1,4 @@
-7z||7z a "%pack" "%folder"
+7z||7z a -r "%pack" "%folder"
 ar||#tar --auto-compress -cf "%pack" "%folder"
 bz2||#tar --auto-compress -cf "%pack" "%folder"
 gz||#tar --auto-compress -cf "%pack" "%folder"
