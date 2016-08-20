@@ -27,7 +27,7 @@
 	 */
 	if (!defined('API_DEBUG'))
 		define('API_DEBUG', true);
-	define('API_VERSION', '2.4.9');
+	define('API_VERSION', '2.4.10');
 	define('MAXIMUM_QUERIES', 2600);
 	define('DEFAULT_VERSION', 2.001);
 	
@@ -37,9 +37,9 @@
 	 */
 	// Twitter API oAuth Details
 	$GLOBALS['twitter'] = array(
-			'consumer_key' => "NLFAz4ZfgzrVal08ZovIkPyVx",
-			'consumer_secret' => "oSsfeitrUv7Jo1eK0ULV3geL5I1F0u66HtvEjADLH1pzPmHJU5",
-			'oauth_access_token' => "2916941286-w2hKqu2obzyVM9VkF2FmUedEgmKdEWtosbfb6IM",
+			'consumer_key' => "NLFAz4ZfgzrVal08Z-vIkPyVx",
+			'consumer_secret' => "oSsfeitrUv7J-1eK0ULV3geL5I1F0u66HtvEjADLH1pzPmHJU5",
+			'oauth_access_token' => "2916941286-w2hKqu2-bzyVM9VkF2FmUedEgmKdEWtosbfb6IM",
 			'oauth_access_token_secret' => "6CRttMfnudkWhparEtWI5CEF9TOR13KKPICLDKix0I3Fl"
 	);
 	
