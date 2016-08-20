@@ -966,6 +966,22 @@ if (!function_exists("getFontsWaitingQueuing")) {
 	}
 }
 
+
+
+if (!function_exists("getLostUploads")) {
+	/**
+	 * Counts in the database the number of fonts available on the API
+	 * 
+	 * @return integer
+	 */
+	function getLostUploads()
+	{
+		return count(get7zListAsArray(__DIR__ . DIRECTORY_SEPARATOR . 'lost'));
+	}
+}
+
+
+
 if (!function_exists("getFontsReleased")) {
 	/**
 	 * Counts in the database the number of fonts available on the API
@@ -4996,6 +5012,33 @@ if (!function_exists("getZipListAsArray")) {
        }
        return $filelist;
     }
+}
+
+if (!function_exists("get7zListAsArray")) {
+	/**
+	 * Get a zip file listing for a single path no recursive
+	 *
+	 * @param string $dirname
+	 * @param string $prefix
+	 *
+	 * @return array
+	 */
+	function get7zListAsArray($dirname, $prefix = '')
+	{
+		$filelist = array();
+		if ($handle = opendir($dirname)) {
+			while (false !== ($file = readdir($handle))) {
+				if (preg_match('/(\.7z)$/i', $file)) {
+					$file = $prefix . $file;
+					$filelist[$file] = $file;
+				}
+			}
+			closedir($handle);
+			asort($filelist);
+			reset($filelist);
+		}
+		return $filelist;
+	}
 }
 
 

@@ -24,6 +24,19 @@ set_time_limit(1999);
 require_once dirname(__DIR__).'/functions.php';
 require_once dirname(__DIR__).'/class/fontages.php';
 
+$ids = getFontIdentitiesArray();
+$GLOBALS['FontsDB']->queryF("START TRANSACTION");
+$sql = "DELETE FROM `font_fingering` WHERE `font_id` NOT IN('" . implode("', '", $ids) . "')";
+if ($GLOBALS['FontsDB']->queryF($sql))
+	echo "Droped some orphan Fingerprints: ". $GLOBALS['FontsDB']->getAffectedRows() . "\n";
+$sql = "DELETE FROM `fonts_archiving` WHERE `font_id` NOT IN('" . implode("', '", $ids) . "')";
+	if ($GLOBALS['FontsDB']->queryF($sql))
+		echo "Droped some orphan Archives: ". $GLOBALS['FontsDB']->getAffectedRows() . "\n";
+$sql = "DELETE FROM `fonts_files` WHERE `font_id` NOT IN('" . implode("', '", $ids) . "')";
+	if ($GLOBALS['FontsDB']->queryF($sql))
+		echo "Droped some orphan Files: ". $GLOBALS['FontsDB']->getAffectedRows() . "\n";
+$GLOBALS['FontsDB']->queryF("COMMIT");
+
 echo "Searching for files to unlink in: " . FONT_RESOURCES_SORTING . ":~ ";
 foreach(getDirListAsArray(FONT_RESOURCES_SORTING) as $dir)
 	if (!checkEmail(basename($dir)))

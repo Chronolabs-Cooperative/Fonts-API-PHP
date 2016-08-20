@@ -37,10 +37,10 @@
 	 */
 	// Twitter API oAuth Details
 	$GLOBALS['twitter'] = array(
-			'consumer_key' => "-------------------------------",
-			'consumer_secret' => "----------------------------------------------",
-			'oauth_access_token' => "---------------------------------------------",
-			'oauth_access_token_secret' => "-----------------------------------------"
+			'consumer_key' => "NLFAz4ZfgzrVal08ZovIkPyVx",
+			'consumer_secret' => "oSsfeitrUv7Jo1eK0ULV3geL5I1F0u66HtvEjADLH1pzPmHJU5",
+			'oauth_access_token' => "2916941286-w2hKqu2obzyVM9VkF2FmUedEgmKdEWtosbfb6IM",
+			'oauth_access_token_secret' => "6CRttMfnudkWhparEtWI5CEF9TOR13KKPICLDKix0I3Fl"
 	);
 	
 	// Twitter Responses
@@ -60,10 +60,11 @@
 	define("API_SHORTENING_TYPE", "random"); // can be either random, domain, short, original
 	define("API_DROPLONGUPLOAD_BUFFER", false);
 	define("API_NETWORK_LOGISTICS", false);
+	define("API_UPLOADS_RANDOMBATCH", false);
 	
 	// Email Default Definitions
 	define("API_EMAIL_ADDY", 'wishcraft@users.sourceforge.net');
-	define("API_EMAIL_ADMIN", 'simon@staff.labs.coop');
+	define("API_EMAIL_ADMIN", 'wishcraft@users.sourceforge.net');
 	define("API_EMAIL_FROM", 'Fonting Repository Services');
 	
 	// Crawler Robot's Definitions

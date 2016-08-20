@@ -202,9 +202,9 @@ foreach($uploader[$ipid] as $time => $data) {
 					unset($emailbcc[$key]);
 			$ffile = 0;
 			$queued = array();
-			$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 			foreach($files as $type => $fontfiles)
 			{
+				$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 				foreach($fontfiles as $finger => $fontfile)
 				{
 					$copypath = FONT_RESOURCES_SORTING . DIRECTORY_SEPARATOR . $data['form']['email'] . DIRECTORY_SEPARATOR . microtime(true);
@@ -279,7 +279,7 @@ foreach($uploader[$ipid] as $time => $data) {
 											@setCallBackURI($data['form']['callback'], 145, 145, array('action'=>'uploaded', 'file-md5' => $finger, 'allocated' => $available, 'key' => $key, 'email' => $data['form']['email'], 'name' => $data['form']['name'], 'bizo' => $data['form']['bizo'], 'frequency' => $freq, 'elapsing' => $elapses, 'filename' => $filename, 'culled' => false));
 											$GLOBALS["FontsDB"]->queryF('UPDATE `networking` SET `fonts` = `fonts` + 1 WHERE `ip_id` = "'.$ipid.'"');
 										echo "\nUploaded file Queued: ".basename($fontfile);
-										if ($ffile>=mt_rand(109, 210))
+										if ($ffile>=mt_rand(109, 210) && API_UPLOADS_RANDOMBATCH == true)
 										{
 											$data['mode'] = 'culling';
 											$uploader = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
@@ -302,8 +302,8 @@ foreach($uploader[$ipid] as $time => $data) {
 						}
 					}
 				}
+				$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
 			}
-			$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
 			if (count(getCompleteFontsListAsArray(constant("FONT_RESOURCES_UNPACKING") . $data['path']))==0)
 			{
 				$data['finished'] = microtime(true);

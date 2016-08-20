@@ -110,6 +110,7 @@
     	<li>At the moment there is <strong style="font-size:135.98765%; color: rgba(0, 0, 255, 0.79876);"><?php echo number_format(abs(getSurveysQueued()-getFontsWaitingConverted()),0); ?></strong> survey's out in the field for categorisation!</li>
     	<li>Between <em><?php echo date('Y/m/d 00:00:00', time());?></em> and <em><?php echo date('Y/m/d 23:59:59', time() + 3600 *24); ?></em> there is <strong style="font-size:135.98765%; color: rgba(0, 0, 255, 0.79876);"><?php echo number_format(getSurveysExpiring(strtotime(date('Y/m/d 00:00:00', time())), strtotime(date('Y/m/d 23:59:59', time() + 3600 *24))),0); ?></strong> survey's expiring!</li>
     	<li>Total amount of font's released <strong style="font-size:135.98765%; color: rgba(0, 0, 255, 0.79876);"><?php echo number_format(getFontsReleased(),0); ?></strong> and available on the API!</li>
+    	<li>Lost font uploads to upload again <strong style="font-size:135.98765%; color: rgba(0, 0, 255, 0.79876);"><?php echo number_format($lost = getLostUploads(),0); ?></strong> <?php if($lost>0) { ?> + Explore: <a href="<?php echo API_URL ?>/lost" target="_blank"><?php echo API_URL ?>/lost</a> <?php } ?></li>
     </ul>
     <h2>Code API Documentation</h2>
     <p>You can find the phpDocumentor code API documentation at the following path :: <a href="<?php echo API_URL; ?>/docs/" target="_blank"><?php echo API_URL; ?>/docs/</a>. These should outline the source code core functions and classes for the API to function!</p>
