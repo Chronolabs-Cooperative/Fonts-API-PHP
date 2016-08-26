@@ -15,7 +15,7 @@ Download the API archive of PHP files from: https://sourceforge.net/p/chronolabs
 You will first have to set up the environment running the following script at root on Ubuntu or Debian Server it will install all the system environment variables you require to do an installation:-
 
     
-    $ sudo apt-get install traceroute rar* p7zip-full unace unrar* zip unzip sharutils sharutils uudeview mpack arj cabextract file-roller fontforge tasksel nano bzip2
+    $ sudo apt-get install traceroute rar* p7zip-full unace unrar* zip unzip sharutils sharutils uudeview mpack arj cabextract file-roller fontforge tasksel nano bzip2 cpulimit
     
 
 Now you will have to execute 'tasksel' in root with the 'sudo' precursor for this to install the LAMP environment; run the following command and install the LAMP environment.
@@ -83,7 +83,27 @@ This is all that is involved in configuring apache 2 httpd on Debian/Ubuntu, the
 You will need to use with either MySQL Workbench or PHPMyAdmin create a MySQL Database for the fonting repository services API. You will find in the path of /sql the sql dump files for the database for the API.
 
 You will need to restore these with either import with MySQL Workbench or within the database on PHPMyAdmin uploading each SQL to create the tables required.
+
 You will also have to create a username which all these details are stored on /var/www/fonts-api/class/fontages.php which contains the configuration for MySQL, Database + Username and Password for the API.
+
+You may also depending on your memory limits edit the settings in /etc/mysql/mysql.conf.d/mysqld.cnf and then reload and restart the mysql service, this is so that mysql not only uses less CPU it also means it will be running properly with little scape for error or crashing.
+
+## Configuring CPU throttling (CPULimit)
+
+You now need to cpu load balance with cpulimit sometimes fontforge can really chew MIPS, run the following on the shell to edit the file that will intialise CPU Throttling on boot, as fontforge as mention can really chew and chew and chew your CPU usage:
+
+    $ sudo nano /etc/rc.local
+    
+and put the following lines in it before the exit() command:
+
+    /usr/bin/cpulimit -e mysql -b -q -l 67
+    /usr/bin/cpulimit -e fontforge -b -q -l 36
+    /usr/bin/cpulimit -e apache2 -b -q -l 35
+    /usr/bin/cpulimit -e php -b -q -l 35
+    /usr/bin/cpulimit -e cron -b -q -l 25
+    /usr/bin/cpulimit -e wget -b -q -l 15
+
+You may have to play around with the cpu throttling if your site is down ever to have the levels picture perfect, these are just estimates on the adverage service.
 
 ## Configuring Scheduled Tasks (CronJobs)
 
@@ -91,9 +111,9 @@ Once you have configured the above you will have to set up the cronjobs for all 
 You need to run the following command from root with sudo at the start unless you are doing user basis of cronjobs to set them below the command is the listing with 'suggested' not 'finited' schedules for tasks to operate; remember adjusting these could leave your system paralised with to much to do in one hit so execute the following and put these lines in: $ sudo crontab -e
 
     */3 * * * * chmod -Rf 0777 /fonts
-    */3 * * * * chown -Rf www-data:www-data /tmp/Font-*
+    */3 * * * * chown -Rf www-data:root /tmp/Font-*
     */3 * * * * chmod -Rf 0777 /tmp
-    */3 * * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/reboot-checker.php
+    */15 * * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/reboot-checker.php
     11 11 */3 * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/lost-fonts-uploads.php
     */11 */11 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/poll-peers.php
     */13 */9 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/check-cache.php

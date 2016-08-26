@@ -104,6 +104,7 @@ foreach($keywords as $keyword)
 }
 shuffle($scripts); shuffle($scripts);shuffle($scripts); shuffle($scripts); shuffle($scripts); shuffle($scripts); 
 $hops = ceil(count($scripts) / API_CRAWLERS_ROBOTS);
+$path = array();
 $robots=0;
 $step=0;
 $crawldat = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "crawling.json"), true);
@@ -111,29 +112,29 @@ foreach($scripts as $exec)
 {
 	if ($step>=$hops)
 	{
-		$scripting[$robots][] = "/usr/bin/tee \"$path\" > \"$path" . DIRECTORY_SEPARATOR . 'finished.dat"';
-		$scripting[$robots][] = "/usr/bin/php -q \"".__DIR__."/register-crawling.php?path=".urlencode($path)."\"";
-		$crawldat[$path]['steps'] = $step;
+		$scripting[$robots][] = "/usr/bin/tee \"".$path[$robots]."\" > \"".$path[$robots]."" . DIRECTORY_SEPARATOR . 'finished.dat"';
+		$scripting[$robots][] = "/usr/bin/php -q \"".__DIR__."/register-crawling.php?path=".urlencode($path[$robots])."\"";
+		$crawldat[$path[$robots]]['steps'] = $step;
 		$robots++;
-		$step = 1;
+		$step = 0;
 	} else 
 		$step++;
 	if (empty($scripting[$robots]))
 	{
 		$scripting[$robots] = array('!#/sh/bash');
-		$path = FONT_UPLOAD_PATH . DIRECTORY_SEPARATOR . API_EMAIL_ADDY . DIRECTORY_SEPARATOR . abs(mt_rand(-microtime(true), microtime(true)));
+		$path[$robots] = FONT_UPLOAD_PATH . DIRECTORY_SEPARATOR . API_EMAIL_ADDY . DIRECTORY_SEPARATOR . abs(mt_rand(-microtime(true), microtime(true)));
 		mkdir(FONT_UPLOAD_PATH, 0777, true);
 		$scripting[$robots][] = 'mkdir "' . FONT_UPLOAD_PATH . '"';		
 		$scripting[$robots][] = 'mkdir "' . FONT_UPLOAD_PATH . DIRECTORY_SEPARATOR . API_EMAIL_ADDY . '"';
-		$scripting[$robots][] = "mkdir \"$path\"";
-		$scripting[$robots][] = "cd \"$path\"";
-		$crawldat[$path]['set'] = microtime(true);
-		$crawldat[$path]['robot'] = $robots;
+		$scripting[$robots][] = "mkdir \"".$path[$robots]."\"";
+		$scripting[$robots][] = "cd \"".$path[$robots]."\"";
+		$crawldat[$path[$robots]]['set'] = microtime(true);
+		$crawldat[$path[$robots]]['robot'] = $robots;
 	}
-	$scripting[$robots][] = sprintf($exec, $path);
+	$scripting[$robots][] = sprintf($exec, $path[$robots]);
 }
-$scripting[$robots][] = "/usr/bin/tee \"$path\" > \"$path" . DIRECTORY_SEPARATOR . 'finished.dat"';
-$scripting[$robots][] = "/usr/bin/php -q \"".__DIR__."/register-crawling.php?path=".urlencode($path)."\"";
+$scripting[$robots][] = "/usr/bin/tee \"".$path[$robots]."\" > \"".$path[$robots]."" . DIRECTORY_SEPARATOR . 'finished.dat"';
+$scripting[$robots][] = "/usr/bin/php -q \"".__DIR__."/register-crawling.php?path=".urlencode($path[$robots])."\"";
 foreach($scripting as $robot => $script)
 {
 	putRawFile(__DIR__ . DIRECTORY_SEPARATOR . "crawling-bot--" . str_repeat("0", (strlen((string)API_CRAWLERS_ROBOTS)+1)-strlen((string)$robot)) ."$robot.sh", implode("\n", $script));

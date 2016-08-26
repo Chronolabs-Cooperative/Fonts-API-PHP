@@ -294,11 +294,8 @@ foreach($uploader[$ipid] as $time => $data) {
 										unlink($uploadfile);
 										rmdir(dirname($uploadfile));
 									}
-								} else
-									die('SQL Failed: ' . $sql);
+								} 
 							}
-							else
-								die('SQL Failed: ' . $sql);
 						}
 					}
 				}
@@ -338,6 +335,8 @@ foreach($uploader[$ipid] as $time => $data) {
 		$uploaders[$ipid][$time] = $data;
 		file_put_contents(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($data)));
 		unlink(constant("FONT_RESOURCES_UNPACKING") . $data['path'] . DIRECTORY_SEPARATOR . "upload.json");
+	} else {
+		shell_exec("rm -Rf " . constant("FONT_RESOURCES_UNPACKING") . $data['path']);
 	}
 }
 
