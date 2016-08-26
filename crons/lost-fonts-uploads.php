@@ -119,6 +119,8 @@ foreach($basefolders as $dir)
 					} elseif (($found == true && empty($data) || filesize($jfile)<=96) && strlen(dirname($jfile))>1) {
 						echo(" -- Empty Resource Found!!\n\n");
 						$packing = getArchivingShellExec();
+						if (!is_dir(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'lost'))
+							mkdir(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'lost', 0777, true);
 						$packfile = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'lost' . DIRECTORY_SEPARATOR . $dir . '-' . $ndd . '.7z';
 						$email = $dir;
 						chdir(dirname($jfile));
@@ -131,22 +133,28 @@ foreach($basefolders as $dir)
 							die("File not found: $packfile ~~ Failed: $cmda");
 						unlink($jfile);
 						$fontfilez = getCompleteFilesListAsArray(dirname($jfile));
-						$mailer = new FontsMailer(API_EMAIL_ADDY, API_EMAIL_FROM);
-						if (file_exists($file = dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "SMTPAuth.diz"))
-							$smtpauths = explode("\n", str_replace(array("\r\n", "\n\n", "\n\r"), "\n", file_get_contents($file)));
-						if (count($smtpauths)>=1)
-							$auth = explode("||", $smtpauths[mt_rand(0, count($smtpauths)-1)]);
-						if (!empty($auth[0]) && !empty($auth[1]) && !empty($auth[2]))
-							$mailer->multimailer->setSMTPAuth($auth[0], $auth[1], $auth[2]);
-						$html = file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'lost-fonts-uploads.html');
-						$html = str_replace("{X_EMAIL}", $email, $html);
-						$html = str_replace("{X_FONTFILE}", API_URL . '/lost/' . basename($packfile), $html);
-						$html = str_replace("{X_FONTFILES}", "<li style='float:left; display: block; width: 24%;'>" . implode("</li><li style='float:left; display: block; width: 24%;'>", $fontfilez) . "</li>", $html);
-						echo "\n";
-						if ($mailer->sendMail(array($email=>$email), array(API_SYSTEMADMIN_EMAIL=>API_SYSTEMADMIN_EMAIL),  array(), "Lost uploading queued!!! Please Resubmit!! -:[ fonts.labs.coop ]:-", $html, array(), NULL, true))
+						if (filesize($packfile)>501)
 						{
-							echo "Sent mail to: " . $email . "\n\n<br/>\n";
-							shell_exec("rm -Rf ".dirname($jfile)."/*");
+							$mailer = new FontsMailer(API_EMAIL_ADDY, API_EMAIL_FROM);
+							if (file_exists($file = dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "SMTPAuth.diz"))
+								$smtpauths = explode("\n", str_replace(array("\r\n", "\n\n", "\n\r"), "\n", file_get_contents($file)));
+							if (count($smtpauths)>=1)
+								$auth = explode("||", $smtpauths[mt_rand(0, count($smtpauths)-1)]);
+							if (!empty($auth[0]) && !empty($auth[1]) && !empty($auth[2]))
+								$mailer->multimailer->setSMTPAuth($auth[0], $auth[1], $auth[2]);
+							$html = file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'lost-fonts-uploads.html');
+							$html = str_replace("{X_EMAIL}", $email, $html);
+							$html = str_replace("{X_FONTFILE}", API_URL . '/lost/' . basename($packfile), $html);
+							$html = str_replace("{X_FONTFILES}", "<li style='float:left; display: block; width: 24%;'>" . implode("</li><li style='float:left; display: block; width: 24%;'>", $fontfilez) . "</li>", $html);
+							echo "\n";
+							if ($mailer->sendMail(array($email=>$email), array(API_SYSTEMADMIN_EMAIL=>API_SYSTEMADMIN_EMAIL),  array(), "Lost uploading queued!!! Please Resubmit!! -:[ fonts.labs.coop ]:-", $html, array(), NULL, true))
+							{
+								echo "Sent mail to: " . $email . "\n\n<br/>\n";
+								shell_exec("rm -Rf ".dirname($jfile));
+							}
+						} else {
+							unlink($packfile);
+							shell_exec("rm -Rf ".dirname($jfile));
 						}
 					} else continue;
 				} else continue;
