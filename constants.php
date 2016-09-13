@@ -37,10 +37,10 @@
 	 */
 	// Twitter API oAuth Details
 	$GLOBALS['twitter'] = array(
-			'consumer_key' => "NLFAz4ZfgzrVal08ZovIkPyVx",
-			'consumer_secret' => "oSsfeitrUv7Jo1eK0ULV3geL5I1F0u66HtvEjADLH1pzPmHJU5",
-			'oauth_access_token' => "2916941286ow2hKqu2obzyVM9VkF2FmUedEgmKdEWtosbfb6IM",
-			'oauth_access_token_secret' => "6CRttMfnudkWhparEtWI5CEF9TOR13KKPICLDKix0I3Fl"
+			'consumer_key' => "NLFAz4Zfgz-Val08ZovIkPyVx",
+			'consumer_secret' => "oSsfeitrUv7-o1eK0ULV3geL5I1F0u66HtvEjADLH1pzPmHJU5",
+			'oauth_access_token' => "2916941286ow-hKqu2obzy-M9VkF2FmUedEgmKdEWtosbfb6IM",
+			'oauth_access_token_secret' => "6CRttMfn-dkWhpar-tWI5CEF9TOR13KKPICLDKix0I3Fl"
 	);
 	
 	// Twitter Responses
