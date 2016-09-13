@@ -300,6 +300,7 @@ foreach($uploader[$ipid] as $time => $data) {
 					}
 				}
 				$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
+				sleep(mt_rand(2,7));
 			}
 			if (count(getCompleteFontsListAsArray(constant("FONT_RESOURCES_UNPACKING") . $data['path']))==0)
 			{

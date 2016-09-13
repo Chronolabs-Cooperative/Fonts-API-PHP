@@ -36,6 +36,7 @@ $sql = "DELETE FROM `fonts_files` WHERE `font_id` NOT IN('" . implode("', '", $i
 	if ($GLOBALS['FontsDB']->queryF($sql))
 		echo "Droped some orphan Files: ". $GLOBALS['FontsDB']->getAffectedRows() . "\n";
 $GLOBALS['FontsDB']->queryF("COMMIT");
+sleep(mt_rand(7,14));
 
 echo "Searching for files to unlink in: " . FONT_RESOURCES_SORTING . ":~ ";
 foreach(getDirListAsArray(FONT_RESOURCES_SORTING) as $dir)
@@ -52,6 +53,7 @@ foreach(getDirListAsArray(FONT_RESOURCES_SORTING) as $dir)
 					echo "x";
 			}
 		}
+sleep(mt_rand(7,14));
 
 echo "\n\nSearching for files to unlink in: " . FONT_RESOURCES_UNPACKING . ":~ "; 
 foreach(getDirListAsArray(FONT_RESOURCES_UNPACKING) as $dir)
@@ -68,6 +70,7 @@ foreach(getDirListAsArray(FONT_RESOURCES_UNPACKING) as $dir)
 					echo "x";
 				}
 			}
+sleep(mt_rand(7,14));
 
 echo "\n\nSearching for files to unlink in: " . FONTS_CACHE . ":~ ";
 foreach(getDirListAsArray(FONTS_CACHE) as $dir)
@@ -83,6 +86,7 @@ foreach(getDirListAsArray(FONTS_CACHE) as $dir)
 				echo "x";				
 			}
 		}
+sleep(mt_rand(7,14));
 	
 foreach(getFileListAsArray(FONTS_CACHE) as $key => $file)
 {
@@ -94,6 +98,7 @@ foreach(getFileListAsArray(FONTS_CACHE) as $key => $file)
 		echo "x";
 	}
 }
+sleep(mt_rand(7,14));
 
 echo "\n\nSearching for files to unlink in: " . FONT_RESOURCES_CACHE . ":~ ";
 foreach(getDirListAsArray(FONT_RESOURCES_CACHE) as $dir)
@@ -109,6 +114,7 @@ foreach(getDirListAsArray(FONT_RESOURCES_CACHE) as $dir)
 				echo "x";
 			}
 		}
+sleep(mt_rand(7,14));
 	
 foreach(getFileListAsArray(FONT_RESOURCES_CACHE) as $key => $file)
 {
@@ -120,6 +126,7 @@ foreach(getFileListAsArray(FONT_RESOURCES_CACHE) as $key => $file)
 		echo "x";
 	}
 }
+sleep(mt_rand(7,14));
 
 echo "\n\nSearching for files to unlink in: /tmp:~ ";
 foreach(getDirListAsArray("/tmp") as $dir)
@@ -135,6 +142,7 @@ foreach(getDirListAsArray("/tmp") as $dir)
 				echo "x";
 			}
 		}
+sleep(mt_rand(7,14));
 
 foreach(getFileListAsArray("/tmp") as $key => $file)
 {

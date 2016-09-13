@@ -19,6 +19,9 @@
 * @link			http://sourceforge.net/projects/chronolabsapis
 * @link			http://cipher.labs.coop
 */
+	$GLOBAL['header'] = array();
+	$GLOBAL['header']['start'] = microtime(true);
+
 	if (!defined('API_DEBUG'))
 		define('API_DEBUG', false);
 	
@@ -106,4 +109,5 @@
 	$ipid = getIPIdentity(whitelistGetIP(true));
 	if (API_DEBUG==true) echo (basename(__FILE__) . "::"  . __LINE__ . "<br/>\n");
 	
-	
+	$GLOBAL['header']['end'] = microtime(true);
+

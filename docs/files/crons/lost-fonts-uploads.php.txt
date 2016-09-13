@@ -26,118 +26,140 @@ error_reporting(E_ERROR);
 set_time_limit(1999);
 require_once dirname(__DIR__).'/functions.php';
 require_once dirname(__DIR__).'/class/fontages.php';
-
-foreach(getDirListAsArray(FONT_RESOURCES_UNPACKING) as $dir)
+require_once dirname(__DIR__).'/class/fontsmailer.php';
+$basefolders = getDirListAsArray(FONT_RESOURCES_UNPACKING);
+mt_srand(mt_rand(-microtime(true), microtime(true)));
+mt_srand(mt_rand(-microtime(true), microtime(true)));
+mt_srand(mt_rand(-microtime(true), microtime(true)));
+mt_srand(mt_rand(-microtime(true), microtime(true)));
+while (mt_rand(-15,2)<-2)
+{
+	shuffle($basefolders);
+	shuffle($basefolders);
+	shuffle($basefolders);
+}
+foreach($basefolders as $dir)
 	if (checkEmail($dir))
-		foreach(getCompleteDirListAsArray(FONT_RESOURCES_UNPACKING.DIRECTORY_SEPARATOR.$dir) as $folder)
-			foreach(getFontsListAsArray($folder) as $key => $file)
+	{
+		$secondary = getDirListAsArray(FONT_RESOURCES_UNPACKING.DIRECTORY_SEPARATOR.$dir);
+		while (mt_rand(-15,2)<-2)
+		{
+			shuffle($secondary);
+			shuffle($secondary);
+			shuffle($secondary);
+		}
+		foreach($secondary as $ndd)
+		{
+			$listing = getCompleteDirListAsArray(FONT_RESOURCES_UNPACKING.DIRECTORY_SEPARATOR.$dir.DIRECTORY_SEPARATOR.$ndd);
+			while (mt_rand(-15,2)>-5)
 			{
-				if (filectime($folder . DIRECTORY_SEPARATOR . $key) <= time() - (3 * 24 * 3600))
+				shuffle($listing);
+				shuffle($listing);
+				shuffle($listing);
+			}
+			$k=0;
+			foreach($listing as $folder)
+			{
+				if ($k==0)
 				{
-					$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
-					$fontfile = $folder . DIRECTORY_SEPARATOR . $key;
-					
-					$patheles = array_reverse(explode(DIRECTORY_SEPARATOR, $folder));
+					$found = false;
 					$data = array();
-					while(count($patheles)>0 || empty($data))
+					if ($folder != FONT_RESOURCES_UNPACKING.DIRECTORY_SEPARATOR.$dir.DIRECTORY_SEPARATOR.$ndd)
 					{
-						if (file_exists($jfile = implode(DIRECTORY_SEPARATOR, array_reverse($patheles)).DIRECTORY_SEPARATOR.'upload.json'))
+						$patheles = array_reverse(explode(DIRECTORY_SEPARATOR, $folder));
+						while(count($patheles) <= $k)
 						{
-							$data = json_decode(file_get_contents($jfile), true);
-						} else {
-							$keys = array_keys($patheles);
-							unset($patheles[$keys[0]]);
-						}
-							
-					}
-					
-					$scope = (!isset($data['form']['scope']['bcc']) && !isset($data['form']['scope']['cc']) && !isset($data['form']['scope']['to'])?'none':(!isset($data['form']['scope']['bcc']) && !isset($data['form']['scope']['cc'])?'to':(!isset($data['form']['scope']['bcc']) || isset($data['form']['scope']['cc'])?'cc':(isset($data['form']['scope']['bcc']) && isset($data['form']['scope']['cc'])?'all':'bcc'))));
-					$copypath = FONT_RESOURCES_UNPACKING . DIRECTORY_SEPARATOR . $data['form']['email'] . DIRECTORY_SEPARATOR . time();
-					if (!is_dir($copypath))
-						mkdir($copypath, 0777, true);
-						
-							
-					$emailcc = cleanWhitespaces(explode("\n", str_replace(array(";",",",":","/","\\","||","|"), "\n", $data['form']['email-cc'])));
-					foreach($emailcc as $key => $value)
-						if (!checkEmail($value))
-							unset($emailcc[$key]);
-								
-					$emailbcc = cleanWhitespaces(explode("\n", str_replace(array(";",",",":","/","\\","||","|"), "\n", $data['form']['email-bcc'])));
-					foreach($emailbcc as $key => $value)
-						if (!checkEmail($value))
-							unset($emailbcc[$key]);
-										
-					if (!file_exists($copypath . DIRECTORY_SEPARATOR . basename($fontfile))&&filesize($fontfile)>199)
-					{
-						if (copy($fontfile, $copypath . DIRECTORY_SEPARATOR .  strtolower(basename($fontfile))))
-						{
-							unlink($fontfile);
-							$ffile++;
-							$data['process'] = microtime(true);
-							$data['mode'] = 'queuing';
-							$data['current'] = $copypath . DIRECTORY_SEPARATOR .  strtolower(basename($fontfile));
-							file_put_contents(constant("FONT_RESOURCES_UNPACKING") . $data['path'] . DIRECTORY_SEPARATOR . "upload.json", json_encode($data));
-	
-								
-							sort($emailcc);
-							sort($emailbcc);
-							$ccid = md5(json_encode($emailcc));
-							$bccid = md5(json_encode($emailbcc));
-								
-							$sql = "SELECT count(*) FROM `emails` WHERE `id` = '$ccid'";
-							list($count) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql));
-							if ($count == 0)
-							{
-								if (!$GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `emails` (`id`, `emails`) VALUES('$ccid', '".mysql_real_escape_string(json_encode($emailcc))."')"))
-									die("SQL Failed: $sql;");
-							}
-								
-							$sql = "SELECT count(*) FROM `emails` WHERE `id` = '$bccid'";
-							list($count) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql));
-							if ($count == 0)
-							{
-								if (!$GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `emails` (`id`, `emails`) VALUES('$bccid', '".mysql_real_escape_string(json_encode($emailcc))."')"))
-									die("SQL Failed: $sql;");
-							}
-								
-							$queued[] = $fontfile;
-							$sql = "INSERT INTO `uploads` (`ip_id`, `available`, `key`, `scope`, `email`, `uploaded_file`, `uploaded_path`, `uploaded`, `referee_uri`, `callback`, `bytes`, `batch-size`, `datastore`, `cc`, `bcc`, `frequency`, `elapses`, `longitude`, `latitude`) VALUES ('$ipid','" . $available = mt_rand(7,13) . "','" . mysql_real_escape_string(md5_file($copypath . DIRECTORY_SEPARATOR .  strtolower(basename($fontfile)))) . "','" . mysql_real_escape_string($scope) . "','" . mysql_real_escape_string($email = $data['form']['email']) . "','" . mysql_real_escape_string($filename = strtolower(basename($fontfile))) . "','" . mysql_real_escape_string($copypath) . "','" . time(). "','" . mysql_real_escape_string($_SERVER['HTTP_REFERER']) . "','" . mysql_real_escape_string($callback = $data['form']['callback']) . "'," . (filesize($fontfile)==''?0:filesize($fontfile)) . "," . $size . ",'" . mysql_real_escape_string(json_encode(array('scope' => $data['form']['scope'], 'ipsec' => $locality = json_decode(getURIData("https://lookups.ringwould.com.au/v1/country/".(in_array($ip = whitelistGetIP(true), array('127.0.0.1','10.1.1.1'))?'myself':$ip)."/json.api"), true), 'name' => $data['form']['name'], 'bizo' => $data['form']['bizo'], 'batch-size' => $size))) . "','$ccid','$bccid','" . mysql_real_escape_string($freq = mt_rand(2.76,6.75)*3600*24) . "','" . mysql_real_escape_string($elapse = mt_rand(9,27)*3600*24) . "','". $locality["location"]["coordinates"]["longitude"]."','". $locality["location"]["coordinates"]["latitude"]."')";
-							if ($GLOBALS['FontsDB']->queryF($sql))
-							{
-								$uploadid = $GLOBALS['FontsDB']->getInsertId();
-								if ($scope == 'none')
-								{
-									$sql = "UPDATE `uploads` SET `quizing` = UNIX_TIMESTAMP(), `expired` = UNIX_TIMESTAMP()+1831, `slotting` = 0, `needing` = 1, `finished` = 2, `surveys` = 2, `available` = 0 WHERE `id` = $uploadid";
-									$GLOBALS['FontsDB']->queryF($sql);
-								}
-								echo "\nCreated Upload Identity: ".$uploadid;
-								if (!empty($cullist[$finger]))
-								{
-									foreach($cullist[$finger] as $typeb => $fingers) {
-										foreach($fingers as $fingerprint => $file)
-										{
-											$culled[$finger][$fingerprint][$typeb] = basename($file);
-											$sql = "INSERT INTO `fonts_fingering` (`type`, `upload_id`, `fingerprint`) VALUES ('" . mysql_real_escape_string($typeb) . "','" . mysql_real_escape_string($uploadid) . "','" . mysql_real_escape_string($fingerprint) . "')";
-											$GLOBALS['FontsDB']->queryF($sql);
-										}
-									}
-								}
-								$sql = "INSERT INTO `fonts_fingering` (`type`, `upload_id`, `fingerprint`) VALUES ('" . mysql_real_escape_string($type) . "','" . mysql_real_escape_string($uploadid) . "','" . mysql_real_escape_string($finger) . "')";
-								$GLOBALS['FontsDB']->queryF($sql);
-								$success[] = basename($fontfile);
-								$data['success'][] = basename($fontfile);
-								if (isset($data['form']['callback']) && !empty($data['form']['callback']))
-									@setCallBackURI($data['form']['callback'], 145, 145, array('action'=>'uploaded', 'file-md5' => $finger, 'allocated' => $available, 'key' => $key, 'email' => $data['form']['email'], 'name' => $data['form']['name'], 'bizo' => $data['form']['bizo'], 'frequency' => $freq, 'elapsing' => $elapses, 'filename' => $filename, 'culled' => false));
-								$GLOBALS["FontsDB"]->queryF('UPDATE `networking` SET `fonts` = `fonts` + 1 WHERE `ip_id` = "'.$ipid.'"');
-								sleep(mt_rand(4,9));
+							$k++;
+							echo "\nLooking for Source: " . ($jfile = implode(DIRECTORY_SEPARATOR, array_reverse($patheles)).DIRECTORY_SEPARATOR.'upload.json');
+							if (implode(DIRECTORY_SEPARATOR, array_reverse($patheles)).DIRECTORY_SEPARATOR.'upload.json'==DIRECTORY_SEPARATOR.'upload.json') {
+								continue;
+								continue;
 							}
 							else
-								die('SQL Failed: ' . $sql);
+								if (file_exists($jfile) && empty($data))
+								{
+									$found = true;
+									$data = json_decode(file_get_contents($jfile), true);
+									continue;
+								} elseif (empty($data)) {
+									$keys = array_keys($patheles);
+									unset($patheles[$keys[0]]);
+								}				
 						}
-						$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
-						echo ".";
-					} else 
-						echo "x";	
-					sleep(mt_rand(20,90));
-				}
+					} elseif ($k==0) {
+						$k++;
+						echo "\nLooking for Source: " . ($jfile = FONT_RESOURCES_UNPACKING.DIRECTORY_SEPARATOR.$dir.DIRECTORY_SEPARATOR.$ndd.DIRECTORY_SEPARATOR.'upload.json');
+						if (FONT_RESOURCES_UNPACKING.DIRECTORY_SEPARATOR.$dir.DIRECTORY_SEPARATOR.$ndd.DIRECTORY_SEPARATOR.'upload.json'==DIRECTORY_SEPARATOR.'upload.json')
+						{
+							continue;
+							continue;
+						}
+						else
+							if (file_exists($jfile) && empty($data) && filesize($jfile)>=96)
+							{
+								$found = true;
+								$data = json_decode(file_get_contents($jfile), true);
+								continue;
+							}
+						
+					}
+					if ($found == true)
+					{
+						echo(" (found)");
+					}
+					if ($found == true && $data['time'] < time() - (0.441 * 3600) && !empty($data))
+					{
+						$data['mode'] = 'culling';
+						$uploader = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
+						$uploader[$GLOBALS['peerid']][time()] = $data;
+						file_put_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($uploader));
+						echo ("\nReimported into Que: $jfile\n\n");
+						if (unlink($jfile))
+							echo (" (deleted)\n\n");			
+					} elseif (($found == true && empty($data) || filesize($jfile)<=96) && strlen(dirname($jfile))>1) {
+						echo(" -- Empty Resource Found!!\n\n");
+						$packing = getArchivingShellExec();
+						if (!is_dir(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'lost'))
+							mkdir(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'lost', 0777, true);
+						$packfile = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'lost' . DIRECTORY_SEPARATOR . $dir . '-' . $ndd . '.7z';
+						$email = $dir;
+						chdir(dirname($jfile));
+						exec("cd " . dirname($jfile), $output, $resolve);
+						$cmdb = str_replace("%pack", $packfile, str_replace("%folder", dirname($jfile), $packing['7z']));
+						echo "Executing: $cmdb\n";
+						exec($cmdb, $output, $resolve);
+						echo implode("\n", $output);
+						if (!file_exists($packfile))
+							die("File not found: $packfile ~~ Failed: $cmda");
+						unlink($jfile);
+						$fontfilez = getCompleteFilesListAsArray(dirname($jfile));
+						if (filesize($packfile)>501)
+						{
+							$mailer = new FontsMailer(API_EMAIL_ADDY, API_EMAIL_FROM);
+							if (file_exists($file = dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "SMTPAuth.diz"))
+								$smtpauths = explode("\n", str_replace(array("\r\n", "\n\n", "\n\r"), "\n", file_get_contents($file)));
+							if (count($smtpauths)>=1)
+								$auth = explode("||", $smtpauths[mt_rand(0, count($smtpauths)-1)]);
+							if (!empty($auth[0]) && !empty($auth[1]) && !empty($auth[2]))
+								$mailer->multimailer->setSMTPAuth($auth[0], $auth[1], $auth[2]);
+							$html = file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'lost-fonts-uploads.html');
+							$html = str_replace("{X_EMAIL}", $email, $html);
+							$html = str_replace("{X_FONTFILE}", API_URL . '/lost/' . basename($packfile), $html);
+							$html = str_replace("{X_FONTFILES}", "<li style='float:left; display: block; width: 24%;'>" . implode("</li><li style='float:left; display: block; width: 24%;'>", $fontfilez) . "</li>", $html);
+							echo "\n";
+							if ($mailer->sendMail(array($email=>$email), array(API_SYSTEMADMIN_EMAIL=>API_SYSTEMADMIN_EMAIL),  array(), "Lost uploading queued!!! Please Resubmit!! -:[ fonts.labs.coop ]:-", $html, array(), NULL, true))
+							{
+								echo "Sent mail to: " . $email . "\n\n<br/>\n";
+								shell_exec("rm -Rf ".dirname($jfile));
+							}
+						} else {
+							unlink($packfile);
+							shell_exec("rm -Rf ".dirname($jfile));
+						}
+					} else continue;
+				} else continue;
 			}
+		}
+		sleep(mt_rand(7,14));
+	}
+

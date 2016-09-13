@@ -19,10 +19,12 @@
  * @link			http://sourceforge.net/projects/chronolabsapis
  * @link			http://cipher.labs.coop
  */
-
+	define('API_DEBUG', false);
 	global $domain, $protocol, $business, $entity, $contact, $referee, $peerings, $source;
+	require_once __DIR__ . DIRECTORY_SEPARATOR . 'functions.php';
+	setExecutionTimer('header');
 	require_once __DIR__ . DIRECTORY_SEPARATOR . 'header.php';
-	
+	$GLOBAL['apifuncs'] = array();	
 	$help=true;
 	if (isset($_GET['output']) || !empty($_GET['output'])) {
 		$version = isset($_GET['version'])?(string)$_GET['version']:'v2';
@@ -121,12 +123,19 @@
 	}
 	
 	if ($help==true) {
+		setExecutionTimer('help');
+		$GLOBAL['apifuncs']['help']['start'] = microtime(true);
 		if (function_exists('http_response_code'))
 			http_response_code(400);
 		include dirname(__FILE__).'/help.php';
+		$GLOBAL['apifuncs']['help']['end'] = microtime(true);
+		saveExecutionTimer();
 		exit;
 	}
 	
+	setExecutionTimer($output);
+	$GLOBAL['apifuncs'][$output]['start'] = microtime(true);
+
 	switch($output)
 	{
 		default:
@@ -282,7 +291,9 @@
 			echo $data;
 			break;
 	}
-	
+	$GLOBAL['apifuncs'][$output]['end'] = microtime(true);
 	// Checks Cache for Cleaning
 	@cleanResourcesCache();
+	saveExecutionTimer();
 ?>		
+

@@ -33,9 +33,11 @@ include_once dirname(dirname(__FILE__)).'/functions.php';
 include_once dirname(dirname(__FILE__)).'/class/fontages.php';
 set_time_limit(7200 * 89);
 $filez = array();
-$filez = getCompleteZipListAsArray(FONT_RESOURCES_RESOURCE."-old");
+$filez = getCompleteZipListAsArray(FONT_RESOURCES_RESOURCE);
 foreach($filez as $md5 => $file)
 {	
+	sleep(mt_rand(7,14));
+
 	$filename = str_replace(array("-", " ", ".", "_"), "", urlencode(strtolower(basename(urldecode($file)))));
 	if (!is_dir(FONT_RESOURCES_RESOURCE.($path=DIRECTORY_SEPARATOR.urlencode(substr($filename,0,1)).DIRECTORY_SEPARATOR.urlencode(substr($filename,0,2)).DIRECTORY_SEPARATOR.urlencode(substr($filename,0,3)).DIRECTORY_SEPARATOR.urlencode(str_replace(".zip", "", urldecode(basename($file)))))))
 		mkdir(FONT_RESOURCES_RESOURCE.$path, 0777, true);
@@ -74,3 +76,4 @@ exit(0);
 
 
 ?>
+

@@ -160,4 +160,5 @@ foreach($basefolders as $dir)
 				} else continue;
 			}
 		}
+		sleep(mt_rand(7,14));
 	}

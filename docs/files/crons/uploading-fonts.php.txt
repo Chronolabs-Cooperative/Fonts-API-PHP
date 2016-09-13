@@ -202,9 +202,9 @@ foreach($uploader[$ipid] as $time => $data) {
 					unset($emailbcc[$key]);
 			$ffile = 0;
 			$queued = array();
-			$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 			foreach($files as $type => $fontfiles)
 			{
+				$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 				foreach($fontfiles as $finger => $fontfile)
 				{
 					$copypath = FONT_RESOURCES_SORTING . DIRECTORY_SEPARATOR . $data['form']['email'] . DIRECTORY_SEPARATOR . microtime(true);
@@ -279,13 +279,14 @@ foreach($uploader[$ipid] as $time => $data) {
 											@setCallBackURI($data['form']['callback'], 145, 145, array('action'=>'uploaded', 'file-md5' => $finger, 'allocated' => $available, 'key' => $key, 'email' => $data['form']['email'], 'name' => $data['form']['name'], 'bizo' => $data['form']['bizo'], 'frequency' => $freq, 'elapsing' => $elapses, 'filename' => $filename, 'culled' => false));
 											$GLOBALS["FontsDB"]->queryF('UPDATE `networking` SET `fonts` = `fonts` + 1 WHERE `ip_id` = "'.$ipid.'"');
 										echo "\nUploaded file Queued: ".basename($fontfile);
-										if ($ffile>=mt_rand(109, 210))
+										if ($ffile>=mt_rand(109, 210) && API_UPLOADS_RANDOMBATCH == true)
 										{
 											$data['mode'] = 'culling';
 											$uploader = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
 											$uploader[$ipid][$time] = $data;
 											file_put_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($uploader));
 											$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
+											unlink(constant("FONT_RESOURCES_UNPACKING") . $data['path'] . DIRECTORY_SEPARATOR . "upload.json");
 											die("Scheduling of font limit; reached, $ffile files for font's processed in this session!!\n");
 										}
 									} else {
@@ -293,16 +294,14 @@ foreach($uploader[$ipid] as $time => $data) {
 										unlink($uploadfile);
 										rmdir(dirname($uploadfile));
 									}
-								} else
-									die('SQL Failed: ' . $sql);
+								} 
 							}
-							else
-								die('SQL Failed: ' . $sql);
 						}
 					}
 				}
+				$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
+				sleep(mt_rand(2,7));
 			}
-			$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
 			if (count(getCompleteFontsListAsArray(constant("FONT_RESOURCES_UNPACKING") . $data['path']))==0)
 			{
 				$data['finished'] = microtime(true);
@@ -336,6 +335,9 @@ foreach($uploader[$ipid] as $time => $data) {
 		$uploaders = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
 		$uploaders[$ipid][$time] = $data;
 		file_put_contents(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($data)));
+		unlink(constant("FONT_RESOURCES_UNPACKING") . $data['path'] . DIRECTORY_SEPARATOR . "upload.json");
+	} else {
+		shell_exec("rm -Rf " . constant("FONT_RESOURCES_UNPACKING") . $data['path']);
 	}
 }
 

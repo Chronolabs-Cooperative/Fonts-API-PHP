@@ -32,7 +32,7 @@ set_time_limit(7200);
 $sql = "SELECT * FROM `peers` WHERE `peer-id` NOT LIKE '%s' AND `polinating` = 'Yes' ORDER BY RAND() LIMIT 5";
 if ($GLOBALS['FontsDB']->getRowsNum($results = $GLOBALS['FontsDB']->queryF(sprintf($sql, mysql_real_escape_string($GLOBALS['peer-id']))))>=1)
 {
-				
+        sleep(mt_rand(7,14));				
 	while(isset($ret[$fingerprint]) && $peer = $GLOBALS['FontsDB']->fetchArray($results))
 	{
 		$fonts = json_decode(getURIData($other['api-uri'].$other['api-uri-fonts'], 900, 900, array()), true);
@@ -144,3 +144,4 @@ if ($GLOBALS['FontsDB']->getRowsNum($results = $GLOBALS['FontsDB']->queryF(sprin
 
 
 ?>
+

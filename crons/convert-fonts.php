@@ -29,14 +29,12 @@ require_once dirname(__DIR__).'/class/fontages.php';
 $result = $GLOBALS['FontsDB']->queryF("SELECT * from `uploads` WHERE `uploaded` > '0' AND `converted` = '0' AND `storaged` = 0 ORDER BY RAND() LIMIT ".mt_rand(17,77));
 while($row = $GLOBALS['FontsDB']->fetchArray($result))
 {
-	$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
-	sleep(mt_rand(20,90));
-	$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
+	sleep(mt_rand(7,19));
 	$skip = false;
 	$upldata = json_decode($row['datastore'], true);
 	if (file_exists($row['uploaded_path'] . DIRECTORY_SEPARATOR . $row['uploaded_file']))
 	{
-		
+		$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 		if (substr($fontfile = $row['uploaded_file'], strlen($row['uploaded_file']) - strlen(API_BASE), strlen(API_BASE)) != API_BASE || !is_array($upldata['font']))
 		{
 			$copypath = $row['uploaded_path'];
@@ -185,10 +183,10 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 				$GLOBALS['FontsDB']->queryF("UPDATE `uploads` SET `currently_path` = '".$currently."', `converted` = `converted` - 1 WHERE `id` = " . $row['id']);
 		} else
 			$GLOBALS['FontsDB']->queryF("UPDATE `uploads` SET `converted` = `converted` - 1 WHERE `id` = " . $row['id']);
+		$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
 		sleep(mt_rand(10,23));
 	} else {
 		echo "Doesn't existing killing record: " . ($row['uploaded_path'] . DIRECTORY_SEPARATOR . $row['uploaded_file']) . "\n";
 		$GLOBALS['FontsDB']->queryF("DELETE FROM `uploads` WHERE `id` = " . $row['id']);
 	}
 }
-$GLOBALS['FontsDB']->queryF($sql = "COMMIT");

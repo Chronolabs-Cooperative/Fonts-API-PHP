@@ -129,6 +129,11 @@
 		redirect(isset($parse['return'])&&!empty($parse['return'])?$parse['return']:'http://'. $_SERVER["HTTP_HOST"], 9, "<center><h1 style='color:rgb(198,0,0);'>Error Has Occured</h1><br/><p>" . implode("<br />", $error) . "</p></center>");
 		exit(0);
 	}
+	foreach( get7zListAsArray($path = __DIR__ . DIRECTORY_SEPARATOR . 'lost') as $lost)
+	{
+		if (md5_file($file) == md5_file($path . DIRECTORY_SEPARATOR . $lost))
+			unlink($path . DIRECTORY_SEPARATOR . $lost);
+	}
 	$GLOBALS["FontsDB"]->queryF('UPDATE `networking` SET `uploads` = `uploads` + 1 WHERE `ip_id` = "'.$ipid.'"');
 	$uploader[$ipid][$time]['files'][] = $file;
 	$uploader[$ipid][$time]['form'] = $parse;

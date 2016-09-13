@@ -1,5 +1,4 @@
-<?php
-/**
+<?php /**
  * Chronolabs Fonting Repository Services REST API API
  *
  * You may not change or alter any portion of this comment or credits
@@ -28,6 +27,96 @@ if (API_DEBUG==true) echo (basename(__FILE__) . "::"  . __LINE__ . "<br/>\n");
 use FontLib\Font;
 require_once __DIR__.'/class/FontLib/Autoloader.php';
 if (API_DEBUG==true) echo (basename(__FILE__) . "::"  . __LINE__ . "<br/>\n");
+
+if (!function_exists("setExecutionTimer")) {
+        /**
+         * get a font nodes by Font Identity Hash
+         *
+         * @param string $font_id
+         *
+         * @return array
+         */
+        function setExecutionTimer($what = 'header')
+        {
+		static $seconds = 0;
+		if ($seconds == 0)
+			$seconds = ini_get('max_execution_time');
+
+                if (file_exists($cache = getCacheFilename(FONTS_CACHE , 'execution-timers--%s--%s.json',sha1($what), 'php')))
+                {
+                        $timers = json_decode(file_get_contents($cache), true);
+			foreach($timers as $id => $time)
+			{
+				$ttl = $ttl + $time;
+			}
+			$seconds = $seconds + ($ttl / count($timers));
+                } else {
+			$seconds = $seconds + 9;
+		}
+		set_time_limit($seconds);
+		ini_set('max_execution_time', $seconds);
+        }
+}
+
+if (!function_exists("saveExecutionTimer")) {
+        /**
+         * get a font nodes by Font Identity Hash
+         *
+         * @param string $font_id
+         *
+         * @return array
+         */
+        function saveExecutionTimer()
+        {
+                static $seconds = 0;
+                if ($seconds == 0)
+                        $seconds = ini_get('max_execution_time');
+
+                $cache = getCacheFilename(FONTS_CACHE , 'execution-timers--%s--%s.json',sha1('header'), 'php');
+		$timers = json_decode(file_get_contents($cache), true);
+		$timers[$GLOBAL['header']['start']] = $GLOBAL['header']['end'] - $GLOBAL['header']['start'];
+		if(($max = mt_rand(32,78))>count($timers))
+		{
+			$keys = array_keys($timers);
+			$index = $max;
+			foreach($keys as $key)
+			{
+				if ($index>0)
+				{
+					unset($timers[$key]);
+					$index--;
+				}
+			}
+		}
+                @writeRawFile($cache, json_encode($timers));
+		if (isset($GLOBAL['apifuncs']) && !empty($GLOBAL['apifuncs']))
+		{
+			foreach($GLOBAL['apifuncs'] as $what => $values)
+			{
+				$cache = getCacheFilename(FONTS_CACHE , 'execution-timers--%s--%s.json',sha1($what), 'php');
+	                	$timers = json_decode(file_get_contents($cache), true);
+        		        $timers[$values['start']] = $values['end'] - $values['start'];
+	        	        if(($max = mt_rand(32,78))>count($timers))
+                		{
+        	                	$keys = array_keys($timers);
+		                        $index = $max;
+        	                	foreach($keys as $key)
+                		        {
+        	        	                if ($index>0)
+	                        	        {
+                                        		unset($timers[$key]);
+                                	        	$index--;
+	                        	        }
+        	        	        }
+        		        }
+	                	@writeRawFile($cache, json_encode($timers));
+			}
+
+		}
+
+        }
+}
+
 
 
 if (!function_exists("getCacheFilename")) {
@@ -965,6 +1054,22 @@ if (!function_exists("getFontsWaitingQueuing")) {
 		return $total;
 	}
 }
+
+
+
+if (!function_exists("getLostUploads")) {
+	/**
+	 * Counts in the database the number of fonts available on the API
+	 * 
+	 * @return integer
+	 */
+	function getLostUploads()
+	{
+		return count(get7zListAsArray(__DIR__ . DIRECTORY_SEPARATOR . 'lost'));
+	}
+}
+
+
 
 if (!function_exists("getFontsReleased")) {
 	/**
@@ -4998,6 +5103,33 @@ if (!function_exists("getZipListAsArray")) {
     }
 }
 
+if (!function_exists("get7zListAsArray")) {
+	/**
+	 * Get a zip file listing for a single path no recursive
+	 *
+	 * @param string $dirname
+	 * @param string $prefix
+	 *
+	 * @return array
+	 */
+	function get7zListAsArray($dirname, $prefix = '')
+	{
+		$filelist = array();
+		if ($handle = opendir($dirname)) {
+			while (false !== ($file = readdir($handle))) {
+				if (preg_match('/(\.7z)$/i', $file)) {
+					$file = $prefix . $file;
+					$filelist[$file] = $file;
+				}
+			}
+			closedir($handle);
+			asort($filelist);
+			reset($filelist);
+		}
+		return $filelist;
+	}
+}
+
 
 if (!function_exists("getPacksListAsArray")) {
 	/**
@@ -5265,3 +5397,4 @@ if (!class_exists("XmlDomConstruct")) {
 }
 if (API_DEBUG==true) echo (basename(__FILE__) . "::"  . __LINE__ . "<br/>\n");
 ?>
+
