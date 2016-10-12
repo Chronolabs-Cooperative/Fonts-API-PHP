@@ -110,126 +110,115 @@ You may have to play around with the cpu throttling if your site is down ever to
 Once you have configured the above you will have to set up the cronjobs for all the scheduled tasks on the fonts-api these are all found on /var/www/fonts-api/crons where they are all required, some are for recovery if you have to drop your database and start from scratch will rebuild from your current processing.
 You need to run the following command from root with sudo at the start unless you are doing user basis of cronjobs to set them below the command is the listing with 'suggested' not 'finited' schedules for tasks to operate; remember adjusting these could leave your system paralised with to much to do in one hit so execute the following and put these lines in: $ sudo crontab -e
 
-    */3 * * * * chmod -Rf 0777 /fonts
-    */3 * * * * chown -Rf www-data:root /tmp/Font-*
-    */3 * * * * chmod -Rf 0777 /tmp
-    */15 * * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/reboot-checker.php
-    11 11 */3 * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/lost-fonts-uploads.php
-    */11 */11 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/poll-peers.php
-    */13 */9 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/check-cache.php
-    */18 */3 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/convert-fonts.php
-    */11 */11 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/clean-tmp.php
-    */56 */5 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/surveying-fonts.php
-    */26 */5 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/surveying-reminder.php
-    */16 */8 */2 * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/surveying-expiring.php
-    * */2 */9 * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/unknown-fonts.php
-    */18 */2 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/release-fonts.php
-    */19 */2 */8 * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/verify-fonts.php
-    */13 * * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/uploading-fonts.php
-    */45 */2 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/processing-fonts.php
-    */11 */2 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/mapping-repository.php
-    */21 */2 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/fix-uploads.php
-    */11 */11 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/poll-peers.php
-    */1 */9 */2 * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/check-cache.php
-    */47 */7 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/convert-fonts.php
-    */27 */3 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/spot-checker.php
-    */37 */2 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/zip-fonts.php
-    */28 */3 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/zip-fonts.php
-    */34 */3 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/zip-fonts.php
-    */25 */3 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/zip-fonts.php
-    */32 */3 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/zip-fonts.php
-    */21 */4 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/zip-fonts.php
-    */25 */2 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/zip-fonts.php
-    */36 */4 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/zip-fonts.php
-    */47 */1 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/zip-fonts.php
-    */27 * * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/zip-fonts.php
-    */35 */1 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/zip-fonts.php
-    */26 */2 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/zip-fonts.php
-    */48 */3 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/zip-fonts.php
-    */49 */4 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/zip-fonts.php
-    */13 */3 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/zip-fonts.php
-    */18 */13 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/verify-fonts.php
-    */17 */3 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/release-fonts.php
-    */47 */4 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/release-fonts.php
-    */27 */5 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/release-fonts.php
-    11 11 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/release-fonts.php
-    */7 */7 * * */2 /usr/bin/php -q /var/www/fonts.labs.coop/crons/release-fonts.php
-    */37 */2 * * */2 /usr/bin/php -q /var/www/fonts.labs.coop/crons/release-fonts.php
-    */23 */3 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/uploading-fonts.php
-    */45 */4 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/processing-fonts.php
-    */3 * * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/callbacks.php
-    * */2 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/mapping-repository.php
-    */21 */2 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/fix-uploads.php
-    */13 */2 * * * sh /fonts/git-add.sh
-    */43 */3 * * * sh /fonts/git-update.sh
-    11 11 * * */4 sh /fonts/git-all.sh
-    */33 */4 * * * sh /fonts/git-json.sh
-    */45 */5 * * * unlink /fonts/Fonting/.git/index.lock
-    
-    ##
-    ## Font Website Crawler Robot + Script Genetator
-    ##
-    1 0 1,13 * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/crawling-robots.php
-    21 0 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--001.sh
-    41 0 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--002.sh
-    1 1 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--003.sh
-    21 1 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--004.sh
-    41 1 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--005.sh
-    1 2 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--006.sh
-    21 2 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--007.sh
-    41 2 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--008.sh
-    1 3 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--009.sh
-    21 3 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--010.sh
-    41 3 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--011.sh
-    1 4 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--012.sh
-    21 4 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--013.sh
-    41 4 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--014.sh
-    1 5 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--015.sh
-    21 5 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--016.sh
-    41 5 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--017.sh
-    1 6 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--018.sh
-    21 6 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--019.sh
-    41 6 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--020.sh
-    1 7 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--021.sh
-    21 7 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--022.sh
-    41 7 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--023.sh
-    1 8 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--024.sh
-    21 8 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--025.sh
-    41 8 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--026.sh
-    1 9 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--027.sh
-    21 9 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--028.sh
-    41 9 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--029.sh
-    1 10 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--030.sh
-    21 10 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--031.sh
-    41 10 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--032.sh
-    1 11 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--033.sh
-    21 11 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--034.sh
-    41 11 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--035.sh
-    1 12 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--036.sh
-    21 12 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--037.sh
-    41 12 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--038.sh
-    1 13 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--039.sh
-    21 13 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--040.sh
-    41 13 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--041.sh
-    1 14 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--042.sh
-    21 14 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--043.sh
-    41 14 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--044.sh
-    1 15 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--045.sh
-    21 15 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--046.sh
-    41 15 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--047.sh
-    1 16 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--048.sh
-    21 16 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--049.sh
-    41 16 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--050.sh
-    1 17 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--051.sh
-    21 17 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--052.sh
-    41 17 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--053.sh
-    1 18 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--054.sh
-    21 18 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--055.sh
-    41 18 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--056.sh
-    1 19 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--057.sh
-    21 19 2,14 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--058.sh
-    41 19 3,15 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--059.sh
-    1 20 1,13 * * sh /var/www/fonts.labs.coop/crons/crawling-bot--060.sh
-
+## fonts.labs.coop ###########################################################################################################
+    */5 * * * * mkdir /tmp/Fonts-Uploads >/dev/null 2>&1
+    */5 * * * * mkdir /tmp/Fonts-Cache >/dev/null 2>&1
+    */7 * * * * chown -Rf www-data:www-data /tmp/Fonts-Uploads >/dev/null 2>&1
+    */7 * * * * chown -Rf www-data:root /tmp >/dev/null 2>&1
+    */7 * * * * chown -Rf www-data:root /fonts >/dev/null 2>&1
+    */7 * * * * chmod -Rf 0777 /tmp/Font* >/dev/null 2>&1
+    */7 * * * * chmod -Rf 0777 /fonts >/dev/null 2>&1
+    */57 */3 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/lost-fonts-uploads.php >/dev/null 2>&1
+    */11 */11 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/poll-peers.php >/dev/null 2>&1
+    */13 */9 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/check-cache.php >/dev/null 2>&1
+    */13 */2 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/convert-fonts.php >/dev/null 2>&1
+    */36 */5 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/convert-fonts.php >/dev/null 2>&1
+    */53 */4 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/convert-fonts.php >/dev/null 2>&1
+    */11 */11 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/clean-tmp.php >/dev/null 2>&1
+    */56 */5 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/surveying-fonts.php >/dev/null 2>&1
+    */26 */5 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/surveying-reminder.php >/dev/null 2>&1
+    */16 */8 */2 * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/surveying-expiring.php >/dev/null 2>&1
+    */19 */2 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/unknown-fonts.php >/dev/null 2>&1
+    */19 */2 */8 * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/verify-fonts.php >/dev/null 2>&1
+    */11 * * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/uploading-fonts.php >/dev/null 2>&1
+    */45 */4 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/processing-fonts.php >/dev/null 2>&1
+    */21 */3 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/fix-uploads.php >/dev/null 2>&1
+    */11 */11 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/poll-peers.php >/dev/null 2>&1
+    */1 */9 */2 * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/check-cache.php >/dev/null 2>&1
+    */47 */7 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/convert-fonts.php >/dev/null 2>&1
+    */27 */7 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/spot-checker.php >/dev/null 2>&1
+    */22 * * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/zip-fonts.php >/dev/null 2>&1
+    */17 */6 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/release-fonts.php >/dev/null 2>&1
+    */47 */7 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/release-fonts.php >/dev/null 2>&1
+    */27 */5 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/release-fonts.php >/dev/null 2>&1
+    */27 */5 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/release-fonts.php >/dev/null 2>&1
+    */7 */7 * * */2 /usr/bin/php -q /var/www/fonts.labs.coop/crons/release-fonts.php >/dev/null 2>&1
+    */37 */2 * * */2 /usr/bin/php -q /var/www/fonts.labs.coop/crons/release-fonts.php >/dev/null 2>&1
+    */12 * * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/uploading-fonts.php >/dev/null 2>&1
+    */3 * * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/callbacks.php >/dev/null 2>&1
+    * */5 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/mapping-repository.php >/dev/null 2>&1
+    */3 * * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/callbacks.php >/dev/null 2>&1
+    * */5 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/mapping-repository.php >/dev/null 2>&1
+    */21 */5 * * * /usr/bin/php -q /var/www/fonts.labs.coop/crons/fix-uploads.php >/dev/null 2>&1
+    */13 */3 * * * sh /fonts/svn-add.sh >/dev/null 2>&1
+    */43 */4 * * */3 sh /fonts/svn-update.sh >/dev/null 2>&1
+    11 21 * * */6 sh /fonts/svn-all.sh >/dev/null 2>&1
+    */33 */4 * * * sh /fonts/svn-json.sh >/dev/null 2>&1
+    */13 */2 * * * sh /fonts/git-add.sh >/dev/null 2>&1
+    */43 */3 * * */3 sh /fonts/git-update.sh >/dev/null 2>&1
+    11 11 * * */5 sh /fonts/git-all.sh >/dev/null 2>&1
+    */33 */4 * * * sh /fonts/git-json.sh >/dev/null 2>&1
+    */45 */3 * * * unlink /fonts/Fonting/.git/index.lock >/dev/null 2>&1
+    1 0 27 */3 * /usr/bin/php -q /var/www/fonts.labs.coop/crons/crawling-robots.php >/dev/null 2>&1
+    21 0 28 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--001.sh >/dev/null 2>&1
+    41 0 29 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--002.sh >/dev/null 2>&1
+    1 1 27 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--003.sh >/dev/null 2>&1
+    21 1 28 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--004.sh >/dev/null 2>&1
+    41 1 29 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--005.sh >/dev/null 2>&1
+    1 2 27 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--006.sh >/dev/null 2>&1
+    21 2 28 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--007.sh >/dev/null 2>&1
+    41 2 29 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--008.sh >/dev/null 2>&1
+    1 3 27 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--009.sh >/dev/null 2>&1
+    21 3 28 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--010.sh >/dev/null 2>&1
+    41 3 29 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--011.sh >/dev/null 2>&1
+    1 4 27 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--012.sh >/dev/null 2>&1
+    21 4 28 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--013.sh >/dev/null 2>&1
+    41 4 29 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--014.sh >/dev/null 2>&1
+    1 5 27 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--015.sh >/dev/null 2>&1
+    21 5 28 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--016.sh >/dev/null 2>&1
+    41 5 29 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--017.sh >/dev/null 2>&1
+    1 6 27 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--018.sh >/dev/null 2>&1
+    21 6 28 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--019.sh >/dev/null 2>&1
+    41 6 29 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--020.sh >/dev/null 2>&1
+    1 7 27 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--021.sh >/dev/null 2>&1
+    21 7 28 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--022.sh >/dev/null 2>&1
+    41 7 29 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--023.sh >/dev/null 2>&1
+    1 8 27 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--024.sh >/dev/null 2>&1
+    21 8 28 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--025.sh >/dev/null 2>&1
+    41 8 29 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--026.sh >/dev/null 2>&1
+    1 9 27 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--027.sh >/dev/null 2>&1
+    21 9 28 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--028.sh >/dev/null 2>&1
+    41 9 29 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--029.sh >/dev/null 2>&1
+    1 10 27 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--030.sh >/dev/null 2>&1
+    21 10 28 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--031.sh >/dev/null 2>&1
+    41 10 29 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--032.sh >/dev/null 2>&1
+    1 11 27 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--033.sh >/dev/null 2>&1
+    21 11 28 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--034.sh >/dev/null 2>&1
+    41 11 29 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--035.sh >/dev/null 2>&1
+    1 12 27 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--036.sh >/dev/null 2>&1
+    21 12 28 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--037.sh >/dev/null 2>&1
+    41 12 29 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--038.sh >/dev/null 2>&1
+    1 13 27 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--039.sh >/dev/null 2>&1
+    21 13 28 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--040.sh >/dev/null 2>&1
+    41 13 29 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--041.sh >/dev/null 2>&1
+    1 14 27 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--042.sh >/dev/null 2>&1
+    21 14 28 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--043.sh >/dev/null 2>&1
+    41 14 29 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--044.sh >/dev/null 2>&1
+    1 15 27 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--045.sh >/dev/null 2>&1
+    21 15 28 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--046.sh >/dev/null 2>&1
+    41 15 29 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--047.sh >/dev/null 2>&1
+    1 16 27 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--048.sh >/dev/null 2>&1
+    21 16 28 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--049.sh >/dev/null 2>&1
+    41 16 29 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--050.sh >/dev/null 2>&1
+    1 17 27 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--051.sh >/dev/null 2>&1
+    21 17 28 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--052.sh >/dev/null 2>&1
+    41 17 29 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--053.sh >/dev/null 2>&1
+    1 18 27 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--054.sh >/dev/null 2>&1
+    21 18 28 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--055.sh >/dev/null 2>&1
+    41 18 29 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--056.sh >/dev/null 2>&1
+    1 19 27 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--057.sh >/dev/null 2>&1
+    21 19 28 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--058.sh >/dev/null 2>&1
+    41 19 29 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--059.sh >/dev/null 2>&1
+    1 20 27 */3 * sh /var/www/fonts.labs.coop/crons/crawling-bot--060.sh >/dev/null 2>&1
 
 That's pretty much the basic of setting up, you can of course make changes to the paths, even store your SVN remotely for larger file support. I hope this installation guide will help you in configuring the Font's API
