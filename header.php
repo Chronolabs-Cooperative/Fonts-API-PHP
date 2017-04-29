@@ -25,9 +25,6 @@
 	if (!defined('API_DEBUG'))
 		define('API_DEBUG', false);
 	
-	error_reporting(E_ERROR);
-	ini_set('display_errors', true);
-	
 	/**
 	 * Opens Access Origin Via networking Route NPN
 	*/

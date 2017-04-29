@@ -20,6 +20,7 @@
  * @link			http://cipher.labs.coop
  */
 	define('API_DEBUG', false);
+
 	global $domain, $protocol, $business, $entity, $contact, $referee, $peerings, $source;
 	require_once __DIR__ . DIRECTORY_SEPARATOR . 'functions.php';
 	setExecutionTimer('header');

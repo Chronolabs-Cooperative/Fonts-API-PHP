@@ -20,5 +20,4 @@
  * @link			http://cipher.labs.coop
  */
 
-
 ?>
