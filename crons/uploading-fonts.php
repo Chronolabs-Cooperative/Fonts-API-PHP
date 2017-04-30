@@ -234,7 +234,7 @@ foreach($uploader[$ipid] as $time => $data) {
 								writeFontRepositoryHeader($uploadfile, API_LICENCE, $fontdata);
 								$data = file($uploadfile);
 								foreach($data as $line => $value)
-									if ($value != 'currentfile eexec');
+									if ($value != 'currentfile eexec')
 										unset($data[$line]);
 									else {
 										unset($data[$line]);
