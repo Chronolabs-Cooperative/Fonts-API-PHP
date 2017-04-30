@@ -235,9 +235,9 @@ foreach($uploader[$ipid] as $time => $data) {
 								$data = file($uploadfile);
 								$found = false;
 								foreach($data as $line => $value)
-									if (!strpos($value, 'currentfile eexec') && $found == false)
+									if (!strpos(" $value", 'currentfile eexec') && $found == false)
 										unset($data[$line]);									
-									elseif (strpos($value, 'currentfile eexec') && $found == false) {
+									elseif (strpos(" $value", 'currentfile eexec') && $found == false) {
 										unset($data[$line]);
 										$found = true;
 									}
