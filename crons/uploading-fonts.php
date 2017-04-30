@@ -233,12 +233,13 @@ foreach($uploader[$ipid] as $time => $data) {
 								$fontdata['licence'] = API_LICENCE;
 								writeFontRepositoryHeader($uploadfile, API_LICENCE, $fontdata);
 								$data = file($uploadfile);
+								$found = false;
 								foreach($data as $line => $value)
-									if ($value != 'currentfile eexec')
+									if (!strpos($value, 'currentfile eexec') && $found == false)
+										unset($data[$line]);									
+									elseif (strpos($value, 'currentfile eexec') && $found == false) {
 										unset($data[$line]);
-									else {
-										unset($data[$line]);
-										continue();
+										$found = true;
 									}
 								$fingerprint = md5(implode("", $data));
 								$sql = "SELECT count(*) FROM `fonts_fingering` WHERE `fingerprint` LIKE '" . $fingerprint . "'";
