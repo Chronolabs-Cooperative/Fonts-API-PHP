@@ -232,7 +232,15 @@ foreach($uploader[$ipid] as $time => $data) {
 								$fontdata['uploaded'] = microtime(true);
 								$fontdata['licence'] = API_LICENCE;
 								writeFontRepositoryHeader($uploadfile, API_LICENCE, $fontdata);
-								$fingerprint = md5_file($uploadfile);
+								$data = file($uploadfile);
+								foreach($data as $line => $value)
+									if ($value != 'currentfile eexec');
+										unset($data[$line]);
+									else {
+										unset($data[$line]);
+										continue();
+									}
+								$fingerprint = md5(implode("", $data));
 								$sql = "SELECT count(*) FROM `fonts_fingering` WHERE `fingerprint` LIKE '" . $fingerprint . "'";
 								list($fingers) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql));
 								if ($fingers==0)
@@ -272,7 +280,8 @@ foreach($uploader[$ipid] as $time => $data) {
 										}
 										echo "\nCreated Upload Identity: ".$uploadid;
 										$sql = "INSERT INTO `fonts_fingering` (`type`, `upload_id`, `fingerprint`) VALUES ('" . $GLOBALS['FontsDB']->escape(API_BASE) . "','" . $GLOBALS['FontsDB']->escape($uploadid) . "','" . $GLOBALS['FontsDB']->escape($fingerprint) . "')";
-										$GLOBALS['FontsDB']->queryF($sql);
+										if (!$GLOBALS['FontsDB']->queryF($sql))
+											echo "SQL Failed: $sql;\n";
 										$success[] = basename($fontfile);
 										$data['success'][] = basename($fontfile);
 										if (isset($data['form']['callback']) && !empty($data['form']['callback']))
