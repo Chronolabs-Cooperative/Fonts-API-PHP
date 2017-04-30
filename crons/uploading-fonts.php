@@ -260,14 +260,14 @@ foreach($uploader[$ipid] as $time => $data) {
 									if ($count == 0)
 									{
 										if (!$GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `emails` (`id`, `emails`) VALUES('$ccid', '".$GLOBALS['FontsDB']->escape(json_encode($emailcc))."')"))
-											die("SQL Failed: $sql;");
+											echo("SQL Failed: $sql;");
 									}
 									$sql = "SELECT count(*) FROM `emails` WHERE `id` = '$bccid'";
 									list($count) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql));
 									if ($count == 0)
 									{
 										if (!$GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `emails` (`id`, `emails`) VALUES('$bccid', '".$GLOBALS['FontsDB']->escape(json_encode($emailcc))."')"))
-											die("SQL Failed: $sql;");
+											echo("SQL Failed: $sql;");
 									}
 									$queued[] = $fontfile;
 									$sql = "INSERT INTO `uploads` (`ip_id`, `available`, `key`, `scope`, `prefix`, `email`, `uploaded_file`, `uploaded_path`, `uploaded`, `referee_uri`, `callback`, `bytes`, `batch-size`, `datastore`, `cc`, `bcc`, `frequency`, `elapses`, `longitude`, `latitude`) VALUES ('$ipid','" . $available = mt_rand(7,13) . "','" . $GLOBALS['FontsDB']->escape(md5_file($copypath . DIRECTORY_SEPARATOR .  strtolower(basename($uploadfile)))) . "','" . $GLOBALS['FontsDB']->escape($scope) . "','" . $GLOBALS['FontsDB']->escape($prefix = $data['form']['prefix']) . "','" . $GLOBALS['FontsDB']->escape($email = $data['form']['email']) . "','" . $GLOBALS['FontsDB']->escape($filename = strtolower(basename($uploadfile))) . "','" . $GLOBALS['FontsDB']->escape($copypath) . "','" . time(). "','" . $GLOBALS['FontsDB']->escape($_SERVER['HTTP_REFERER']) . "','" . $GLOBALS['FontsDB']->escape($callback = $data['form']['callback']) . "'," . (filesize($uploadfile)==''?0:filesize($uploadfile)) . "," . $size . ",'" . $GLOBALS['FontsDB']->escape(json_encode(array('scope' => $data['form']['scope'], 'ipsec' => $locality = json_decode(getURIData("https://lookups.labs.coop/v1/country/".(in_array($ip = whitelistGetIP(true), array('127.0.0.1','10.1.1.1'))?'myself':$ip)."/json.api"), true), 'name' => $data['form']['name'], 'bizo' => $data['form']['bizo'], 'batch-size' => $size, 'font' => $fontdata))) . "','$ccid','$bccid','" . $GLOBALS['FontsDB']->escape($freq = mt_rand(2.76,6.75)*3600*24) . "','" . $GLOBALS['FontsDB']->escape($elapse = mt_rand(9,27)*3600*24) . "','". (!isset($_SESSION['locality']['location']["coordinates"]["longitude"])?"0.0001":$_SESSION['locality']['location']["coordinates"]["longitude"])."','". (!isset($_SESSION['locality']['location']["coordinates"]["latitude"])?"0.0001":$_SESSION['locality']['location']["coordinates"]["latitude"])."')";
