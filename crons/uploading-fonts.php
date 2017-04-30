@@ -304,6 +304,8 @@ foreach($uploader[$ipid] as $time => $data) {
 										unlink($uploadfile);
 										rmdir(dirname($uploadfile));
 									}
+									$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
+									$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 								} 
 							}
 						}
