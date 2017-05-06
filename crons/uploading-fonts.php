@@ -232,7 +232,16 @@ foreach($uploader[$ipid] as $time => $data) {
 								$fontdata['uploaded'] = microtime(true);
 								$fontdata['licence'] = API_LICENCE;
 								writeFontRepositoryHeader($uploadfile, API_LICENCE, $fontdata);
-								$fingerprint = md5_file($uploadfile);
+								$data = file($uploadfile);
+								$found = false;
+								foreach($data as $line => $value)
+									if (!strpos(" $value", 'currentfile eexec') && $found == false)
+										unset($data[$line]);									
+									elseif (strpos(" $value", 'currentfile eexec') && $found == false) {
+										unset($data[$line]);
+										$found = true;
+									}
+								$fingerprint = md5(implode("", $data));
 								$sql = "SELECT count(*) FROM `fonts_fingering` WHERE `fingerprint` LIKE '" . $fingerprint . "'";
 								list($fingers) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql));
 								if ($fingers==0)
@@ -251,14 +260,14 @@ foreach($uploader[$ipid] as $time => $data) {
 									if ($count == 0)
 									{
 										if (!$GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `emails` (`id`, `emails`) VALUES('$ccid', '".$GLOBALS['FontsDB']->escape(json_encode($emailcc))."')"))
-											die("SQL Failed: $sql;");
+											echo("SQL Failed: $sql;");
 									}
 									$sql = "SELECT count(*) FROM `emails` WHERE `id` = '$bccid'";
 									list($count) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql));
 									if ($count == 0)
 									{
 										if (!$GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `emails` (`id`, `emails`) VALUES('$bccid', '".$GLOBALS['FontsDB']->escape(json_encode($emailcc))."')"))
-											die("SQL Failed: $sql;");
+											echo("SQL Failed: $sql;");
 									}
 									$queued[] = $fontfile;
 									$sql = "INSERT INTO `uploads` (`ip_id`, `available`, `key`, `scope`, `prefix`, `email`, `uploaded_file`, `uploaded_path`, `uploaded`, `referee_uri`, `callback`, `bytes`, `batch-size`, `datastore`, `cc`, `bcc`, `frequency`, `elapses`, `longitude`, `latitude`) VALUES ('$ipid','" . $available = mt_rand(7,13) . "','" . $GLOBALS['FontsDB']->escape(md5_file($copypath . DIRECTORY_SEPARATOR .  strtolower(basename($uploadfile)))) . "','" . $GLOBALS['FontsDB']->escape($scope) . "','" . $GLOBALS['FontsDB']->escape($prefix = $data['form']['prefix']) . "','" . $GLOBALS['FontsDB']->escape($email = $data['form']['email']) . "','" . $GLOBALS['FontsDB']->escape($filename = strtolower(basename($uploadfile))) . "','" . $GLOBALS['FontsDB']->escape($copypath) . "','" . time(). "','" . $GLOBALS['FontsDB']->escape($_SERVER['HTTP_REFERER']) . "','" . $GLOBALS['FontsDB']->escape($callback = $data['form']['callback']) . "'," . (filesize($uploadfile)==''?0:filesize($uploadfile)) . "," . $size . ",'" . $GLOBALS['FontsDB']->escape(json_encode(array('scope' => $data['form']['scope'], 'ipsec' => $locality = json_decode(getURIData("https://lookups.labs.coop/v1/country/".(in_array($ip = whitelistGetIP(true), array('127.0.0.1','10.1.1.1'))?'myself':$ip)."/json.api"), true), 'name' => $data['form']['name'], 'bizo' => $data['form']['bizo'], 'batch-size' => $size, 'font' => $fontdata))) . "','$ccid','$bccid','" . $GLOBALS['FontsDB']->escape($freq = mt_rand(2.76,6.75)*3600*24) . "','" . $GLOBALS['FontsDB']->escape($elapse = mt_rand(9,27)*3600*24) . "','". (!isset($_SESSION['locality']['location']["coordinates"]["longitude"])?"0.0001":$_SESSION['locality']['location']["coordinates"]["longitude"])."','". (!isset($_SESSION['locality']['location']["coordinates"]["latitude"])?"0.0001":$_SESSION['locality']['location']["coordinates"]["latitude"])."')";
@@ -272,7 +281,8 @@ foreach($uploader[$ipid] as $time => $data) {
 										}
 										echo "\nCreated Upload Identity: ".$uploadid;
 										$sql = "INSERT INTO `fonts_fingering` (`type`, `upload_id`, `fingerprint`) VALUES ('" . $GLOBALS['FontsDB']->escape(API_BASE) . "','" . $GLOBALS['FontsDB']->escape($uploadid) . "','" . $GLOBALS['FontsDB']->escape($fingerprint) . "')";
-										$GLOBALS['FontsDB']->queryF($sql);
+										if (!$GLOBALS['FontsDB']->queryF($sql))
+											echo "SQL Failed: $sql;\n";
 										$success[] = basename($fontfile);
 										$data['success'][] = basename($fontfile);
 										if (isset($data['form']['callback']) && !empty($data['form']['callback']))
@@ -294,6 +304,8 @@ foreach($uploader[$ipid] as $time => $data) {
 										unlink($uploadfile);
 										rmdir(dirname($uploadfile));
 									}
+									$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
+									$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
 								} 
 							}
 						}

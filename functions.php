@@ -20,13 +20,35 @@
  */
 
 
-
 if (API_DEBUG==true) echo (basename(__FILE__) . "::"  . __LINE__ . "<br/>\n");
 require_once __DIR__.'/constants.php';
 if (API_DEBUG==true) echo (basename(__FILE__) . "::"  . __LINE__ . "<br/>\n");
 use FontLib\Font;
 require_once __DIR__.'/class/FontLib/Autoloader.php';
 if (API_DEBUG==true) echo (basename(__FILE__) . "::"  . __LINE__ . "<br/>\n");
+
+
+if (!function_exists("setCallBackURI")) {
+	/* 
+	 * set's a callback to be called in the database reference for the cronjob
+	 * 
+	 * @param string $uri
+	 * @param integer $timeout
+	 * @param integer $connectout
+	 * @param array $data
+	 * @param array $queries
+	 * 
+	 * @return boolean
+	 */
+	function setCallBackURI($uri = '', $timeout = 65, $connectout = 65, $data = array(), $queries = array())
+	{
+		list($when) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF("SELECT `when` from `callbacks` ORDER BY `when` DESC LIMIT 1"));
+		if ($when<time())
+			$when = $time();
+		$when = $when + mt_rand(3, 14);
+		return $GLOBALS['FontsDB']->queryF("INSERT INTO `callbacks` (`when`, `uri`, `timeout`, `connection`, `data`, `queries`) VALUES(\"$when\", \"$uri\", \"$timeout\", \"$connectout\", \"" . $GLOBALS['FontsDB']->escape(json_encode($data)) . "\",\"" . $GLOBALS['FontsDB']->escape(json_encode($queries)) . "\")");
+	}
+}
 
 if (!function_exists("setExecutionTimer")) {
         /**
@@ -462,29 +484,14 @@ if (!function_exists("MakePHPFont")) {
 				$file = substr($file, 0, ($size1 + $size2));
 			}
 			$basename = strtolower($basename);
-			if (function_exists('gzcompress')) {
-				$cmp = $path . DIRECTORY_SEPARATOR . $basename.'.z';
-				SaveToFile($cmp, gzcompress($file, 9), 'b');
-				$s .= '$file=\''.$cmp."';\n";
-				//print "Font file compressed (".$cmp.")\n";
-				if (!empty($cidtogidmap)) {
-					$cmp = $basename.'.ctg.z';
-					SaveToFile($cmp, gzcompress($cidtogidmap, 9), 'b');
-					//print "CIDToGIDMap created and compressed (".$cmp.")\n";
-					$s .= '$ctg=\''.$cmp."';\n";
-				}
-			} else {
-				$s .= '$file=\''.basename($fontfile)."';\n";
-				//print "Notice: font file could not be compressed (zlib extension not available)\n";
-				if (!empty($cidtogidmap)) {
-					$cmp = $path . DIRECTORY_SEPARATOR . $basename.'.ctg';
-					$f = fopen($cmp, 'wb');
-					fwrite($f, $cidtogidmap);
-					fclose($f);
-					//print "CIDToGIDMap created (".$cmp.")\n";
-					$s .= '$ctg=\''.$cmp."';\n";
-				}
-			}
+			$cmp = $path . DIRECTORY_SEPARATOR . $basename.'.z';
+			SaveToFile($cmp, gzcompress($file, 9), 'b');
+			$s .= '$file=\'' . API_URL . '/v2/font/' . $_GET['clause'] . '/z.api\';'."\n\n";
+			$s .= '/* To Execute on a local path download the *.php and the *.z; place in the same folder you can download the resource from:'."\n";
+			$s .= '   *.z: ' . API_URL . '/v2/font/' . $_GET['clause'] . '/z.api'."\n";
+			$s .= '   *.php: ' . API_URL . '/v2/font/' . $_GET['clause'] . '/php.api'."\n";
+			$s .= '   Uncomment line for local file access for embedded *.z font and comment out line above! */'."\n\n";			
+			$s .= '//$file=__DIR__ . DIRECTORY_SEPARATOR . \''.$basename.'.z\';'."\n";
 			if($type == 'Type1') {
 				$s .= '$size1='.$size1.";\n";
 				$s .= '$size2='.$size2.";\n";
@@ -997,29 +1004,6 @@ if (!function_exists("fontsUseragentSupportedArray")) {
 				$return[$puts[0]]=$puts[1];
 			}
 		return $return;
-	}
-}
-
-
-if (!function_exists("setCallBackURI")) {
-	/* 
-	 * set's a callback to be called in the database reference for the cronjob
-	 * 
-	 * @param string $uri
-	 * @param integer $timeout
-	 * @param integer $connectout
-	 * @param array $data
-	 * @param array $queries
-	 * 
-	 * @return boolean
-	 */
-	function setCallBackURI($uri = '', $timeout = 65, $connectout = 65, $data = array(), $queries = array())
-	{
-		list($when) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['trackerDB']->queryF("SELECT `when` from `callbacks` ORDER BY `when` DESC LIMIT 1"));
-		if ($when<time())
-			$when = $time();
-			$when = $when + mt_rand(3, 14);
-			return $GLOBALS['FontsDB']->queryF("INSERT INTO `callbacks` (`when`, `uri`, `timeout`, `connection`, `data`, `queries`) VALUES(\"$when\", \"$uri\", \"$timeout\", \"$connectout\", \"" . $GLOBALS['FontsDB']->escape(json_encode($data)) . "\",\"" . $GLOBALS['FontsDB']->escape(json_encode($queries)) . "\")");
 	}
 }
 
@@ -2775,33 +2759,53 @@ if (!function_exists("getFontRawData")) {
 								die("Failed to find convertable format in: *." . implode(", *.", $formats) . " for fonting in archive: " . basename($zip));
 						}
 
-						writeRawFile($fonteer = $currently . DIRECTORY_SEPARATOR . $basefile, getArchivedZIPFile($zip, $basefile, $row['font_id']));					
-						writeFontResourceHeader($fonteer, $eothd['licence'], $eothd);
-						$totalmaking = count(file(__DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"))-1;
-						$outt = array();exec("cd $currently", $outt, $return);
-						$covertscript = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"));
-						foreach($covertscript as $line => $value)
-							if (!strpos($value, $output) && substr($value,0,4)!='Open' && !in_array($output, array('z', 'php')))
-								unset($covertscript[$line]);
-							elseif(in_array($output, array('z', 'php') && substr($value,0,4)!='Open' && (!strpos($value, 'ttf')) && !strpos($value, 'afm')))
-								unset($covertscript[$line]);
-						writeRawFile($script = FONT_RESOURCES_CACHE.DIRECTORY_SEPARATOR.md5(microtime(true).$zip.$row['font_id']).".pe", implode("\n", $covertscript));
-						$outt = shell_exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", $script, basename($fonteer)));
-						unlink($script);
 						if (in_array($output, array('z', 'php')))
 						{
-							$parts = explode('.', basename($font));
+							writeRawFile($fonteer = $currently . DIRECTORY_SEPARATOR . $basefile, getArchivedZIPFile($zip, $basefile, $row['font_id']));					
+							writeFontResourceHeader($fonteer, $eothd['licence'], $eothd);
+							$totalmaking = count(file(__DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"))-1;
+							$outt = array();exec("cd $currently", $outt, $return);
+							$covertscript = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"));
+							foreach($covertscript as $line => $value)
+								if(substr($value,0,4)!='Open' && (!strpos($value, 'ttf') && !strpos($value, 'afm')))
+									unset($covertscript[$line]);
+							writeRawFile($script = FONT_RESOURCES_CACHE.DIRECTORY_SEPARATOR.md5(microtime(true).$zip.$row['font_id']).".pe", implode("\n", $covertscript));
+							$outt = shell_exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", $script, basename($fonteer)));
+							unlink($script);
+							$parts = explode('.', basename($basefile));
 							unset($parts[count($parts)-1]);
 							$fbase = implode(".", $parts);
 							if (file_exists($currently . DIRECTORY_SEPARATOR . $fbase . '.ttf') && file_exists($currently . DIRECTORY_SEPARATOR . $fbase . '.afm'))
 								MakePHPFont($currently . DIRECTORY_SEPARATOR . $fbase . '.ttf', $currently . DIRECTORY_SEPARATOR . $fbase . '.afm', $currently, true);
+							else
+								die("File Missing: $fbase.ttf & $fbase.afm");
+							$packing = getArchivingShellExec();
+							chdir($currently);
+							$cmda = str_replace("%folder", "./", str_replace("%pack", $cachefile, str_replace("%comment", $comment, (substr($packing['zip'],0,1)!="#"?$packing['zip']:substr($packing['zip'],1)))));
+							$outt = shell_exec($cmda);
+							if (!file_exists($cachefile))
+								die("File not found: $cachefile ~~ Failed: $cmda\n\n$outt");
+						} else {
+							writeRawFile($fonteer = $currently . DIRECTORY_SEPARATOR . $basefile, getArchivedZIPFile($zip, $basefile, $row['font_id']));					
+							writeFontResourceHeader($fonteer, $eothd['licence'], $eothd);
+							$totalmaking = count(file(__DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"))-1;
+							$outt = array();exec("cd $currently", $outt, $return);
+							$covertscript = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"));
+							foreach($covertscript as $line => $value)
+								if (!strpos($value, $output) && substr($value,0,4)!='Open' && !in_array($output, array('z', 'php')))
+									unset($covertscript[$line]);
+								elseif(in_array($output, array('z', 'php') && substr($value,0,4)!='Open' && (!strpos($value, 'ttf')) && !strpos($value, 'afm')))
+									unset($covertscript[$line]);
+							writeRawFile($script = FONT_RESOURCES_CACHE.DIRECTORY_SEPARATOR.md5(microtime(true).$zip.$row['font_id']).".pe", implode("\n", $covertscript));
+							$outt = shell_exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", $script, basename($fonteer)));
+							unlink($script);
+							$packing = getArchivingShellExec();
+							chdir($currently);
+							$cmda = str_replace("%folder", "./", str_replace("%pack", $cachefile, str_replace("%comment", $comment, (substr($packing['zip'],0,1)!="#"?$packing['zip']:substr($packing['zip'],1)))));
+							$outt = shell_exec($cmda);
+							if (!file_exists($cachefile))
+								die("File not found: $cachefile ~~ Failed: $cmda\n\n$outt");
 						}
-						$packing = getArchivingShellExec();
-						chdir($currently);
-						$cmda = str_replace("%folder", "./", str_replace("%pack", $cachefile, str_replace("%comment", $comment, (substr($packing['zip'],0,1)!="#"?$packing['zip']:substr($packing['zip'],1)))));
-						$outt = shell_exec($cmda);
-						if (!file_exists($cachefile))
-							die("File not found: $cachefile ~~ Failed: $cmda\n\n$outt");
 					}
 					$zip = $cachefile;
 				}

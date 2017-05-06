@@ -56,10 +56,11 @@
 	define('API_REPOSITORY', 'git,svn'); // = git or svn or git,svn
 	define('API_BASE', 'eot');
 	define('API_LICENCE', 'gpl3');
-	define("API_SHORTENING_URL", "http://2.labs.coop/"); // URL for your shortener API see: https://github.com/Chronolabs-Cooperative/Jump-API-PHP
+	$short = file("https://raw.githubusercontent.com/Chronolabs-Cooperative/Jump-API-PHP/master/services.txt");
+	define("API_SHORTENING_URL", "http://".str_replace("\n", "", trim($short[mt_rand(0, count($short)-1)]))."/"); // URL for your shortener API see: https://github.com/Chronolabs-Cooperative/Jump-API-PHP
 	define("API_SHORTENING_TYPE", "random"); // can be either random, domain, short, original
 	define("API_DROPLONGUPLOAD_BUFFER", false);
-	define("API_NETWORK_LOGISTICS", true);
+	define("API_NETWORK_LOGISTICS", false);
 	define("API_UPLOADS_RANDOMBATCH", false);
 	
 	// Email Default Definitions
@@ -79,10 +80,10 @@
 	 * 
 	 * @var string
 	 */
-	define('FONT_RESOURCES_UNPACKING', '/fonts/Unpacking');
-	define('FONT_RESOURCES_SORTING', '/fonts/Sorting');
-	define('FONT_RESOURCES_CONVERTING', '/fonts/Converting');
-	define('FONT_RESOURCES_RESOURCE', '/fonts/Fonting');
+	define('FONT_RESOURCES_UNPACKING', '/mnt/6c2b8804-6e70-4305-a356-bcf16c433701/fonts-api/Unpacking');
+	define('FONT_RESOURCES_SORTING', '/mnt/6c2b8804-6e70-4305-a356-bcf16c433701/fonts-api/Sorting');
+	define('FONT_RESOURCES_CONVERTING', '/mnt/6c2b8804-6e70-4305-a356-bcf16c433701/fonts-api/Converting');
+	define('FONT_RESOURCES_RESOURCE', '/mnt/6c2b8804-6e70-4305-a356-bcf16c433701/fonts-api/Repository');
 	define('FONT_RESOURCES_CACHE', '/tmp/Fonts-Cache');
 	define('FONT_RESOURCES_STORE', 'https://sourceforge.net/p/chronolabsapis/Fonting/HEAD/tree/%s?format=raw');
 	define('FONT_RESOURCES_PEERS', 'https://sourceforge.net/p/chronolabsapis/Fonting/HEAD/tree/peers.json?format=raw');
@@ -96,7 +97,7 @@
 	/******* DO NOT CHANGE THIS VARIABLE ****
 	 * @var string
 	 */
-	define('API_ROOT_NODE', 'http://fonts.labs.coop');
+	define('API_ROOT_NODE', 'http://' . $_SERVER['HTTP_HOST']);
 	
 	
 	/**
