@@ -19,14 +19,16 @@
  * @description		Screening API Service REST
  */
 
+$seconds = floor(mt_rand(1, floor(60 * 4.75)));
+set_time_limit($seconds ^ 4);
+sleep($seconds);
 
 ini_set('display_errors', true);
 ini_set('log_errors', true);
 error_reporting(E_ERROR);
 define('MAXIMUM_QUERIES', 25);
 ini_set('memory_limit', '315M');
-include_once dirname(dirname(__FILE__)).'/functions.php';
-include_once dirname(dirname(__FILE__)).'/class/fontages.php';
+include_once dirname(__DIR__).'/constants.php';
 set_time_limit(7200);
 
 $ids = json_decode(getURIData(str_replace(array("%s/", "%s--", "?format=raw"), "", FONT_RESOURCES_REPOMAP), 120, 120, array()), true);;
@@ -34,7 +36,7 @@ $ids = json_decode(getURIData(str_replace(array("%s/", "%s--", "?format=raw"), "
 foreach(getCompleteZipListAsArray(FONT_RESOURCES_RESOURCE) as $md5 => $file)
 {
 	sleep(mt_rand(6,13));
-	list($archiving) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql = "SELECT count(*) from `fonts_archiving` WHERE `filename` = '" . basename($file) . "' AND `path` = '".mysql_real_escape_string(str_replace(FONT_RESOURCES_RESOURCE, "", dirname($file)))."'"));
+	list($archiving) = $GLOBALS['APIDB']->fetchRow($GLOBALS['APIDB']->queryF($sql = "SELECT count(*) from `" . $GLOBALS['APIDB']->prefix('fonts_archiving') . "` WHERE `filename` = '" . basename($file) . "' AND `path` = '".mysql_real_escape_string(str_replace(FONT_RESOURCES_RESOURCE, "", dirname($file)))."'"));
 	if ($archiving != 0)
 	{
 		$path = str_replace(FONT_RESOURCES_RESOURCE, '', dirname($file));

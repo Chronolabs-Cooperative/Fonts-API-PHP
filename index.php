@@ -25,16 +25,58 @@
 	require_once __DIR__ . DIRECTORY_SEPARATOR . 'functions.php';
 	setExecutionTimer('header');
 	require_once __DIR__ . DIRECTORY_SEPARATOR . 'header.php';
+	
+	
+	/**
+	 * URI Path Finding of API URL Source Locality
+	 * @var unknown_type
+	 */
+	$odds = $inner = array();
+	foreach($_GET as $key => $values) {
+	    if (!isset($inner[$key])) {
+	        $inner[$key] = $values;
+	    } elseif (!in_array(!is_array($values) ? $values : md5(json_encode($values, true)), array_keys($odds[$key]))) {
+	        if (is_array($values)) {
+	            $odds[$key][md5(json_encode($inner[$key] = $values, true))] = $values;
+	        } else {
+	            $odds[$key][$inner[$key] = $values] = "$values--$key";
+	        }
+	    }
+	}
+	
+	foreach($_POST as $key => $values) {
+	    if (!isset($inner[$key])) {
+	        $inner[$key] = $values;
+	    } elseif (!in_array(!is_array($values) ? $values : md5(json_encode($values, true)), array_keys($odds[$key]))) {
+	        if (is_array($values)) {
+	            $odds[$key][md5(json_encode($inner[$key] = $values, true))] = $values;
+	        } else {
+	            $odds[$key][$inner[$key] = $values] = "$values--$key";
+	        }
+	    }
+	}
+	
+	foreach(parse_url('http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'].(strpos($_SERVER['REQUEST_URI'], '?')?'&':'?').$_SERVER['QUERY_STRING'], PHP_URL_QUERY) as $key => $values) {
+	    if (!isset($inner[$key])) {
+	        $inner[$key] = $values;
+	    } elseif (!in_array(!is_array($values) ? $values : md5(json_encode($values, true)), array_keys($odds[$key]))) {
+	        if (is_array($values)) {
+	            $odds[$key][md5(json_encode($inner[$key] = $values, true))] = $values;
+	        } else {
+	            $odds[$key][$inner[$key] = $values] = "$values--$key";
+	        }
+	    }
+	}
 	$GLOBAL['apifuncs'] = array();	
 	$help=true;
-	if (isset($_GET['output']) || !empty($_GET['output'])) {
-		$version = isset($_GET['version'])?(string)$_GET['version']:'v2';
-		$output = isset($_GET['output'])?(string)$_GET['output']:'';
-		$name = isset($_GET['name'])?(string)$_GET['name']:'';
-		$clause = isset($_GET['clause'])?(string)$_GET['clause']:'';
+	if (isset($inner['output']) || !empty($inner['output'])) {
+		$version = isset($inner['version'])?(string)$inner['version']:'v2';
+		$output = isset($inner['output'])?(string)$inner['output']:'';
+		$name = isset($inner['name'])?(string)$inner['name']:'';
+		$clause = isset($inner['clause'])?(string)$inner['clause']:'';
 		$callback = isset($_REQUEST['callback'])?(string)$_REQUEST['callback']:'';
-		$mode = isset($_GET['mode'])?(string)$_GET['mode']:'';
-		$state = isset($_GET['state'])?(string)$_GET['state']:'';
+		$mode = isset($inner['mode'])?(string)$inner['mode']:'';
+		$state = isset($inner['state'])?(string)$inner['state']:'';
 		switch($output)
 		{
 			default:
@@ -113,7 +155,7 @@
 				}
 				break;	
 			case "glyph":
-				if (in_array($mode, array('font')) && !empty($clause) && !empty($_GET['char']))
+				if (in_array($mode, array('font')) && !empty($clause) && !empty($inner['char']))
 				{
 					$help=false;
 				}
@@ -216,7 +258,7 @@
 					http_response_code(200);
 				else 
 					http_response_code(501);
-			$data = getGlyphPreview($mode, $clause, $state, $name, $output, $_GET['char'], $version);
+			$data = getGlyphPreview($mode, $clause, $state, $name, $output, $inner['char'], $version);
 			break;
 		case "forms":
 			if (function_exists('http_response_code'))

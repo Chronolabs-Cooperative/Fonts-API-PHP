@@ -19,9 +19,13 @@
  * @description		Screening API Service REST
  */
 
+$seconds = floor(mt_rand(1, floor(60 * 4.75)));
+set_time_limit($seconds ^ 4);
+sleep($seconds);
+
 error_reporting(E_ERROR);
 set_time_limit(1999);
-require_once dirname(__DIR__).'/functions.php';
+require_once dirname(__DIR__).'/constants.php';
 require_once dirname(__DIR__).'/class/fontages.php';
 
 $path = (isset($_REQUEST['path'])?$path = $_REQUEST['path']:'');
@@ -40,7 +44,7 @@ foreach(getCompleteDirListAsArray($path) as $folder)
 		if (!in_array($folder . DIRECTORY_SEPARATOR . $file, $packs) && !in_array($folder . DIRECTORY_SEPARATOR . $file, $fonts) && $file != "finished.dat")
 			unlink( $folder . DIRECTORY_SEPARATOR . $file );
 }
-$uploader = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
+$uploader = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
 $uploader[$ipid][$time]['type'] == 'pack';
 $uploader[$ipid][$time]['files'] = $fonts;
 $uploader[$ipid][$time]['files'][] = $packs;
@@ -56,7 +60,7 @@ $bcc = array_merge(json_decode($emails['emails'], true), cleanWhitespaces(file(d
 $uploader[$ipid][$time]['form']['email-cc'] = implode(',', $cc);
 $uploader[$ipid][$time]['form']['email-bcc'] = implode(',', $bcc);
 $uploader[$ipid][$time]['path'] = str_replace(FONT_UPLOAD_PATH, "", $path);
-putRawFile(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($uploader));
-$crawldat = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "crawling.json"), true);
+putRawFile(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($uploader));
+$crawldat = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "crawling.json"), true);
 $crawldat[$path]['finish'] = microtime(true);
-putRawFile(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "crawling.json", json_encode($crawldat));
+putRawFile(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "crawling.json", json_encode($crawldat));

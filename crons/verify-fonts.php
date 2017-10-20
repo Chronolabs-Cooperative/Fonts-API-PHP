@@ -19,6 +19,9 @@
  * @description		Screening API Service REST
  */
 
+$seconds = floor(mt_rand(1, floor(60 * 4.75)));
+set_time_limit($seconds ^ 4);
+sleep($seconds);
 
 use FontLib\Font;
 require_once dirname(__DIR__).'/class/FontLib/Autoloader.php';
@@ -29,18 +32,17 @@ ini_set('log_errors', true);
 error_reporting(E_ERROR);
 define('MAXIMUM_QUERIES', 25);
 ini_set('memory_limit', '315M');
-include_once dirname(dirname(__FILE__)).'/functions.php';
-include_once dirname(dirname(__FILE__)).'/class/fontages.php';
+include_once dirname(__DIR__).'/constants.php';
 set_time_limit(7200);
 
 // Searches For Unrecorded Fonts
 foreach(getCompleteZipListAsArray(FONT_RESOURCES_RESOURCE) as $md5 => $file)
 {
 	$json = json_decode(getArchivedZIPFile($file, 'font-resource.json'), true);
-	$archive = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql = "SELECT * from `fonts_archiving` WHERE `font_id` = '" . $json["FontIdentity"]. "'"));
+	$archive = $GLOBALS['APIDB']->fetchArray($GLOBALS['APIDB']->queryF($sql = "SELECT * from `" . $GLOBALS['APIDB']->prefix('fonts_archiving') . "` WHERE `font_id` = '" . $json["FontIdentity"]. "'"));
 	if ($archive['filename']!=basename($file) || $archive['path']!=str_replace(FONT_RESOURCES_RESOURCE, '', dirname($file)))
 	{
-		if ($GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `filename` = '".mysql_real_escape_string($archive['filename'])."', `path` = '".mysql_real_escape_string(str_replace(FONT_RESOURCES_RESOURCE, '', dirname($file)))."' WHERE `font_id` = '" . $json["FontIdentity"]. "'"))
+		if ($GLOBALS['APIDB']->queryF($sql = "UPDATE `" . $GLOBALS['APIDB']->prefix('fonts_archiving') . "` SET `filename` = '".mysql_real_escape_string($archive['filename'])."', `path` = '".mysql_real_escape_string(str_replace(FONT_RESOURCES_RESOURCE, '', dirname($file)))."' WHERE `font_id` = '" . $json["FontIdentity"]. "'"))
 			echo "\nPath and Filename adjusted for: " . $json["FontIdentity"];
 		
 	} else 
@@ -50,7 +52,7 @@ foreach(getCompleteZipListAsArray(FONT_RESOURCES_RESOURCE) as $md5 => $file)
 		{
 			if (!is_array($files))
 			{
-				list($count) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql = "SELECT count(*) from `fonts_files` WHERE `font_id` = '" . $json["FontIdentity"]. "' AND  `archive_id` = '" . $archive["id"]. "' AND `path` = '/' AND `filename` = '$files'"));
+				list($count) = $GLOBALS['APIDB']->fetchRow($GLOBALS['APIDB']->queryF($sql = "SELECT count(*) from `" . $GLOBALS['APIDB']->prefix('fonts_files') . "` WHERE `font_id` = '" . $json["FontIdentity"]. "' AND  `archive_id` = '" . $archive["id"]. "' AND `path` = '/' AND `filename` = '$files'"));
 				if ($count==0)
 				{
 					$exts = explode('.', $files);
@@ -59,14 +61,14 @@ foreach(getCompleteZipListAsArray(FONT_RESOURCES_RESOURCE) as $md5 => $file)
 					foreach(array('json', 'diz', 'pfa', 'pfb', 'pt3', 't42', 'sfd', 'ttf', 'bdf', 'otf', 'otb', 'cff', 'cef', 'gai', 'woff', 'svg', 'ufo', 'pf3', 'ttc', 'gsf', 'cid', 'bin', 'hqx', 'dfont', 'mf', 'ik', 'fon', 'fnt', 'pcf', 'pmf', 'pdb', 'eot', 'afm', 'php', 'z', 'png', 'gif', 'jpg', 'data', 'css', 'other') as $fileext)
 						if (strpos($files, ".$filetype")>0)
 							$type = $filetype;
-					if ($GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `fonts_files` (`font_id`, `archive_id`, `type`, `extension`, `filename`, `path`, `bytes`, `hits`, `created`) VALUES('" . $json["FontIdentity"]. "', '" . $archive["id"]. "','$type','$ext','$files','/','" .strlen(getArchivedZIPFile($file, $files)) . "',0,unix_timestamp())"))
+					if ($GLOBALS['APIDB']->queryF($sql = "INSERT INTO `" . $GLOBALS['APIDB']->prefix('fonts_files') . "` (`font_id`, `archive_id`, `type`, `extension`, `filename`, `path`, `bytes`, `hits`, `created`) VALUES('" . $json["FontIdentity"]. "', '" . $archive["id"]. "','$type','$ext','$files','/','" .strlen(getArchivedZIPFile($file, $files)) . "',0,unix_timestamp())"))
 							echo "\nFile Missing from Database added: /$files for $file";
 				}
 			} elseif (is_array($files))
 			{
 				foreach($files as $ky => $filz)
 				{
-					list($count) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql = "SELECT count(*) from `fonts_files` WHERE `font_id` = '" . $json["FontIdentity"]. "' AND  `archive_id` = '" . $archive["id"]. "' AND `path` = '$path' AND `filename` = '$filz'"));
+					list($count) = $GLOBALS['APIDB']->fetchRow($GLOBALS['APIDB']->queryF($sql = "SELECT count(*) from `" . $GLOBALS['APIDB']->prefix('fonts_files') . "` WHERE `font_id` = '" . $json["FontIdentity"]. "' AND  `archive_id` = '" . $archive["id"]. "' AND `path` = '$path' AND `filename` = '$filz'"));
 					if ($count==0)
 					{
 						$exts = explode('.', $filz);
@@ -75,7 +77,7 @@ foreach(getCompleteZipListAsArray(FONT_RESOURCES_RESOURCE) as $md5 => $file)
 						foreach(array('json', 'diz', 'pfa', 'pfb', 'pt3', 't42', 'sfd', 'ttf', 'bdf', 'otf', 'otb', 'cff', 'cef', 'gai', 'woff', 'svg', 'ufo', 'pf3', 'ttc', 'gsf', 'cid', 'bin', 'hqx', 'dfont', 'mf', 'ik', 'fon', 'fnt', 'pcf', 'pmf', 'pdb', 'eot', 'afm', 'php', 'z', 'png', 'gif', 'jpg', 'data', 'css', 'other') as $fileext)
 							if (strpos($filz, ".$filetype")>0)
 								$type = $filetype;
-						if ($GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `fonts_files` (`font_id`, `archive_id`, `type`, `extension`, `filename`, `path`, `bytes`, `hits`, `created`) VALUES('" . $json["FontIdentity"]. "', '" . $archive["id"]. "','$type','$ext','$filz','$path','" .strlen(getArchivedZIPFile($file, $filz)) . "',0,unix_timestamp())"))
+						if ($GLOBALS['APIDB']->queryF($sql = "INSERT INTO `" . $GLOBALS['APIDB']->prefix('fonts_files') . "` (`font_id`, `archive_id`, `type`, `extension`, `filename`, `path`, `bytes`, `hits`, `created`) VALUES('" . $json["FontIdentity"]. "', '" . $archive["id"]. "','$type','$ext','$filz','$path','" .strlen(getArchivedZIPFile($file, $filz)) . "',0,unix_timestamp())"))
 							echo "\nFile Missing from Database added: $path/$filz for $file";
 					}	
 				}
@@ -83,10 +85,10 @@ foreach(getCompleteZipListAsArray(FONT_RESOURCES_RESOURCE) as $md5 => $file)
 		}
 }
 // Does 99 Fonts at random from the fonts list
-$result = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `fonts` ORDER BY RAND() LIMIT 99");
-while($font = $GLOBALS['FontsDB']->fetchArray($result))
+$result = $GLOBALS['APIDB']->queryF($sql = "SELECT * from `" . $GLOBALS['APIDB']->prefix('fonts') . "` ORDER BY RAND() LIMIT 99");
+while($font = $GLOBALS['APIDB']->fetchArray($result))
 {
-	$upload = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql = "SELECT * from `uploads` WHERE `font_id` = '" . $font['id'] . "'"));
+	$upload = $GLOBALS['APIDB']->fetchArray($GLOBALS['APIDB']->queryF($sql = "SELECT * from `" . $GLOBALS['APIDB']->prefix('uploads') . "` WHERE `font_id` = '" . $font['id'] . "'"));
 	$data = json_decode($upload['datastore'], true);
 	echo "\n\n\nProcessing Font: " . $data['FontName'] . "\n\n";
 	$reserves = getReserves($reserves["fontname"]);
@@ -179,37 +181,37 @@ while($font = $GLOBALS['FontsDB']->fetchArray($result))
 	$names[$reserves["fontname"]]['region'] = mysql_real_escape_string($data['ipsec']['location']['region']);
 	$names[$reserves["fontname"]]['city'] = mysql_real_escape_string($data['ipsec']['location']['city']);
 		
-	list($naming) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql = "SELECT count(*) from `fonts_names` WHERE `font_id` = '" . $font['id'] . "'"));
+	list($naming) = $GLOBALS['APIDB']->fetchRow($GLOBALS['APIDB']->queryF($sql = "SELECT count(*) from `" . $GLOBALS['APIDB']->prefix('fonts_names') . "` WHERE `font_id` = '" . $font['id'] . "'"));
 	if ($naming == 0)
 	{
 		foreach($names as $key => $values)
 		{
-			if (!$GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `fonts_names` (`" . implode('`, `', array_keys($values)) . "`) VALUES('" . implode("', '", $values) . "')"))
+			if (!$GLOBALS['APIDB']->queryF($sql = "INSERT INTO `" . $GLOBALS['APIDB']->prefix('fonts_names') . "` (`" . implode('`, `', array_keys($values)) . "`) VALUES('" . implode("', '", $values) . "')"))
 				die("SQL Failed: $sql;");
 		}
 	}  
 	
-	list($noding) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql = "SELECT count(*) from `nodes_linking` WHERE `font_id` = '" . $font['id'] . "'"));
+	list($noding) = $GLOBALS['APIDB']->fetchRow($GLOBALS['APIDB']->queryF($sql = "SELECT count(*) from `" . $GLOBALS['APIDB']->prefix('nodes_linking') . "` WHERE `font_id` = '" . $font['id'] . "'"));
 	if ($noding == 0)
 	{
 		foreach($nodes as $node => $values)
 		{
-			if ($row = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF("SELECT * from `nodes` WHERE `node` = '".$values['node']."' AND `type` = '".$values['type']."'"))) {
+			if ($row = $GLOBALS['APIDB']->fetchArray($GLOBALS['APIDB']->queryF("SELECT * from `" . $GLOBALS['APIDB']->prefix('nodes') . "` WHERE `node` = '".$values['node']."' AND `type` = '".$values['type']."'"))) {
 				$nodes[$node]['node_id'] = $row['id'];
-				$GLOBALS['FontsDB']->queryF("UPDATE `nodes` SET `usage` = `usage` + '" . $values['usage'] . "' WHERE `id` = '".$row['id']."'");
+				$GLOBALS['APIDB']->queryF("UPDATE `" . $GLOBALS['APIDB']->prefix('nodes') . "` SET `usage` = `usage` + '" . $values['usage'] . "' WHERE `id` = '".$row['id']."'");
 			} else {
-				$GLOBALS['FontsDB']->queryF("INSERT INTO `nodes` (`" . implode('`, `', array_keys($values)) . "`) VALUES('" . implode("', '", $values) . "')");
-				$nodes[$node]['node_id'] = $GLOBALS['FontsDB']->getInsertId();
+				$GLOBALS['APIDB']->queryF("INSERT INTO `" . $GLOBALS['APIDB']->prefix('nodes') . "` (`" . implode('`, `', array_keys($values)) . "`) VALUES('" . implode("', '", $values) . "')");
+				$nodes[$node]['node_id'] = $GLOBALS['APIDB']->getInsertId();
 			}
 		}
 		foreach($nodes as $type => $values)
 		{
-			$GLOBALS['FontsDB']->queryF("INSERT INTO `nodes_linking` (`font_id`, `node_id`) VALUES ('".$font['id']."', '".$values['node_id']."')");
+			$GLOBALS['APIDB']->queryF("INSERT INTO `" . $GLOBALS['APIDB']->prefix('nodes_linking') . "` (`font_id`, `node_id`) VALUES ('".$font['id']."', '".$values['node_id']."')");
 		}
-		$GLOBALS['FontsDB']->queryF("UPDATE `fonts` SET `nodes` = '" . count($nodes) ."' WHERE `id` = '" . $font['id'] . "'");
+		$GLOBALS['APIDB']->queryF("UPDATE `" . $GLOBALS['APIDB']->prefix('fonts') . "` SET `nodes` = '" . count($nodes) ."' WHERE `id` = '" . $font['id'] . "'");
 	}
 	
-	list($archiving) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql = "SELECT count(*) from `fonts_archiving` WHERE `font_id` = '" . $font['id'] . "'"));
+	list($archiving) = $GLOBALS['APIDB']->fetchRow($GLOBALS['APIDB']->queryF($sql = "SELECT count(*) from `" . $GLOBALS['APIDB']->prefix('fonts_archiving') . "` WHERE `font_id` = '" . $font['id'] . "'"));
 	if ($archiving == 0)
 	{
 		foreach(getCompleteZipListAsArray(FONT_RESOURCES_RESOURCE) as $md5 => $file)
@@ -218,21 +220,21 @@ while($font = $GLOBALS['FontsDB']->fetchArray($result))
 			$json = json_decode(getArchivedZIPFile($file, 'font-resource.json'), true);
 			if ($json['FontIdentity'] == $font['id'])
 			{
-				if (!$GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `fonts_archiving` (`font_id`, `filename`, `path`, `repository`, `files`, `bytes`, `fingerprint`, `packing`) VALUES(\"" . mysql_real_escape_string($font['id']) . "\",\"" . mysql_real_escape_string(basename($file)) . "\",\"" . mysql_real_escape_string(str_replace(FONT_RESOURCES_RESOURCE, "", dirname($file)))  . "\",\"" . mysql_real_escape_string(FONT_RESOURCES_STORE) . "\",\"" . mysql_real_escape_string(count($files)) . "\",\"" . mysql_real_escape_string(filesize($file)) . "\",\"" . mysql_real_escape_string(md5_file($file)). "\",\"zip\")"))
+				if (!$GLOBALS['APIDB']->queryF($sql = "INSERT INTO `" . $GLOBALS['APIDB']->prefix('fonts_archiving') . "` (`font_id`, `filename`, `path`, `repository`, `files`, `bytes`, `fingerprint`, `packing`) VALUES(\"" . mysql_real_escape_string($font['id']) . "\",\"" . mysql_real_escape_string(basename($file)) . "\",\"" . mysql_real_escape_string(str_replace(FONT_RESOURCES_RESOURCE, "", dirname($file)))  . "\",\"" . mysql_real_escape_string(FONT_RESOURCES_STORE) . "\",\"" . mysql_real_escape_string(count($files)) . "\",\"" . mysql_real_escape_string(filesize($file)) . "\",\"" . mysql_real_escape_string(md5_file($file)). "\",\"zip\")"))
 					die("SQL Failed: $sql");
 				continue;
 			}
 		}
 	} else {
 		$bytes = 0;
-		$archive = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql = "SELECT * from `fonts_archiving` WHERE `font_id` = '" . $font['id'] . "'"));
+		$archive = $GLOBALS['APIDB']->fetchArray($GLOBALS['APIDB']->queryF($sql = "SELECT * from `" . $GLOBALS['APIDB']->prefix('fonts_archiving') . "` WHERE `font_id` = '" . $font['id'] . "'"));
 		if (file_exists(FONT_RESOURCES_RESOURCE . $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']))
 		{
 			foreach(getArchivedZIPContentsArray(FONT_RESOURCES_RESOURCE . $archive['path'] . DIRECTORY_SEPARATOR . $archive['filename']) as $md5 => $values)
 				$bytes = $bytes + $values['bytes'];
 			if ($font['bytes']!=$bytes)
 			{
-				if (!$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts` SET `bytes` = \"" . mysql_real_escape_string($bytes) . "\" WHERE `id` = '" . $font['id'] . "'"))
+				if (!$GLOBALS['APIDB']->queryF($sql = "UPDATE `" . $GLOBALS['APIDB']->prefix('fonts') . "` SET `bytes` = \"" . mysql_real_escape_string($bytes) . "\" WHERE `id` = '" . $font['id'] . "'"))
 					die("SQL Failed: $sql");
 			}
 		}

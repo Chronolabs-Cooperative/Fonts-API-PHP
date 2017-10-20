@@ -19,17 +19,19 @@
  * @description		Screening API Service REST
  */
 
+$seconds = floor(mt_rand(1, floor(60 * 4.75)));
+set_time_limit($seconds ^ 4);
+sleep($seconds);
 
 ini_set('display_errors', true);
 ini_set('log_errors', true);
 error_reporting(E_ERROR);
 define('MAXIMUM_QUERIES', 25);
 ini_set('memory_limit', '315M');
-include_once dirname(dirname(__FILE__)).'/functions.php';
-include_once dirname(dirname(__FILE__)).'/class/fontages.php';
+include_once dirname(__DIR__).'/constants.php';
 require_once dirname(__DIR__).'/class/fontsmailer.php';
 set_time_limit(7200*99*25);
-$uploader = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
+$uploader = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
 $folders = array();
 foreach(getCompleteDirListAsArray(constant("FONT_RESOURCES_UNPACKING")) as $path => $dir)
 {
@@ -60,7 +62,7 @@ foreach($uploader as $ipid => $values)
 	if (empty($values))
 		unset($uploader[$ipid]);
 }
-file_put_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($uploader));
+file_put_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($uploader));
 
 exit(0);
 

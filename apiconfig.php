@@ -20,4 +20,33 @@
  * @link			http://cipher.labs.coop
  */
 
+
+if (!is_file(__DIR__ . DIRECTORY_SEPARATOR . 'mainfile.php') || !is_file(__DIR__ . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'license.php'))
+{
+    header('Location: ' . "./install");
+    exit(0);
+}
+
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'mainfile.php';
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'functions.php';
+
+
+/**
+ * Opens Access Origin Via networking Route NPN
+ */
+header('Access-Control-Allow-Origin: *');
+header('Origin: *');
+
+/**
+ * Turns of GZ Lib Compression for Document Incompatibility
+ */
+ini_set("zlib.output_compression", 'Off');
+ini_set("zlib.output_compression_level", -1);
+
+/**
+ *
+ * @var constants
+ */
+define('API_CACHE_SECONDS', 93);
+
 ?>

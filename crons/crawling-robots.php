@@ -19,17 +19,20 @@
  * @description		Screening API Service REST
  */
 
+$seconds = floor(mt_rand(1, floor(60 * 4.75)));
+set_time_limit($seconds ^ 4);
+sleep($seconds);
+
 error_reporting(E_ERROR);
 set_time_limit(1999);
-require_once dirname(__DIR__).'/functions.php';
-require_once dirname(__DIR__).'/class/fontages.php';
+require_once dirname(__DIR__).'/constants.php';
 $filters = array();
-$metas = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'crawlers-metas-files.diz'));
-$filters['%packs'] = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'packs-converted.diz'));
-$filters['%fonts'] = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'font-converted.diz'));
+$metas = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . 'crawlers-metas-files.diz'));
+$filters['%packs'] = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . 'packs-converted.diz'));
+$filters['%fonts'] = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . 'font-converted.diz'));
 $scripting = $scripts = array();
-$urls = cleanWhitespaces(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'font-crawls-urls.diz'));
-$keywords = cleanWhitespaces(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'font-crawls-keywords.diz'));
+$urls = cleanWhitespaces(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . 'font-crawls-urls.diz'));
+$keywords = cleanWhitespaces(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . 'font-crawls-keywords.diz'));
 shuffle($keywords);
 shuffle($keywords);
 foreach($keywords as $keyword)
@@ -107,7 +110,7 @@ $hops = ceil(count($scripts) / API_CRAWLERS_ROBOTS);
 $path = array();
 $robots=0;
 $step=0;
-$crawldat = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "crawling.json"), true);
+$crawldat = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "crawling.json"), true);
 foreach($scripts as $exec)
 {
 	if ($step>=$hops)
@@ -139,7 +142,7 @@ foreach($scripting as $robot => $script)
 {
 	putRawFile(__DIR__ . DIRECTORY_SEPARATOR . "crawling-bot--" . str_repeat("0", (strlen((string)API_CRAWLERS_ROBOTS)+1)-strlen((string)$robot)) ."$robot.sh", implode("\n", $script));
 }
-putRawFile(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "crawling.json", json_encode($crawldat));
+putRawFile(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "crawling.json", json_encode($crawldat));
 
 
 

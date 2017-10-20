@@ -63,19 +63,6 @@
 	if (API_DEBUG==true) echo (basename(__FILE__) . "::"  . __LINE__ . "<br/>\n");
 	global $domain, $protocol, $business, $entity, $contact, $referee, $peerings, $source, $ipid, $fontnames;
 	$fontnames = array();
-	if (API_DEBUG==true) echo (basename(__FILE__) . "::"  . __LINE__ . "<br/>\n");
-	define('FONTS_CACHE', DIRECTORY_SEPARATOR . 'tmp' . DIRECTORY_SEPARATOR . 'fonts' . DIRECTORY_SEPARATOR . 'cache');
-	if (!is_dir(FONTS_CACHE))
-		mkdirSecure(FONTS_CACHE, 0777, true);
-	
-	if (API_DEBUG==true) echo (basename(__FILE__) . "::"  . __LINE__ . "<br/>\n");
-	
-	/**
-	 * URI Path Finding of API URL Source Locality
-	 * @var unknown_type
-	 */
-	$pu = parse_url($_SERVER['REQUEST_URI']);
-	$source = (isset($_SERVER['HTTPS'])?'https://':'http://').strtolower($_SERVER['HTTP_HOST']);
 	
 	if (API_DEBUG==true) echo (basename(__FILE__) . "::"  . __LINE__ . "<br/>\n");
 	if (defined("MAXIMUM_QUERIES")) {

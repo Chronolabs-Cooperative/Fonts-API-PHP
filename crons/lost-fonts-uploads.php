@@ -19,13 +19,16 @@
  * @description		Screening API Service REST
  */
 
+$seconds = floor(mt_rand(1, floor(60 * 4.75)));
+set_time_limit($seconds ^ 4);
+sleep($seconds);
+
 use FontLib\Font;
 require_once dirname(__DIR__).'/class/FontLib/Autoloader.php';
 
 error_reporting(E_ERROR);
 set_time_limit(1999);
-require_once dirname(__DIR__).'/functions.php';
-require_once dirname(__DIR__).'/class/fontages.php';
+require_once dirname(__DIR__).'/constants.php';
 require_once dirname(__DIR__).'/class/fontsmailer.php';
 $basefolders = getDirListAsArray(FONT_RESOURCES_UNPACKING);
 mt_srand(mt_rand(-microtime(true), microtime(true)));
@@ -110,9 +113,9 @@ foreach($basefolders as $dir)
 					if ($found == true && $data['time'] < time() - (0.441 * 3600) && !empty($data))
 					{
 						$data['mode'] = 'culling';
-						$uploader = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
+						$uploader = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
 						$uploader[$GLOBALS['peerid']][time()] = $data;
-						file_put_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($uploader));
+						file_put_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($uploader));
 						echo ("\nReimported into Que: $jfile\n\n");
 						if (unlink($jfile))
 							echo (" (deleted)\n\n");			
@@ -136,7 +139,7 @@ foreach($basefolders as $dir)
 						if (filesize($packfile)>501)
 						{
 							$mailer = new FontsMailer(API_EMAIL_ADDY, API_EMAIL_FROM);
-							if (file_exists($file = dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "SMTPAuth.diz"))
+							if (file_exists($file = dirname(__DIR__) . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "SMTPAuth.diz"))
 								$smtpauths = explode("\n", str_replace(array("\r\n", "\n\n", "\n\r"), "\n", file_get_contents($file)));
 							if (count($smtpauths)>=1)
 								$auth = explode("||", $smtpauths[mt_rand(0, count($smtpauths)-1)]);

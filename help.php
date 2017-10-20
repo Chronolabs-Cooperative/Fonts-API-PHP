@@ -40,65 +40,72 @@
 		$keys = array_keys($data['UnicodeCharMap']);
 		$glyph = $keys[mt_rand(0, count($keys)-1)];
 	}
-	global $domain, $protocol, $business, $entity, $contact, $referee, $peerings, $source;
 
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
+<meta property="og:title" content="<?php echo API_VERSION; ?>"/>
+<meta property="og:type" content="api<?php echo API_TYPE; ?>"/>
+<meta property="og:image" content="<?php echo API_URL; ?>/assets/images/logo_500x500.png"/>
+<meta property="og:url" content="<?php echo (isset($_SERVER["HTTPS"])?"https://":"http://").$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]; ?>" />
+<meta property="og:site_name" content="<?php echo API_VERSION; ?> - <?php echo API_LICENSE_COMPANY; ?>"/>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="rating" content="general" />
+<meta http-equiv="author" content="wishcraft@users.sourceforge.net" />
+<meta http-equiv="copyright" content="<?php echo API_LICENSE_COMPANY; ?> &copy; <?php echo date("Y"); ?>" />
+<meta http-equiv="generator" content="Chronolabs Cooperative (<?php echo $place['iso3']; ?>)" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title><?php echo API_VERSION; ?> || <?php echo API_LICENSE_COMPANY; ?></title>
+<!-- AddThis Smart Layers BEGIN -->
+<!-- Go to http://www.addthis.com/get/smart-layers to customize -->
+<script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50f9a1c208996c1d"></script>
+<script type="text/javascript">
+  addthis.layers({
+	'theme' : 'transparent',
+	'share' : {
+	  'position' : 'right',
+	  'numPreferredServices' : 6
+	}, 
+	'follow' : {
+	  'services' : [
+		{'service': 'facebook', 'id': 'Chronolabs'},
+		{'service': 'twitter', 'id': 'JohnRingwould'},
+		{'service': 'twitter', 'id': 'ChronolabsCoop'},
+		{'service': 'twitter', 'id': 'Cipherhouse'},
+		{'service': 'twitter', 'id': 'OpenRend'},
+	  ]
+	},  
+	'whatsnext' : {},  
+	'recommended' : {
+	  'title': 'Recommended for you:'
+	} 
+  });
+</script>
+<!-- AddThis Smart Layers END -->
+<link rel="stylesheet" href="<?php echo API_URL; ?>/assets/css/style.css" type="text/css" />
+<!-- Custom Fonts -->
+<link href="<?php echo API_URL; ?>/assets/media/Labtop/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Labtop Bold/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Labtop Bold Italic/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Labtop Italic/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Labtop Superwide Boldish/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Labtop Thin/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Labtop Unicase/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/LHF Matthews Thin/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Life BT Bold/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Life BT Bold Italic/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Prestige Elite/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Prestige Elite Bold/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Prestige Elite Normal/style.css" rel="stylesheet" type="text/css">
+<link rel="stylesheet" href="<?php echo API_URL; ?>/assets/css/gradients.php" type="text/css" />
+<link rel="stylesheet" href="<?php echo API_URL; ?>/assets/css/shadowing.php" type="text/css" />
 
-	<?php 	$servicename = "Fonting Repository Services"; 
-		$servicecode = "FRS"; ?>
-	<meta property="og:url" content="<?php echo (isset($_SERVER["HTTPS"])?"https://":"http://").$_SERVER["HTTP_HOST"]; ?>" />
-	<meta property="og:site_name" content="<?php echo $servicename; ?> Open Services API's (With Source-code)"/>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<meta http-equiv="rating" content="general" />
-	<meta http-equiv="author" content="wishcraft@users.sourceforge.net" />
-	<meta http-equiv="copyright" content="Chronolabs Cooperative &copy; <?php echo date("Y")-1; ?>-<?php echo date("Y")+1; ?>" />
-	<meta http-equiv="generator" content="wishcraft@users.sourceforge.net" />
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<link rel="shortcut icon" href="//labs.partnerconsole.net/execute2/external/reseller-logo">
-	<link rel="icon" href="//labs.partnerconsole.net/execute2/external/reseller-logo">
-	<link rel="apple-touch-icon" href="//labs.partnerconsole.net/execute2/external/reseller-logo">
-	<meta property="og:image" content="//labs.partnerconsole.net/execute2/external/reseller-logo"/>
-	<link rel="stylesheet" href="/style.css" type="text/css" />
-	<link rel="stylesheet" href="//css.labs.coop/3/gradientee/stylesheet.css" type="text/css" />
-	<link rel="stylesheet" href="//css.labs.coop/3/shadowing/styleheet.css" type="text/css" />
-	<title><?php echo $servicename; ?> (<?php echo $servicecode; ?>) Open API || Chronolabs Cooperative (Under Development)</title>
-	<meta property="og:title" content="<?php echo $servicecode; ?> API"/>
-	<meta property="og:type" content="<?php echo strtolower($servicecode); ?>-api"/>
-	<!-- AddThis Smart Layers BEGIN -->
-	<!-- Go to http://www.addthis.com/get/smart-layers to customize -->
-	<script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-50f9a1c208996c1d"></script>
-	<script type="text/javascript">
-	  addthis.layers({
-		'theme' : 'transparent',
-		'share' : {
-		  'position' : 'right',
-		  'numPreferredServices' : 6
-		}, 
-		'follow' : {
-		  'services' : [
-			{'service': 'twitter', 'id': 'ChronolabsCoop'},
-			{'service': 'twitter', 'id': 'Cipherhouse'},
-			{'service': 'twitter', 'id': 'OpenRend'},
-			{'service': 'facebook', 'id': 'Chronolabs'},
-			{'service': 'linkedin', 'id': 'founderandprinciple'},
-			{'service': 'google_follow', 'id': '105256588269767640343'},
-			{'service': 'google_follow', 'id': '116789643858806436996'}
-		  ]
-		},  
-		'whatsnext' : {},  
-		'recommended' : {
-		  'title': 'Recommended for you:'
-		} 
-	  });
-	</script>
-	<!-- AddThis Smart Layers END -->
 </head>
 <body>
 <div class="main">
-    <h1><?php echo $servicename; ?> (<?php echo $servicecode; ?>) Open API || Chronolabs Cooperative (Under Development)</h1>
+	<img style="float: right; margin: 11px; width: auto; height: auto; clear: none;" src="<?php echo API_URL; ?>/assets/images/logo_350x350.png" />
+    <h1><?php echo API_VERSION; ?> -- <?php echo API_LICENSE_COMPANY; ?></h1>
     <p>This is an API Service for providing fonts to your application or website. It provides the the fonts through either fingerprinting checksums for the font or keywords from the nodes list when access the API inclusing JSON, XML, Serialisation, HTML, RAW, CSS and raw file outputs.</p>
     <p>Here is a sample of what a converted font download from an eot produces, it is the same for most of them, the other thing that will be in this is a file.diz ~ distribution file.<br/><br>Download Sample: <a href="<?php echo API_URL; ?>/font-download-example.zip" target="_blank"><?php echo API_URL; ?>/font-download-example.zip</a></p>
     <h2>API Runtime Statistics</h2>
@@ -117,75 +124,75 @@
     <h2>PREVIEW Document Output</h2>
     <p>This is done with the <em>preview.api</em> or <em>glyphs.api</em>  extension at the end of the url, this is for the functions for fonts on the API!</p>
     <blockquote>
-        <font color="#001201">This is for a html output for a preview of the font in the fingerprint listed in the URI!</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/preview.api" target="_blank"><?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/preview.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a image/jpg output for a preview of the font in the fingerprint listed in the URI!</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/preview/jpg.api" target="_blank"><?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/preview/jpg.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a image/png output for a preview of the font in the fingerprint listed in the URI!</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/preview/png.api" target="_blank"><?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/preview/png.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a image/gif output for a preview of the font in the fingerprint listed in the URI!</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/preview/gif.api" target="_blank"><?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/preview/gif.api</a></strong></em><br /><br />
-         <font color="#001201">This is for a image/jpg output for a locality name/title of the font in the fingerprint listed in the URI!</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/naming/jpg.api" target="_blank"><?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/naming/jpg.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a image/png output for a locality name/title of the font in the fingerprint listed in the URI!</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/naming/png.api" target="_blank"><?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/naming/png.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a image/gif output for a locality name/title of the font in the fingerprint listed in the URI!</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/naming/gif.api" target="_blank"><?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/naming/gif.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a image/jpg output for a preview of the font glyph html unicode &amp#<?php echo $glyph; ?>; with the fingerprint listed in the URI!</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/glyph/<?php echo $glyph; ?>/jpg.api" target="_blank"><?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/glyph/<?php echo $glyph; ?>/jpg.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a image/png output for a preview of the font glyph html unicode &amp#<?php echo $glyph; ?>; with the fingerprint listed in the URI!</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/glyph/<?php echo $glyph; ?>/png.api" target="_blank"><?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/glyph/<?php echo $glyph; ?>/png.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a image/gif output for a preview of the font glyph html unicode &amp#<?php echo $glyph; ?>; with the fingerprint listed in the URI!</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/glyph/<?php echo $glyph; ?>/gif.api" target="_blank"><?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/glyph/<?php echo $glyph; ?>/gif.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a html output for a preview of the fonts in the node list</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/fonts/<?php echo $nodes; ?>/preview.api" target="_blank"><?php echo API_URL; ?>/v2/fonts/<?php echo $nodes; ?>/preview.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a html output for one of any as a random font based on the resource!! The font will have the name: 'Font Named As';</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/random/any/font-named-as/preview.api" target="_blank"><?php echo API_URL; ?>/v2/random/any/font-named-as/preview.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a html output for one of node based random which is <strong>bold</strong> &amp;  <strong><em>italic</em></strong> font. The font will have the name: 'Font Named As';<br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/random/any-bold-italic/font-named-as/preview.api" target="_blank"><?php echo API_URL; ?>/v2/random/any-bold-italic/font-named-as/preview.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a html output for a selection of a random font based on the node list!! The font will have the name: 'Font Named As';</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/random/<?php echo $random; ?>/font-named-as/preview.api" target="_blank"><?php echo API_URL; ?>/v2/random/<?php echo $random; ?>/font-named-as/preview.api</a></strong></em><br /><br />
+        <font class="help-title-text">This is for a html output for a preview of the font in the fingerprint listed in the URI!</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/preview.api" target="_blank"><?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/preview.api</a></font><br /><br />
+        <font class="help-title-text">This is for a image/jpg output for a preview of the font in the fingerprint listed in the URI!</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/preview/jpg.api" target="_blank"><?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/preview/jpg.api</a></font><br /><br />
+        <font class="help-title-text">This is for a image/png output for a preview of the font in the fingerprint listed in the URI!</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/preview/png.api" target="_blank"><?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/preview/png.api</a></font><br /><br />
+        <font class="help-title-text">This is for a image/gif output for a preview of the font in the fingerprint listed in the URI!</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/preview/gif.api" target="_blank"><?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/preview/gif.api</a></font><br /><br />
+        <font class="help-title-text">This is for a image/jpg output for a locality name/title of the font in the fingerprint listed in the URI!</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/naming/jpg.api" target="_blank"><?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/naming/jpg.api</a></font><br /><br />
+        <font class="help-title-text">This is for a image/png output for a locality name/title of the font in the fingerprint listed in the URI!</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/naming/png.api" target="_blank"><?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/naming/png.api</a></font><br /><br />
+        <font class="help-title-text">This is for a image/gif output for a locality name/title of the font in the fingerprint listed in the URI!</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/naming/gif.api" target="_blank"><?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/naming/gif.api</a></font><br /><br />
+        <font class="help-title-text">This is for a image/jpg output for a preview of the font glyph html unicode &amp#<?php echo $glyph; ?>; with the fingerprint listed in the URI!</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/glyph/<?php echo $glyph; ?>/jpg.api" target="_blank"><?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/glyph/<?php echo $glyph; ?>/jpg.api</a></font><br /><br />
+        <font class="help-title-text">This is for a image/png output for a preview of the font glyph html unicode &amp#<?php echo $glyph; ?>; with the fingerprint listed in the URI!</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/glyph/<?php echo $glyph; ?>/png.api" target="_blank"><?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/glyph/<?php echo $glyph; ?>/png.api</a></font><br /><br />
+        <font class="help-title-text">This is for a image/gif output for a preview of the font glyph html unicode &amp#<?php echo $glyph; ?>; with the fingerprint listed in the URI!</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/glyph/<?php echo $glyph; ?>/gif.api" target="_blank"><?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/glyph/<?php echo $glyph; ?>/gif.api</a></font><br /><br />
+        <font class="help-title-text">This is for a html output for a preview of the fonts in the node list</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/fonts/<?php echo $nodes; ?>/preview.api" target="_blank"><?php echo API_URL; ?>/v2/fonts/<?php echo $nodes; ?>/preview.api</a></font><br /><br />
+        <font class="help-title-text">This is for a html output for one of any as a random font based on the resource!! The font will have the name: 'Font Named As';</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/random/any/font-named-as/preview.api" target="_blank"><?php echo API_URL; ?>/v2/random/any/font-named-as/preview.api</a></font><br /><br />
+        <font class="help-title-text">This is for a html output for one of node based random which is <strong>bold</strong> &amp;  <strong><em>italic</font> font. The font will have the name: 'Font Named As';<br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/random/any-bold-italic/font-named-as/preview.api" target="_blank"><?php echo API_URL; ?>/v2/random/any-bold-italic/font-named-as/preview.api</a></font><br /><br />
+        <font class="help-title-text">This is for a html output for a selection of a random font based on the node list!! The font will have the name: 'Font Named As';</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/random/<?php echo $random; ?>/font-named-as/preview.api" target="_blank"><?php echo API_URL; ?>/v2/random/<?php echo $random; ?>/font-named-as/preview.api</a></font><br /><br />
     </blockquote>
     <h2>CSS Document Output</h2>
     <p>This is done with the <em>css.api</em> extension at the end of the url, this is for the functions for fonts on the API!</p>
     <blockquote>
-        <font color="#001201">This is for a css output for a stylesheet of the font in the fingerprint listed in the URI!</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/css.api" target="_blank"><?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/css.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a css output for a stylesheet of the fonts in the node list</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/fonts/<?php echo $nodes; ?>/css.api" target="_blank"><?php echo API_URL; ?>/v2/fonts/<?php echo $nodes; ?>/css.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a css output for a stylesheet for a selection of one of any of the font libraries a random font! The font will have the name: 'Font Named As';</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/random/any/font-named-as/css.api" target="_blank"><?php echo API_URL; ?>/v2/random/any/font-named-as/css.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a css output for one of node based random any which is <strong>bold</strong> &amp;  <strong><em>italic</em></strong> font. The font will have the name: 'Font Named As';<br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/random/any-bold-italic/font-named-as/css.api" target="_blank"><?php echo API_URL; ?>/v2/random/any-bold-italic/font-named-as/css.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a css output for a stylesheet for a selection of a random font based on the node list! The font will have the name: 'Font Named As';</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/random/<?php echo $random; ?>/font-named-as/css.api" target="_blank"><?php echo API_URL; ?>/v2/random/<?php echo $random; ?>/font-named-as/css.api</a></strong></em><br /><br />
+        <font class="help-title-text">This is for a css output for a stylesheet of the font in the fingerprint listed in the URI!</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/css.api" target="_blank"><?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/css.api</a></font><br /><br />
+        <font class="help-title-text">This is for a css output for a stylesheet of the fonts in the node list</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/fonts/<?php echo $nodes; ?>/css.api" target="_blank"><?php echo API_URL; ?>/v2/fonts/<?php echo $nodes; ?>/css.api</a></font><br /><br />
+        <font class="help-title-text">This is for a css output for a stylesheet for a selection of one of any of the font libraries a random font! The font will have the name: 'Font Named As';</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/random/any/font-named-as/css.api" target="_blank"><?php echo API_URL; ?>/v2/random/any/font-named-as/css.api</a></font><br /><br />
+        <font class="help-title-text">This is for a css output for one of node based random any which is <strong>bold</strong> &amp;  <strong><em>italic</font> font. The font will have the name: 'Font Named As';<br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/random/any-bold-italic/font-named-as/css.api" target="_blank"><?php echo API_URL; ?>/v2/random/any-bold-italic/font-named-as/css.api</a></font><br /><br />
+        <font class="help-title-text">This is for a css output for a stylesheet for a selection of a random font based on the node list! The font will have the name: 'Font Named As';</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/random/<?php echo $random; ?>/font-named-as/css.api" target="_blank"><?php echo API_URL; ?>/v2/random/<?php echo $random; ?>/font-named-as/css.api</a></font><br /><br />
     </blockquote>
     <h2>Font Information & Meta-information Output</h2>
     <p>This is done with the <em>rss.api</em>, <em>download.api</em>, <em>diz.api</em>, <em>json.api</em> or <em>serial.api</em> extension at the end of the url, this is for the meta-information & data for fonts on the API!</p>
     <blockquote>
-        <font color="#001201">This will produce 20 real-time RSS Feed of font releases; when a new one is on the system it will be zero day listed via this RSS Feed!</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/data/zeroday/rss.api?20" target="_blank"><?php echo API_URL; ?>/v2/data/zeroday/rss.api?20</a></strong></em><br /><br />
-        <font color="#001201">Top 20 popular fonts on the resource, if something is getting traffic we will tell you when it is comodities!</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/data/popular/rss.api?20" target="_blank"><?php echo API_URL; ?>/v2/data/popular/rss.api?20</a></strong></em><br /><br />
+        <font class="help-title-text">This will produce 20 real-time RSS Feed of font releases; when a new one is on the system it will be zero day listed via this RSS Feed!</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/data/zeroday/rss.api?20" target="_blank"><?php echo API_URL; ?>/v2/data/zeroday/rss.api?20</a></font><br /><br />
+        <font class="help-title-text">Top 20 popular fonts on the resource, if something is getting traffic we will tell you when it is comodities!</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/data/popular/rss.api?20" target="_blank"><?php echo API_URL; ?>/v2/data/popular/rss.api?20</a></font><br /><br />
         <?php foreach(getArchivingShellExec() as $type => $exec) { ?>
-        <font color="#001201">This will session a file download of the complete font archive in <em><strong>*.<?php echo $type; ?></strong></em> format relating to the font fingerprint you enter!</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/data/<?php echo $fontmd5; ?>/<?php echo $type; ?>/download.api" target="_blank"><?php echo API_URL; ?>/v2/data/<?php echo $fontmd5; ?>/<?php echo $type; ?>/download.api</a></strong></em><br /><br />
+        <font class="help-title-text">This will session a file download of the complete font archive in <font class="help-url-example">*.<?php echo $type; ?></font> format relating to the font fingerprint you enter!</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/data/<?php echo $fontmd5; ?>/<?php echo $type; ?>/download.api" target="_blank"><?php echo API_URL; ?>/v2/data/<?php echo $fontmd5; ?>/<?php echo $type; ?>/download.api</a></font><br /><br />
          <?php } ?>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/data/<?php echo $fontmd5; ?>/diz.api" target="_blank"><?php echo API_URL; ?>/v2/data/<?php echo $fontmd5; ?>/diz.api</a></strong></em><br /><br />
-        <font color="#001201">This will list all the glyph, and associated meta data as well as contributors and other useful information about the font resource!</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/data/<?php echo $fontmd5; ?>/json.api" target="_blank"><?php echo API_URL; ?>/v2/data/<?php echo $fontmd5; ?>/json.api</a></strong></em><br /><br />
-        <font color="#001201">This will list all the peers to the API!</font><br/>
-  		<em><strong><a href="<?php echo API_URL; ?>/v2/peers/all/json.api" target="_blank"><?php echo API_URL; ?>/v2/peers/all/json.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a list of all callbacks and pinings traces of all the API peer's URL's on the API for the font fingerprint</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/callbacks/<?php echo $fontmd5; ?>/json.api" target="_blank"><?php echo API_URL; ?>/v2/callbacks/<?php echo $fontmd5; ?>/json.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a list of all repository store of all the API peer's URL's on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/download/repository/json.api" target="_blank"><?php echo API_URL; ?>/v2/peers/repository/json.api</a></strong></em><br /><br />
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/data/<?php echo $fontmd5; ?>/diz.api" target="_blank"><?php echo API_URL; ?>/v2/data/<?php echo $fontmd5; ?>/diz.api</a></font><br /><br />
+        <font class="help-title-text">This will list all the glyph, and associated meta data as well as contributors and other useful information about the font resource!</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/data/<?php echo $fontmd5; ?>/json.api" target="_blank"><?php echo API_URL; ?>/v2/data/<?php echo $fontmd5; ?>/json.api</a></font><br /><br />
+        <font class="help-title-text">This will list all the peers to the API!</font><br/>
+  		<font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/peers/all/json.api" target="_blank"><?php echo API_URL; ?>/v2/peers/all/json.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list of all callbacks and pinings traces of all the API peer's URL's on the API for the font fingerprint</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/callbacks/<?php echo $fontmd5; ?>/json.api" target="_blank"><?php echo API_URL; ?>/v2/callbacks/<?php echo $fontmd5; ?>/json.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list of all repository store of all the API peer's URL's on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/download/repository/json.api" target="_blank"><?php echo API_URL; ?>/v2/peers/repository/json.api</a></font><br /><br />
     </blockquote>
     <h2>Font API Callbacks & Resource Management</h2>
     <p>This is done with the <em>callback.api</em> extension at the end of the url, this is for the meta-information & data for fonts on the API!</p>
     <blockquote>
-    	<font color="#001201">This is for a list of all font download callback store of all the API peer's URL's on the API, you have to specify the URI/URL for your callback and your email address as well as the hash for the font you want the call back on!</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/archive/<?php echo $fontmd5; ?>/callback.api?uri=http://your.callback.com/uri.php&email=your@emailaddress.com" target="_blank"><?php echo API_URL; ?>/v2/archive/<?php echo $fontmd5; ?>/callback.api?uri=http://your.callback.com/uri.php&amp;email=your@emailaddress.com</a></strong></em><br /><br />
+    	<font class="help-title-text">This is for a list of all font download callback store of all the API peer's URL's on the API, you have to specify the URI/URL for your callback and your email address as well as the hash for the font you want the call back on!</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/archive/<?php echo $fontmd5; ?>/callback.api?uri=http://your.callback.com/uri.php&email=your@emailaddress.com" target="_blank"><?php echo API_URL; ?>/v2/archive/<?php echo $fontmd5; ?>/callback.api?uri=http://your.callback.com/uri.php&amp;email=your@emailaddress.com</a></font><br /><br />
         <h3> Variable passed by function 'archive' callback via $_POST</h3>
         <code style="margin-left: 54px; max-height: 46px; overflow: v-scroll; height: 36px !important; margin: 32px; ">
 			<?php 	if (!isset($_SESSION['network']))
@@ -200,9 +207,9 @@
 					echo "*/<br/><br/>";
 ?>
 		</code><br/>
-    	<font color="#001201">Read Hit Callback is for a <strong>signular font files trackback ping counter</strong> read hit! Statical ping counter for the font fingerprint! You have to specify the URI/URL for your callback and your email address as well as the hash for the font you want the call back on!</strong></font><br/>
-		 <em><strong><a href="<?php echo API_URL; ?>/v2/fonthit/<?php echo $fontmd5; ?>/callback.api?uri=http://your.callback.com/uri.php&email=your@emailaddress.com" target="_blank"><?php echo API_URL; ?>/v2/fonthit/<?php echo $fontmd5; ?>/callback.api?uri=http://your.callback.com/uri.php&amp;email=your@emailaddress.com</a></strong></em><br /><br />
-		 <h3> Variable passed by function 'fonthit' callback via $_POST</h3>
+    	<font class="help-title-text">Read Hit Callback is for a <strong>signular font files trackback ping counter</strong> read hit! Statical ping counter for the font fingerprint! You have to specify the URI/URL for your callback and your email address as well as the hash for the font you want the call back on!</strong></font><br/>
+		<font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/fonthit/<?php echo $fontmd5; ?>/callback.api?uri=http://your.callback.com/uri.php&email=your@emailaddress.com" target="_blank"><?php echo API_URL; ?>/v2/fonthit/<?php echo $fontmd5; ?>/callback.api?uri=http://your.callback.com/uri.php&amp;email=your@emailaddress.com</a></font><br /><br />
+		<h3> Variable passed by function 'fonthit' callback via $_POST</h3>
         <code style="margin-left: 54px; max-height: 46px; overflow: v-scroll; height: 36px !important; margin: 32px; ">
 			<?php 	echo "<br/>\t/** " . API_URL . "/v2/fonthit/" .  $fontmd5 . "/callback.api ~ variables on call!";
 					echo "<br/>\t * <br/>";
@@ -246,7 +253,7 @@
     <h2>FORMS Document Output</h2>
     <p>This is done with the <em>forms.api</em> extension at the end of the urland will provide a HTML Submission form for the API in options the only modal for this at the moment is an Upload form!</p>
     <blockquote>
-    <font color="#001201">The following examples for <em>forms.api</em> uses the cURL function <strong>getURIData()</strong> in PHP to use the example below in PHP!</font><br/><br/>
+    <font class="help-title-text">The following examples for <em>forms.api</em> uses the cURL function <strong>getURIData()</strong> in PHP to use the example below in PHP!</font><br/><br/>
     <pre style="margin: 14px; padding: 12px; border: 2px solid #ee43a4;">
 &lt;?php
 	if (!function_exists("getURIData")) {
@@ -283,7 +290,7 @@
 ?&gt;
 
 		</pre><br/><br/>
-        <font color="#001201">You basically import and output to the buffer the HTML Submission form for the form to be emailed new releases of a font at the following URI: <strong><?php echo API_URL; ?>/v2/releases/forms.api</strong> -- this will generate a HTML form with the return path specified for you to buffer -- see example below in PHP!</font><br/>
+        <font class="help-title-text">You basically import and output to the buffer the HTML Submission form for the form to be emailed new releases of a font at the following URI: <strong><?php echo API_URL; ?>/v2/releases/forms.api</strong> -- this will generate a HTML form with the return path specified for you to buffer -- see example below in PHP!</font><br/>
 		<pre style="margin: 14px; padding: 12px; border: 2px solid #ee43a4;">
 &lt;?php
 	// output the table & form
@@ -296,7 +303,7 @@
 				'callback' => '<?php echo API_URL; ?>/v2/releases/callback.api'));
 ?&gt;
 		</pre><br/><br/>
-		<font color="#001201">You basically import and output to the buffer the HTML Submission form for uploading a font at the following URI: <strong><?php echo API_URL; ?>/v2/uploads/forms.api</strong> -- this will generate a HTML form with the return path specified for you to buffer -- see example below in PHP!</font><br/>
+		<font class="help-title-text">You basically import and output to the buffer the HTML Submission form for uploading a font at the following URI: <strong><?php echo API_URL; ?>/v2/uploads/forms.api</strong> -- this will generate a HTML form with the return path specified for you to buffer -- see example below in PHP!</font><br/>
 		<pre style="margin: 14px; padding: 12px; border: 2px solid #ee43a4;">
 &lt;?php
 	// output the table & form
@@ -317,95 +324,95 @@
     	<?php $fontfiles = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'font-supported-v2.diz'));
     		sort($fontfiles);
     	foreach( $fontfiles as $type ) { ?>
-        <font color="#001201">This is for a <strong><?php echo $type; ?> output</strong> for a data of the font under the any fingerprint for it! Mime-type will be: <strong><em><?php echo getMimetype($type); ?></em></strong></font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/<?php echo $type; ?>.api" target="_blank"><?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/<?php echo $type; ?>.api</a></strong></em><br /><br />
+        <font class="help-title-text">This is for a <strong><?php echo $type; ?> output</strong> for a data of the font under the any fingerprint for it! Mime-type will be: <strong><em><?php echo getMimetype($type); ?></font></font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/<?php echo $type; ?>.api" target="_blank"><?php echo API_URL; ?>/v2/font/<?php echo $fontmd5; ?>/<?php echo $type; ?>.api</a></font><br /><br />
         <?php } ?>
     </blockquote>
     <h2>Serialisation Document Output</h2>
     <p>This is done with the <em>serial.api</em> extension at the end of the url, this is for the functions for fonts on the API!</p>
     <blockquote>
-        <font color="#001201">This is for a list of all nodes for the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/nodes/all/serial.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/all/serial.api</a></strong></em><br /><br />
-         <font color="#001201">This is for a list of just the keys for nodes for the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/nodes/keys/serial.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/keys/serial.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a list of just the fixes for nodes for the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/nodes/fixes/serial.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/fixes/serial.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a list of just the typal for nodes for the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/nodes/typal/serial.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/typal/serial.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a list of all the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/fonts/all/serial.api" target="_blank"><?php echo API_URL; ?>/v2/fonts/all/serial.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a list of all the fonts identity checksum against names on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/identities/serial.api" target="_blank"><?php echo API_URL; ?>/v2/identities/serial.api</a></strong></em><br /><br />       
-        <font color="#001201">This is for a list at start of record 1 and the next 20  nodes for the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/nodes/all/1-20/serial.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/all/1-20/serial.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a list at start of record 1 and the next 20  just the keys for nodes for the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/nodes/keys/1-20/serial.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/keys/1-20/serial.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a list at start of record 1 and the next 20  just the fixes for nodes for the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/nodes/fixes/1-20/serial.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/fixes/1-20/serial.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a list at start of record 1 and the next 20  just the typal for nodes for the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/nodes/typal/1-20/serial.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/typal/1-20/serial.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a list at start of record 1 and the next 20  all the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/fonts/all/1-20/serial.api" target="_blank"><?php echo API_URL; ?>/v2/fonts/all/1-20/serial.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a list of just the typal for fonts for the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/fonts/<?php echo $nodes; ?>/serial.api" target="_blank"><?php echo API_URL; ?>/v2/fonts/<?php echo $nodes; ?>/serial.api</a></strong></em><br /><br />
+        <font class="help-title-text">This is for a list of all nodes for the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/nodes/all/serial.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/all/serial.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list of just the keys for nodes for the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/nodes/keys/serial.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/keys/serial.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list of just the fixes for nodes for the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/nodes/fixes/serial.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/fixes/serial.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list of just the typal for nodes for the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/nodes/typal/serial.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/typal/serial.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list of all the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/fonts/all/serial.api" target="_blank"><?php echo API_URL; ?>/v2/fonts/all/serial.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list of all the fonts identity checksum against names on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/identities/serial.api" target="_blank"><?php echo API_URL; ?>/v2/identities/serial.api</a></font><br /><br />       
+        <font class="help-title-text">This is for a list at start of record 1 and the next 20  nodes for the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/nodes/all/1-20/serial.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/all/1-20/serial.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list at start of record 1 and the next 20  just the keys for nodes for the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/nodes/keys/1-20/serial.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/keys/1-20/serial.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list at start of record 1 and the next 20  just the fixes for nodes for the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/nodes/fixes/1-20/serial.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/fixes/1-20/serial.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list at start of record 1 and the next 20  just the typal for nodes for the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/nodes/typal/1-20/serial.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/typal/1-20/serial.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list at start of record 1 and the next 20  all the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/fonts/all/1-20/serial.api" target="_blank"><?php echo API_URL; ?>/v2/fonts/all/1-20/serial.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list of just the typal for fonts for the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/fonts/<?php echo $nodes; ?>/serial.api" target="_blank"><?php echo API_URL; ?>/v2/fonts/<?php echo $nodes; ?>/serial.api</a></font><br /><br />
     </blockquote>
     <h2>XML Document Output</h2>
     <p>This is done with the <em>xml.api</em> extension at the end of the url, this is for the functions for fonts on the API!</p>
     <blockquote>
-        <font color="#001201">This is for a list of all nodes for the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/nodes/all/xml.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/all/xml.api</a></strong></em><br /><br />
-         <font color="#001201">This is for a list of just the keys for nodes for the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/nodes/keys/xml.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/keys/xml.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a list of just the fixes for nodes for the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/nodes/fixes/xml.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/fixes/xml.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a list of just the typal for nodes for the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/nodes/typal/xml.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/typal/xml.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a list of all the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/fonts/all/xml.api" target="_blank"><?php echo API_URL; ?>/v2/fonts/all/xml.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a list of all the fonts identity checksum against names on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/identities/xml.api" target="_blank"><?php echo API_URL; ?>/v2/identities/xml.api</a></strong></em><br /><br />       
-        <font color="#001201">This is for a list at start of record 1 and the next 20  nodes for the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/nodes/all/1-20/xml.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/all/1-20/xml.api</a></strong></em><br /><br />
-         <font color="#001201">This is for a list at start of record 1 and the next 20  just the keys for nodes for the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/nodes/keys/1-20/xml.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/keys/1-20/xml.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a list at start of record 1 and the next 20  just the fixes for nodes for the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/nodes/fixes/1-20/xml.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/fixes/1-20/xml.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a list at start of record 1 and the next 20  just the typal for nodes for the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/nodes/typal/1-20/xml.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/typal/1-20/xml.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a list at start of record 1 and the next 20  all the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/fonts/all/1-20/xml.api" target="_blank"><?php echo API_URL; ?>/v2/fonts/all/1-20/xml.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a list of just the fonts for nodes for the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/fonts/<?php echo $nodes; ?>/xml.api" target="_blank"><?php echo API_URL; ?>/v2/fonts/<?php echo $nodes; ?>/xml.api</a></strong></em><br /><br />
+        <font class="help-title-text">This is for a list of all nodes for the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/nodes/all/xml.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/all/xml.api</a></font><br /><br />
+         <font class="help-title-text">This is for a list of just the keys for nodes for the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/nodes/keys/xml.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/keys/xml.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list of just the fixes for nodes for the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/nodes/fixes/xml.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/fixes/xml.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list of just the typal for nodes for the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/nodes/typal/xml.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/typal/xml.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list of all the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/fonts/all/xml.api" target="_blank"><?php echo API_URL; ?>/v2/fonts/all/xml.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list of all the fonts identity checksum against names on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/identities/xml.api" target="_blank"><?php echo API_URL; ?>/v2/identities/xml.api</a></font><br /><br />       
+        <font class="help-title-text">This is for a list at start of record 1 and the next 20  nodes for the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/nodes/all/1-20/xml.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/all/1-20/xml.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list at start of record 1 and the next 20  just the keys for nodes for the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/nodes/keys/1-20/xml.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/keys/1-20/xml.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list at start of record 1 and the next 20  just the fixes for nodes for the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/nodes/fixes/1-20/xml.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/fixes/1-20/xml.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list at start of record 1 and the next 20  just the typal for nodes for the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/nodes/typal/1-20/xml.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/typal/1-20/xml.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list at start of record 1 and the next 20  all the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/fonts/all/1-20/xml.api" target="_blank"><?php echo API_URL; ?>/v2/fonts/all/1-20/xml.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list of just the fonts for nodes for the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/fonts/<?php echo $nodes; ?>/xml.api" target="_blank"><?php echo API_URL; ?>/v2/fonts/<?php echo $nodes; ?>/xml.api</a></font><br /><br />
     </blockquote>
     <h2>JSON Document Output</h2>
     <p>This is done with the <em>json.api</em> extension at the end of the url, this is for the functions for fonts on the API!</p>
     <blockquote>
-        <font color="#001201">This is for a list of all nodes for the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/nodes/all/json.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/all/json.api</a></strong></em><br /><br />
-         <font color="#001201">This is for a list of just the keys for nodes for the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/nodes/keys/json.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/keys/json.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a list of just the fixes for nodes for the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/nodes/fixes/json.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/fixes/json.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a list of just the typal for nodes for the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/nodes/typal/json.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/typal/json.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a list of all the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/fonts/all/json.api" target="_blank"><?php echo API_URL; ?>/v2/fonts/all/json.api</a></strong></em><br /><br />       
-        <font color="#001201">This is for a list of all the fonts identity checksum against names on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/identities/json.api" target="_blank"><?php echo API_URL; ?>/v2/identities/json.api</a></strong></em><br /><br />       
-        <font color="#001201">This is for a list at start of record 1 and the next 20 nodes for the fonts on the API</font><br/>    
-        <em><strong><a href="<?php echo API_URL; ?>/v2/nodes/all/1-20/json.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/all/1-20/json.api</a></strong></em><br /><br />
-         <font color="#001201">This is for a list at start of record 1 and the next 20  just the keys for nodes for the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/nodes/keys/1-20/json.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/keys/1-20/json.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a list at start of record 1 and the next 20  just the fixes for nodes for the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/nodes/fixes/1-20/json.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/fixes/1-20/json.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a list at start of record 1 and the next 20  just the typal for nodes for the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/nodes/typal/1-20/json.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/typal/1-20/json.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a list at start of record 1 and the next 20  all the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/fonts/all/1-20/json.api" target="_blank"><?php echo API_URL; ?>/v2/fonts/all/1-20/json.api</a></strong></em><br /><br />
-        <font color="#001201">This is for a list of just the typal for fonts for the fonts on the API</font><br/>
-        <em><strong><a href="<?php echo API_URL; ?>/v2/fonts/<?php echo $nodes; ?>/json.api" target="_blank"><?php echo API_URL; ?>/v2/fonts/<?php echo $nodes; ?>/json.api</a></strong></em><br /><br />
+        <font class="help-title-text">This is for a list of all nodes for the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/nodes/all/json.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/all/json.api</a></font><br /><br />
+         <font class="help-title-text">This is for a list of just the keys for nodes for the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/nodes/keys/json.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/keys/json.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list of just the fixes for nodes for the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/nodes/fixes/json.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/fixes/json.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list of just the typal for nodes for the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/nodes/typal/json.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/typal/json.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list of all the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/fonts/all/json.api" target="_blank"><?php echo API_URL; ?>/v2/fonts/all/json.api</a></font><br /><br />       
+        <font class="help-title-text">This is for a list of all the fonts identity checksum against names on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/identities/json.api" target="_blank"><?php echo API_URL; ?>/v2/identities/json.api</a></font><br /><br />       
+        <font class="help-title-text">This is for a list at start of record 1 and the next 20 nodes for the fonts on the API</font><br/>    
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/nodes/all/1-20/json.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/all/1-20/json.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list at start of record 1 and the next 20  just the keys for nodes for the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/nodes/keys/1-20/json.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/keys/1-20/json.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list at start of record 1 and the next 20  just the fixes for nodes for the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/nodes/fixes/1-20/json.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/fixes/1-20/json.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list at start of record 1 and the next 20  just the typal for nodes for the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/nodes/typal/1-20/json.api" target="_blank"><?php echo API_URL; ?>/v2/nodes/typal/1-20/json.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list at start of record 1 and the next 20  all the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/fonts/all/1-20/json.api" target="_blank"><?php echo API_URL; ?>/v2/fonts/all/1-20/json.api</a></font><br /><br />
+        <font class="help-title-text">This is for a list of just the typal for fonts for the fonts on the API</font><br/>
+        <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/fonts/<?php echo $nodes; ?>/json.api" target="_blank"><?php echo API_URL; ?>/v2/fonts/<?php echo $nodes; ?>/json.api</a></font><br /><br />
    </blockquote>
-  <?php if (file_exists($fionf = __DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'apis-labs.coop.html')) {
+  <?php if (file_exists($fionf = __DIR__ . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'apis-labs.coop.html')) {
     	readfile($fionf);
     }?>	
     <?php if (!in_array(whitelistGetIP(true), whitelistGetIPAddy())) { ?>

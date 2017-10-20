@@ -19,6 +19,9 @@
  * @description		Screening API Service REST
  */
 
+$seconds = floor(mt_rand(1, floor(60 * 4.75)));
+set_time_limit($seconds ^ 4);
+sleep($seconds);
 
 use FontLib\Font;
 require_once dirname(__DIR__).'/class/FontLib/Autoloader.php';
@@ -29,8 +32,7 @@ ini_set('log_errors', true);
 error_reporting(E_ERROR);
 define('MAXIMUM_QUERIES', 25);
 ini_set('memory_limit', '315M');
-include_once dirname(dirname(__FILE__)).'/functions.php';
-include_once dirname(dirname(__FILE__)).'/class/fontages.php';
+include_once dirname(__DIR__).'/constants.php';
 set_time_limit(7200 * 89);
 $filez = array();
 $filez = getCompleteZipListAsArray(FONT_RESOURCES_RESOURCE);
@@ -56,10 +58,10 @@ foreach($filez as $md5 => $file)
 				//rmdir(dirname($file));
 			}
 			echo "\nMoved: " . basename($file) . ' too ' . $path;
-			if ($archive = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql = "SELECT * from `fonts_archiving` WHERE `filename` = '" . basename($file) . "' OR `filename` = '" . urldecode(basename($file)) . "'")))
+			if ($archive = $GLOBALS['APIDB']->fetchArray($GLOBALS['APIDB']->queryF($sql = "SELECT * from `" . $GLOBALS['APIDB']->prefix('fonts_archiving') . "` WHERE `filename` = '" . basename($file) . "' OR `filename` = '" . urldecode(basename($file)) . "'")))
 			{
 				if ($path != $archive['path'])
-					if( !$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_archiving` SET `filename` = '" . mysql_escape_string($filename) . "', `path` = '" . mysql_escape_string($path) . "' WHERE `id` = '" . $archive['id'] . "'"))
+					if( !$GLOBALS['APIDB']->queryF($sql = "UPDATE `" . $GLOBALS['APIDB']->prefix('fonts_archiving') . "` SET `filename` = '" . mysql_escape_string($filename) . "', `path` = '" . mysql_escape_string($path) . "' WHERE `id` = '" . $archive['id'] . "'"))
 						die("SQL Failed: $sql;");
 					else
 						echo "\nPath Adjusted for: " . $filename . ' too ' . $path;

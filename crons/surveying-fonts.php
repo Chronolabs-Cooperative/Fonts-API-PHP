@@ -18,25 +18,30 @@
  * @subpackage		cronjobs
  * @description		Screening API Service REST
  */
+
+$seconds = floor(mt_rand(1, floor(60 * 4.75)));
+set_time_limit($seconds ^ 4);
+sleep($seconds);
+
+
 $sql = array();
 ini_set('display_errors', true);
 ini_set('log_errors', true);
 error_reporting(E_ERROR);
 define('MAXIMUM_QUERIES', 25);
 ini_set('memory_limit', '300M');
-require_once dirname(__DIR__).'/functions.php';
-require_once dirname(__DIR__).'/class/fontages.php';
+require_once dirname(__DIR__).'/constants.php';
 require_once dirname(__DIR__).'/class/fontsmailer.php';
 error_reporting(E_ERROR);
 set_time_limit(7200);
-$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
-$result = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `uploads` WHERE `uploaded` > '0' AND `converted` > '0'  AND `quizing` <= '0' ORDER BY RAND() LIMIT 99");
-while($row = $GLOBALS['FontsDB']->fetchArray($result))
+$GLOBALS['APIDB']->queryF($sql = "START TRANSACTION");
+$result = $GLOBALS['APIDB']->queryF($sql = "SELECT * from `" . $GLOBALS['APIDB']->prefix('uploads') . "` WHERE `uploaded` > '0' AND `converted` > '0'  AND `quizing` <= '0' ORDER BY RAND() LIMIT 99");
+while($row = $GLOBALS['APIDB']->fetchArray($result))
 {
 	if ($row['scope'] == 'none')
 	{
-		$sql = "UPDATE `uploads` SET `quizing` = UNIX_TIMESTAMP(), `expired` = UNIX_TIMESTAMP()+1831, `slotting` = 0, `needing` = 1, `finished` = 2, `surveys` = 2, `available` = 0 WHERE `id` = '".$row['id']."'";
-		$GLOBALS['FontsDB']->queryF($sql);
+		$sql = "UPDATE `" . $GLOBALS['APIDB']->prefix('uploads') . "` SET `quizing` = UNIX_TIMESTAMP(), `expired` = UNIX_TIMESTAMP()+1831, `slotting` = 0, `needing` = 1, `finished` = 2, `surveys` = 2, `available` = 0 WHERE `id` = '".$row['id']."'";
+		$GLOBALS['APIDB']->queryF($sql);
 	} elseif (empty($row['font_id']))
 	{
 		$currently = $row['currently_path'];
@@ -75,9 +80,9 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 	} else
 		$fingerprint = $upload['font_id'];
 	$datastore = json_decode($row['datastore'], true);
-	list($emails) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql = "SELECT `emails` from `emails` WHERE `id` = '".$row['cc']."'"));
+	list($emails) = $GLOBALS['APIDB']->fetchRow($GLOBALS['APIDB']->queryF($sql = "SELECT `emails` FROM `" . $GLOBALS['APIDB']->prefix('emails') . "` WHERE `id` = '".$row['cc']."'"));
 	$cc = array_merge(json_decode($emails['emails'], true), cleanWhitespaces(file(dirname(__DIR__) . '/data/emails-default-cc.diz')));
-	list($emails) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql = "SELECT `emails` from `emails` WHERE `id` = '".$row['bcc']."'"));
+	list($emails) = $GLOBALS['APIDB']->fetchRow($GLOBALS['APIDB']->queryF($sql = "SELECT `emails` FROM `" . $GLOBALS['APIDB']->prefix('emails') . "` WHERE `id` = '".$row['bcc']."'"));
 	$bcc = array_merge(json_decode($emails['emails'], true), cleanWhitespaces(file(dirname(__DIR__) . '/data/emails-default-bcc.diz')));
 	$nopass = -1;
 	$tos = array();
@@ -91,7 +96,7 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 			{
 				shuffle($cc);
 				$email = $cc[$idx = mt_rand(0,count($cc)-1)];
-				list($count) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql = "SELECT count(*) as `rc` from `flows` WHERE `email` LIKE '$email' AND `available` <= '0'  OR `participate` = 'no'"));
+				list($count) = $GLOBALS['APIDB']->fetchRow($GLOBALS['APIDB']->queryF($sql = "SELECT count(*) as `rc` from `" . $GLOBALS['APIDB']->prefix('flows') . "` WHERE `email` LIKE '$email' AND `available` <= '0'  OR `participate` = 'no'"));
 				if ($count==0)
 				{
 					$tos['to'][] = $email;
@@ -102,7 +107,7 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 			{
 				shuffle($bcc);
 				$email = $bcc[$idx = mt_rand(0,count($bcc)-1)];
-				list($count) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql = "SELECT count(*) as `rc` from `flows` WHERE `email` LIKE '$email' AND `available` <= '0'  OR `participate` = 'no'"));
+				list($count) = $GLOBALS['APIDB']->fetchRow($GLOBALS['APIDB']->queryF($sql = "SELECT count(*) as `rc` from `" . $GLOBALS['APIDB']->prefix('flows') . "` WHERE `email` LIKE '$email' AND `available` <= '0'  OR `participate` = 'no'"));
 				if ($count==0)
 				{
 					$tos['bcc'][] = $email;
@@ -120,7 +125,7 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 			while(count($tos['to'])<$ccs && count($tos['to']) <= count($cc))
 			{
 				$email = $cc[$idx = mt_rand(0,count($cc)-1)];
-				list($count) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql = "SELECT count(*) as `rc` from `flows` WHERE `email` LIKE '$email' AND `available` <= '0'  OR `participate` = 'no'"));
+				list($count) = $GLOBALS['APIDB']->fetchRow($GLOBALS['APIDB']->queryF($sql = "SELECT count(*) as `rc` from `" . $GLOBALS['APIDB']->prefix('flows') . "` WHERE `email` LIKE '$email' AND `available` <= '0'  OR `participate` = 'no'"));
 				if ($count==0)
 				{
 					$tos['to'][] = $email;
@@ -130,7 +135,7 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 			if (in_array('to', array_keys($datastore['scope'])))
 			{
 				$email = $row['email'];
-				list($count) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql = "SELECT count(*) as `rc` from `flows` WHERE `email` LIKE '$email' AND `available` <= '0'  OR `participate` = 'no'"));
+				list($count) = $GLOBALS['APIDB']->fetchRow($GLOBALS['APIDB']->queryF($sql = "SELECT count(*) as `rc` from `" . $GLOBALS['APIDB']->prefix('flows') . "` WHERE `email` LIKE '$email' AND `available` <= '0'  OR `participate` = 'no'"));
 				if ($count==0)
 				{
 					$tos['cc'][] = $email;
@@ -149,19 +154,19 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 	foreach($tos as $key => $values)
 		foreach($values as $id => $email)
 		{
-			$rrow = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql = "SELECT * from `flows` WHERE `email` = '$email' AND `participate` = 'yes'"));
+			$rrow = $GLOBALS['APIDB']->fetchArray($GLOBALS['APIDB']->queryF($sql = "SELECT * from `" . $GLOBALS['APIDB']->prefix('flows') . "` WHERE `email` = '$email' AND `participate` = 'yes'"));
 			if ($rrow['available']>0||!isset($rrow['available']))
 			{
 				if (!isset($rrow['flow_id'])||empty($rrow['flow_id']))
 				{
-					if (!$GLOBALS['FontsDB']->queryF($sql =  ("INSERT INTO `flows` (`email`, `name`, `participate`, `fonts`, `surveys`, `score`, `reminder`, `available`, `currently`, `code`) VALUES ('$email', '', 'yes', 0,0,0,".($remind = time() + mt_rand(3600*3*22, 3600*7*24)).",7,1,'".($code=substr(md5(microtime), mt_rand(0,32-6), 5)) . "')")))
+					if (!$GLOBALS['APIDB']->queryF($sql =  ("INSERT INTO `" . $GLOBALS['APIDB']->prefix('flows') . "` (`email`, `name`, `participate`, `fonts`, `surveys`, `score`, `reminder`, `available`, `currently`, `code`) VALUES ('$email', '', 'yes', 0,0,0,".($remind = time() + mt_rand(3600*3*22, 3600*7*24)).",7,1,'".($code=substr(md5(microtime), mt_rand(0,32-6), 5)) . "')")))
 						die("SQL Failed: $sql");
-					if (!$rrow = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql = "SELECT * from `flows` WHERE `email` = '$email' AND `participate` = 'yes'")))
+					if (!$rrow = $GLOBALS['APIDB']->fetchArray($GLOBALS['APIDB']->queryF($sql = "SELECT * from `" . $GLOBALS['APIDB']->prefix('flows') . "` WHERE `email` = '$email' AND `participate` = 'yes'")))
 						die("SQL Failed: $sql");
 				} elseif ($row['available']>0) {
-					$GLOBALS['FontsDB']->queryF($sql = ("UPDATE `flows` SET `reminder` = ".($remind = time() + mt_rand(3600*3*22, 3600*7*24)).", `available` = `available`-1, `currently`=`currently`+1 WHERE `flow_id` = " . $rrow['flow_id']));
+					$GLOBALS['APIDB']->queryF($sql = ("UPDATE `" . $GLOBALS['APIDB']->prefix('flows') . "` SET `reminder` = ".($remind = time() + mt_rand(3600*3*22, 3600*7*24)).", `available` = `available`-1, `currently`=`currently`+1 WHERE `flow_id` = " . $rrow['flow_id']));
 				}
-				if (!$GLOBALS['FontsDB']->queryF($sql = ("INSERT INTO `flows_history` (`key`, `flow_id`, `upload_id`, `questions`, `reminding`, `expiring`, `step`) VALUES ('".$row['key']."', '".$rrow['flow_id'] . "','" .$row['id']."', '2', '$remind', '".($expiring = (time() + 3600 * mt_rand(3, 12) * mt_rand(7, 19) * 1.11223455665)))."','waiting')"))
+				if (!$GLOBALS['APIDB']->queryF($sql = ("INSERT INTO `" . $GLOBALS['APIDB']->prefix('flows_history') . "` (`key`, `flow_id`, `upload_id`, `questions`, `reminding`, `expiring`, `step`) VALUES ('".$row['key']."', '".$rrow['flow_id'] . "','" .$row['id']."', '2', '$remind', '".($expiring = (time() + 3600 * mt_rand(3, 12) * mt_rand(7, 19) * 1.11223455665)))."','waiting')"))
 					die("SQL Failed: $sql");
 				$sendmail = true;
 			} else {
@@ -171,7 +176,7 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 	if ($sendmail == true)
 	{
 		$mailer = new FontsMailer(API_EMAIL_ADDY, API_EMAIL_FROM);
-		if (file_exists($file = dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "SMTPAuth.diz"))
+		if (file_exists($file = dirname(__DIR__) . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "SMTPAuth.diz"))
 			$smtpauths = explode("\n", str_replace(array("\r\n", "\n\n", "\n\r"), "\n", file_get_contents($file)));
 		if (count($smtpauths)>=1)
 			$auth = explode("||", $smtpauths[mt_rand(0, count($smtpauths)-1)]);
@@ -192,10 +197,10 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 				$needing = mt_rand(1,2);
 			else
 				$needing = mt_rand(3,6);
-			$GLOBALS['FontsDB']->queryF("UPDATE `uploads` SET `available` = '$available', `needing` = '$needing', `quizing` = '" . (time() + (3600 * 24 * 3 * mt_rand(0.233453, 2.78647))) . "' where `id` = '" . $row['id'] . "'");
+			$GLOBALS['APIDB']->queryF("UPDATE `" . $GLOBALS['APIDB']->prefix('uploads') . "` SET `available` = '$available', `needing` = '$needing', `quizing` = '" . (time() + (3600 * 24 * 3 * mt_rand(0.233453, 2.78647))) . "' where `id` = '" . $row['id'] . "'");
 		}
 		echo ".";
 	}
 }
-$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
+$GLOBALS['APIDB']->queryF($sql = "COMMIT");
 ?>

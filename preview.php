@@ -27,12 +27,37 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
+<meta property="og:title" content="<?php echo API_VERSION; ?>"/>
+<meta property="og:type" content="api<?php echo API_TYPE; ?>"/>
+<meta property="og:image" content="<?php echo API_URL; ?>/assets/images/logo_500x500.png"/>
+<meta property="og:url" content="<?php echo (isset($_SERVER["HTTPS"])?"https://":"http://").$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]; ?>" />
+<meta property="og:site_name" content="<?php echo API_VERSION; ?> - <?php echo API_LICENSE_COMPANY; ?>"/>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>Font's Preview || Chronolabs Cooperative</title>
-<link rel="stylesheet" href="<?php echo $source; ?>/style.css" type="text/css" />
-<link rel="stylesheet" href="http://css.labs.coop/3/gradientee/stylesheet.css" type="text/css" />
-<link rel="stylesheet" href="http://css.labs.coop/3/shadowing/styleheet.css" type="text/css" />
-<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.min.js"></script>
+<meta http-equiv="rating" content="general" />
+<meta http-equiv="author" content="wishcraft@users.sourceforge.net" />
+<meta http-equiv="copyright" content="<?php echo API_LICENSE_COMPANY; ?> &copy; <?php echo date("Y"); ?>" />
+<meta http-equiv="generator" content="Chronolabs Cooperative (<?php echo $place['iso3']; ?>)" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title><?php echo API_VERSION; ?> || <?php echo API_LICENSE_COMPANY; ?></title>
+
+<link rel="stylesheet" href="<?php echo API_URL; ?>/assets/css/style.css" type="text/css" />
+<!-- Custom Fonts -->
+<link href="<?php echo API_URL; ?>/assets/media/Labtop/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Labtop Bold/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Labtop Bold Italic/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Labtop Italic/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Labtop Superwide Boldish/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Labtop Thin/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Labtop Unicase/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/LHF Matthews Thin/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Life BT Bold/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Life BT Bold Italic/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Prestige Elite/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Prestige Elite Bold/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Prestige Elite Normal/style.css" rel="stylesheet" type="text/css">
+<link rel="stylesheet" href="<?php echo API_URL; ?>/assets/css/gradients.php" type="text/css" />
+<link rel="stylesheet" href="<?php echo API_URL; ?>/assets/css/shadowing.php" type="text/css" />
+
 <style>
 
 <?php 
@@ -52,7 +77,8 @@ foreach( $GLOBALS['fontcss'] as $key => $values)
 <body>
 <div class="main">
     <div style="margin-bottom: 19px; padding: 15px; clear: both;">
-    	<h1>Font's Previewer</h1>
+    	<img style="float: right; margin: 11px; width: auto; height: auto; clear: none;" src="<?php echo API_URL; ?>/assets/images/logo_350x350.png" />
+    	<h1><?php echo API_VERSION; ?> (<?php echo API_LICENSE_COMPANY;?>) ~ Font's Previewer</h1>
     	<p>The following <?php echo count($fontnames); ?> font(s) are shown in this preview:-</p><p style="height: auto; clear: both;"><ol style="height: auto; clear: both;"><li style="width: 25%; float: left;"><?php echo implode('</li><li style="width: 25%; float: left;">', $names = $fontnames); ?></li></ol></p>
     </div>
 <?php foreach( $GLOBALS['fontcss'] as $key => $values)

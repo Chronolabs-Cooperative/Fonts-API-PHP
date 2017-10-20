@@ -19,7 +19,7 @@
  * @link			http://sourceforge.net/projects/chronolabsapis
  * @link			http://cipher.labs.coop
  * 
- * CREATE TABLE `releases` (
+ * CREATE TABLE `' . $GLOBALS['APIDB']->prefix('releases') . '` (
   `id` int(22) NOT NULL AUTO_INCREMENT,
   `name` varchar(150) NOT NULL,
   `email` varchar(198) NOT NULL,
@@ -66,13 +66,13 @@
 		exit(0);
 	}
 	
-	if (!$release = $GLOBALS["FontsDB"]->fetchArray($GLOBALS["FontsDB"]->queryF('SELECT * FROM `releases` WHERE `email` = "'.$GLOBALS["FontsDB"]->escape($_REQUEST[$_GET['field']]['email']).'" AND  `name` = "'.$GLOBALS["FontsDB"]->escape($_REQUEST[$_GET['field']]['name']).'" AND `org` = "'.$GLOBALS["FontsDB"]->escape($_REQUEST[$_GET['field']]['org']).'"')))
+	if (!$release = $GLOBALS["APIDB"]->fetchArray($GLOBALS["APIDB"]->queryF('SELECT * FROM `' . $GLOBALS['APIDB']->prefix('releases') . '` WHERE `email` = "'.$GLOBALS["APIDB"]->escape($_REQUEST[$_GET['field']]['email']).'" AND  `name` = "'.$GLOBALS["APIDB"]->escape($_REQUEST[$_GET['field']]['name']).'" AND `org` = "'.$GLOBALS["APIDB"]->escape($_REQUEST[$_GET['field']]['org']).'"')))
 	{
 		switch($_REQUEST[$_GET['field']]['method'])
 		{
 			case "subscribed":
 				
-				if (!$GLOBALS["FontsDB"]->queryF($sql = 'INSERT INTO `releases` (`email`, `name`, `org`, `callback`, `method`, `created`) VALUES("'.$GLOBALS["FontsDB"]->escape($_REQUEST[$_GET['field']]['email']).'", "'.$GLOBALS["FontsDB"]->escape($_REQUEST[$_GET['field']]['name']).'","'.$GLOBALS["FontsDB"]->escape($_REQUEST[$_GET['field']]['org']).'","'.$GLOBALS["FontsDB"]->escape($_REQUEST[$_GET['field']]['callback']).'","'.$GLOBALS["FontsDB"]->escape($_REQUEST[$_GET['field']]['method']).'", "'.time(). '")'))
+				if (!$GLOBALS["APIDB"]->queryF($sql = 'INSERT INTO `' . $GLOBALS['APIDB']->prefix('releases') . '` (`email`, `name`, `org`, `callback`, `method`, `created`) VALUES("'.$GLOBALS["APIDB"]->escape($_REQUEST[$_GET['field']]['email']).'", "'.$GLOBALS["APIDB"]->escape($_REQUEST[$_GET['field']]['name']).'","'.$GLOBALS["APIDB"]->escape($_REQUEST[$_GET['field']]['org']).'","'.$GLOBALS["APIDB"]->escape($_REQUEST[$_GET['field']]['callback']).'","'.$GLOBALS["APIDB"]->escape($_REQUEST[$_GET['field']]['method']).'", "'.time(). '")'))
 					die("SQL Failed: $sql;");
 				break;
 			default:
@@ -85,11 +85,11 @@
 		{
 			case "subscribed":
 		
-				if (!$GLOBALS["FontsDB"]->queryF($sql = 'UPDATE `releases` SET `callback` = "'.$GLOBALS["FontsDB"]->escape($_REQUEST[$_GET['field']]['callback']).'", `method` = "'.$GLOBALS["FontsDB"]->escape($_REQUEST[$_GET['field']]['method']). '", `updated` = "'.time().'" WHERE `id` = "' . $releases['id'] . "'"))
+				if (!$GLOBALS["APIDB"]->queryF($sql = 'UPDATE `' . $GLOBALS['APIDB']->prefix('releases') . '` SET `callback` = "'.$GLOBALS["APIDB"]->escape($_REQUEST[$_GET['field']]['callback']).'", `method` = "'.$GLOBALS["APIDB"]->escape($_REQUEST[$_GET['field']]['method']). '", `updated` = "'.time().'" WHERE `id` = "' . $releases['id'] . "'"))
 					die("SQL Failed: $sql;");
 				break;
 			case "unsubscribed":
-				if (!$GLOBALS["FontsDB"]->queryF($sql = 'UPDATE `releases` SET `method` = "'.$GLOBALS["FontsDB"]->escape($_REQUEST[$_GET['field']]['method']). '", `updated` = "'.time().'" WHERE `id` = "' . $releases['id'] . "'"))
+				if (!$GLOBALS["APIDB"]->queryF($sql = 'UPDATE `' . $GLOBALS['APIDB']->prefix('releases') . '` SET `method` = "'.$GLOBALS["APIDB"]->escape($_REQUEST[$_GET['field']]['method']). '", `updated` = "'.time().'" WHERE `id` = "' . $releases['id'] . "'"))
 					die("SQL Failed: $sql;");
 				break;
 		}

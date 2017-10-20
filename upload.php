@@ -134,7 +134,7 @@
 		if (md5_file($file) == md5_file($path . DIRECTORY_SEPARATOR . $lost))
 			unlink($path . DIRECTORY_SEPARATOR . $lost);
 	}
-	$GLOBALS["FontsDB"]->queryF('UPDATE `networking` SET `uploads` = `uploads` + 1 WHERE `ip_id` = "'.$ipid.'"');
+	$GLOBALS["APIDB"]->queryF('UPDATE `" . $GLOBALS['APIDB']->prefix('networking') . "` SET `uploads` = `uploads` + 1 WHERE `ip_id` = "'.$ipid.'"');
 	$uploader[$ipid][$time]['files'][] = $file;
 	$uploader[$ipid][$time]['form'] = $parse;
 	$uploader[$ipid][$time]['path'] = $uploadpath;

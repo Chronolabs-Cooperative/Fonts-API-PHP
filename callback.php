@@ -23,10 +23,10 @@
 
 	require_once  __DIR__ . DIRECTORY_SEPARATOR . "header.php";
 
-	$sql = "SELECT * FROM `peers` WHERE `peer-id` LIKE '%s'";
-	if ($GLOBALS['FontsDB']->getRowsNum($results = $GLOBALS['FontsDB']->queryF(sprintf($sql, mysql_real_escape_string($GLOBALS['peer-id']))))==1)
+	$sql = "SELECT * FROM `" . $GLOBALS['APIDB']->prefix('peers') . "` WHERE `peer-id` LIKE '%s'";
+	if ($GLOBALS['APIDB']->getRowsNum($results = $GLOBALS['APIDB']->queryF(sprintf($sql, mysql_real_escape_string($GLOBALS['peer-id']))))==1)
 	{
-		$peer = $GLOBALS['FontsDB']->fetchArray($results);
+		$peer = $GLOBALS['APIDB']->fetchArray($results);
 	}
 	
 	$mode = !isset($_REQUEST['mode'])?md5(NULL):$_REQUEST['mode'];
@@ -39,20 +39,20 @@
 				if (!in_array($field, array_keys($_POST)))
 					die("Field \$_POST[$field] is required to operate this function!");
 			
-			$sql = "INSERT INTO `peers` (`peer-id`, 'api-uri', 'api-uri-callback', 'api-uri-zip', 'api-uri-fonts', `version`, `polinating`, `created`, `heard`) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', unix_timestamp())";
-			if ($GLOBALS['FontsDB']->queryF(sprintf($sql, mysql_real_escape_string($_POST['peer-id']), mysql_real_escape_string($_POST['api-uri']), mysql_real_escape_string($_POST['api-uri-callback']), mysql_real_escape_string($_POST['api-uri-zip']), mysql_real_escape_string($_POST['api-uri-fonts']), mysql_real_escape_string($_POST['version']), ($_POST['polinating']==true?'Yes':'No'), time())))
+			$sql = "INSERT INTO `" . $GLOBALS['APIDB']->prefix('peers') . "` (`peer-id`, 'api-uri', 'api-uri-callback', 'api-uri-zip', 'api-uri-fonts', `version`, `polinating`, `created`, `heard`) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', unix_timestamp())";
+			if ($GLOBALS['APIDB']->queryF(sprintf($sql, mysql_real_escape_string($_POST['peer-id']), mysql_real_escape_string($_POST['api-uri']), mysql_real_escape_string($_POST['api-uri-callback']), mysql_real_escape_string($_POST['api-uri-zip']), mysql_real_escape_string($_POST['api-uri-fonts']), mysql_real_escape_string($_POST['version']), ($_POST['polinating']==true?'Yes':'No'), time())))
 			{
 				if ($_POST['polinating']==true)
 				{
 					@setCallBackURI(sprintf($_POST['api-uri'].$_POST['api-uri-callback'], $mode), 245, 245, array('peer-id'=>$GLOBALS['peer-id'], 'api-uri'=>API_URL, 'api-uri-callback'=>API_URL_CALLBACK, 'api-uri-zip'=>API_URL_ZIP, 'api-uri-fonts'=>API_URL_FONTS, 'version'=>API_VERSION, 'polinating'=>API_POLINATING), array());
 					if (API_URL === API_ROOT_NODE)
 					{
-						$sql = "SELECT * FROM `peers` WHERE `peer-id` NOT LIKE '%s' AND  `peer-id` NOT LIKE '%s' AND `polinating` = 'Yes'";
-						if ($GLOBALS['FontsDB']->getRowsNum($results = $GLOBALS['FontsDB']->queryF(sprintf($sql, mysql_real_escape_string($GLOBALS['peer-id']), mysql_real_escape_string($_POST['peer-id']))))>=1)
+						$sql = "SELECT * FROM `" . $GLOBALS['APIDB']->prefix('peers') . "` WHERE `peer-id` NOT LIKE '%s' AND  `peer-id` NOT LIKE '%s' AND `polinating` = 'Yes'";
+						if ($GLOBALS['APIDB']->getRowsNum($results = $GLOBALS['APIDB']->queryF(sprintf($sql, mysql_real_escape_string($GLOBALS['peer-id']), mysql_real_escape_string($_POST['peer-id']))))>=1)
 						{
-							while($other = $GLOBALS['FontsDB']->fetchArray($results))
+							while($other = $GLOBALS['APIDB']->fetchArray($results))
 							{
-								@setCallBackURI(sprintf($other['api-uri'].$other['api-uri-callback'], $mode), 245, 245, $_POST, array('success'=>"UPDATE `peers` SET `called` = UNIX_TIMESTAMP() WHERE `peer-id` = '" . $other['peer-id'] . "'"));
+								@setCallBackURI(sprintf($other['api-uri'].$other['api-uri-callback'], $mode), 245, 245, $_POST, array('success'=>"UPDATE `" . $GLOBALS['APIDB']->prefix('peers') . "` SET `called` = UNIX_TIMESTAMP() WHERE `peer-id` = '" . $other['peer-id'] . "'"));
 								@setCallBackURI(sprintf($_POST['api-uri'].$_POST['api-uri-callback'], $mode), 245, 245, array('peer-id'=>$other['peer-id'], 'api-uri'=>$other['api-uri'], 'api-uri-callback'=>$other['api-uri-callback'], 'api-uri-zip'=>$other['api-uri-zip'], 'api-uri-fonts'=>$other['api-uri-fonts'], 'version'=>$other['version'], 'polinating'=>$other['polinating']), array());
 							}
 						}
@@ -66,10 +66,10 @@
 			foreach($required as $field)
 				if (!in_array($field, array_keys($_POST)))
 					die("Field \$_POST[$field] is required to operate this function!");
-			$sql = "UPDATE `peers` SET `heard` = unix_timestamp() where `peer-id` LIKE '%s'";
-			$GLOBALS['FontsDB']->queryF(sprintf($sql, $_POST['peer-id']));
-			$sql = "SELECT COUNT(*) as RC from `fonts_fingering` where `fingerprint` LIKE '%s'";
-			list($count) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF(sprintf($sql, $_POST['fingerprint'])));
+			$sql = "UPDATE `" . $GLOBALS['APIDB']->prefix('peers') . "` SET `heard` = unix_timestamp() where `peer-id` LIKE '%s'";
+			$GLOBALS['APIDB']->queryF(sprintf($sql, $_POST['peer-id']));
+			$sql = "SELECT COUNT(*) as RC from `" . $GLOBALS['APIDB']->prefix('fonts_fingering') . "` where `fingerprint` LIKE '%s'";
+			list($count) = $GLOBALS['APIDB']->fetchRow($GLOBALS['APIDB']->queryF(sprintf($sql, $_POST['fingerprint'])));
 			die(json_encode(array('count'=>$count)));
 			break;
 			
@@ -78,14 +78,14 @@
 			foreach($required as $field)
 				if (!in_array($field, array_keys($_POST)))
 					die("Field \$_POST[$field] is required to operate this function!");
-			$sql = "UPDATE `peers` SET `heard` = unix_timestamp() where `peer-id` LIKE '%s'";
-			$GLOBALS['FontsDB']->queryF(sprintf($sql, $_POST['peer-id']));
-			$sql = "SELECT * from `fonts_archiving` WHERE (`font_id` = '".$_POST['font-id'].")";
-			$result = $GLOBALS['FontsDB']->queryF($sql);
-			while($row = $GLOBALS['FontsDB']->fetchArray($result))
+			$sql = "UPDATE `" . $GLOBALS['APIDB']->prefix('peers') . "` SET `heard` = unix_timestamp() where `peer-id` LIKE '%s'";
+			$GLOBALS['APIDB']->queryF(sprintf($sql, $_POST['peer-id']));
+			$sql = "SELECT * from `" . $GLOBALS['APIDB']->prefix('fonts_archiving') . "` WHERE (`font_id` = '".$_POST['font-id'].")";
+			$result = $GLOBALS['APIDB']->queryF($sql);
+			while($row = $GLOBALS['APIDB']->fetchArray($result))
 			{
-				$sql = "SELECT * from `fonts` WHERE `id` = '" . $row['font_id'] . "'";
-				$font = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql));
+				$sql = "SELECT * from `" . $GLOBALS['APIDB']->prefix('fonts') . "` WHERE `id` = '" . $row['font_id'] . "'";
+				$font = $GLOBALS['APIDB']->fetchArray($GLOBALS['APIDB']->queryF($sql));
 				switch($font['medium'])
 				{
 					case 'FONT_RESOURCES_CACHE':
@@ -110,10 +110,10 @@
 						$sessions = unserialize(file_get_contents(FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . "file-store-sessions.serial"));
 						if (!file_exists(constant(FONT_RESOURCES_CACHE) . $row['path'] . DIRECTORY_SEPARATOR . $row['filename']) && !isset($sessions[md5($font['path'] . DIRECTORY_SEPARATOR . $font['filename'])]))
 						{
-							$sql = "SELECT * FROM `peers` WHERE `peer-id` LIKE '%s'";
-							if ($GLOBALS['FontsDB']->getRowsNum($results = $GLOBALS['FontsDB']->queryF(sprintf($sql, mysql_real_escape_string($font['peer_id']))))==1)
+							$sql = "SELECT * FROM `" . $GLOBALS['APIDB']->prefix('peers') . "` WHERE `peer-id` LIKE '%s'";
+							if ($GLOBALS['APIDB']->getRowsNum($results = $GLOBALS['APIDB']->queryF(sprintf($sql, mysql_real_escape_string($font['peer_id']))))==1)
 							{
-								$peer = $GLOBALS['FontsDB']->fetchArray($results);
+								$peer = $GLOBALS['APIDB']->fetchArray($results);
 								mkdir(constant("FONT_RESOURCES_CACHE") . $row['path'], 0777, true);
 								writeRawFile(constant("FONT_RESOURCES_CACHE") . $row['path'] . DIRECTORY_SEPARATOR . $row['filename'], getURIData(sprint($peer['api-uri'].$peer['api-uri-zip'], $row['font_id'])));
 								$sessions[md5($row['path'] . DIRECTORY_SEPARATOR . $row['filename'])] = array("opened" => microtime(true), "dropped" => microtime(true) + mt_rand(3600 * 0.785, 3600 * 1.896), "resource" => $font['path'] . DIRECTORY_SEPARATOR . $font['filename']);
@@ -131,7 +131,7 @@
 					if (!is_dir($currently))
 						die("Failed to make path: $currently");
 				$filename = urldecode(str_replace('.zip', ".$state", $row['filename']));
-				if (!$GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `fonts_downloads` (`font_id`, `archive_id`, `filename`, `ip_id`, `when`) VALUES ('" . $row['font_id'] . "', '" . $row['id'] . "', '$filename', '$ipid', unix_timestamp())"))
+				if (!$GLOBALS['APIDB']->queryF($sql = "INSERT INTO `" . $GLOBALS['APIDB']->prefix('fonts_downloads') . "` (`font_id`, `archive_id`, `filename`, `ip_id`, `when`) VALUES ('" . $row['font_id'] . "', '" . $row['id'] . "', '$filename', '$ipid', unix_timestamp())"))
 					die("SQL Failed: $sql;");
 				$expanded = 0;
 				$output = array();
@@ -168,7 +168,7 @@
 					if (isset($preview) && file_exists($preview))
 					{
 						require_once __DIR__ . DIRECTORY_SEPARATOR . 'class' . DIRECTORY_SEPARATOR . 'WideImage' . DIRECTORY_SEPARATOR . 'WideImage.php';
-						$img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'font-preview.png');
+						$img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'font-preview.png');
 						$height = $img->getHeight();
 						$lsize = 66;
 						$ssize = 14;
@@ -189,13 +189,13 @@
 						unset($img);
 						$title = getRegionalFontName($row['font_id']);
 						if (strlen($title)<=9)
-							$img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'font-title-small.png');
+							$img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'font-title-small.png');
 						elseif (strlen($title)<=18)
-							$img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'font-title-medium.png');
+							$img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'font-title-medium.png');
 						elseif (strlen($title)<=35)
-							$img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'font-title-large.png');
+							$img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'font-title-large.png');
 						elseif (strlen($title)>=36)
-							$img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'font-title-extra.png');
+							$img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'font-title-extra.png');
 						$canvas->useFont($preview, 78, $img->allocateColor(0, 0, 0));
 						$canvas->writeText('center', 'center', $title);
 						$img->saveToFile($currently . DIRECTORY_SEPARATOR . 'font-name-banner.jpg');
@@ -232,23 +232,23 @@
 	
 				if (file_exists($packfile))
 				{
-					$resultb = $GLOBALS['FontsDB']->queryF($sql = "SELECT * FROM `fonts_callbacks` WHERE `failed` <= unix_timestamp() - (3600 * 6) AND LENGTH(`uri`) > 0 AND `type` IN ('archive') AND `font_id` = '" . $row['font_id'] . "'");
-					while($callback = $GLOBALS['FontsDB']->fetchArray($resultb))
+					$resultb = $GLOBALS['APIDB']->queryF($sql = "SELECT * FROM `" . $GLOBALS['APIDB']->prefix('fonts_callbacks') . "` WHERE `failed` <= unix_timestamp() - (3600 * 6) AND LENGTH(`uri`) > 0 AND `type` IN ('archive') AND `font_id` = '" . $row['font_id'] . "'");
+					while($callback = $GLOBALS['APIDB']->fetchArray($resultb))
 					{
-						@setCallBackURI($callback['uri'], 145, 145, array_merge(array('format' => $output, 'downloads' => $font['downloaded']+1, 'font-key' => $row['font_id'], 'ipid' => getIPIdentity('', true))), array('success'=>"UPDATE `fonts_callbacks` SET `calls` = `calls` + 1, `last` = UNIX_TIMESTAMP() WHERE `id` = '" . $callback['id'] . "'"));
+						@setCallBackURI($callback['uri'], 145, 145, array_merge(array('format' => $output, 'downloads' => $font['downloaded']+1, 'font-key' => $row['font_id'], 'ipid' => getIPIdentity('', true))), array('success'=>"UPDATE `" . $GLOBALS['APIDB']->prefix('fonts_callbacks') . "` SET `calls` = `calls` + 1, `last` = UNIX_TIMESTAMP() WHERE `id` = '" . $callback['id'] . "'"));
 					}
 					switch($font['medium'])
 					{
 						case 'FONT_RESOURCES_CACHE':
 						case 'FONT_RESOURCES_RESOURCE':
-							$GLOBALS['FontsDB']->queryF($sql = 'UPDATE `fonts` SET `medium` = \'FONT_RESOURCES_RESOURCE\', downloaded` = `downloaded` + 1 WHERE `id` = \'' . $row['font_id'] . "'");
-							$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_downloads` SET `fingerprint` = '".md5_file($packfile) . "' WHERE `font_id` = '" . $row['font_id'] . "' AND `archive_id` = '" . $row['id'] . "' AND `filename` = '$filename' AND `ipid` = '$ipid'");
+							$GLOBALS['APIDB']->queryF($sql = 'UPDATE `' . $GLOBALS['APIDB']->prefix('fonts') . '` SET `medium` = \'FONT_RESOURCES_RESOURCE\', downloaded` = `downloaded` + 1 WHERE `id` = \'' . $row['font_id'] . "'");
+							$GLOBALS['APIDB']->queryF($sql = "UPDATE `" . $GLOBALS['APIDB']->prefix('fonts_downloads') . "` SET `fingerprint` = '".md5_file($packfile) . "' WHERE `font_id` = '" . $row['font_id'] . "' AND `archive_id` = '" . $row['id'] . "' AND `filename` = '$filename' AND `ipid` = '$ipid'");
 							break;
 						case 'FONT_RESOURCES_PEERS':
-							$resultb = $GLOBALS['FontsDB']->queryF($sql = "SELECT * FROM `peers` WHERE `down` <= unix_timestamp() - (3600 * 6) AND `polinating` = 'yes' AND `peer-id` = '" . $font['peer_id'] . "'");
-							while($peer = $GLOBALS['FontsDB']->fetchArray($resultb))
+							$resultb = $GLOBALS['APIDB']->queryF($sql = "SELECT * FROM `" . $GLOBALS['APIDB']->prefix('peers') . "` WHERE `down` <= unix_timestamp() - (3600 * 6) AND `polinating` = 'yes' AND `peer-id` = '" . $font['peer_id'] . "'");
+							while($peer = $GLOBALS['APIDB']->fetchArray($resultb))
 							{
-								@setCallBackURI(sprintf($peer['api-uri'].$peer['api-uri-callback'], 'download'), 345, 345, array('font-id' => $row['font_id'], 'ip' => whitelistGetIP(true), 'ipid' => getIPIdentity(whitelistGetIP(true), true)), array('success'=>"UPDATE `peers` SET `called` = UNIX_TIMESTAMP() WHERE `peer-id` = '" . $peer['peer-id'] . "'"));
+								@setCallBackURI(sprintf($peer['api-uri'].$peer['api-uri-callback'], 'download'), 345, 345, array('font-id' => $row['font_id'], 'ip' => whitelistGetIP(true), 'ipid' => getIPIdentity(whitelistGetIP(true), true)), array('success'=>"UPDATE `" . $GLOBALS['APIDB']->prefix('peers') . "` SET `called` = UNIX_TIMESTAMP() WHERE `peer-id` = '" . $peer['peer-id'] . "'"));
 							}
 							break;
 					}

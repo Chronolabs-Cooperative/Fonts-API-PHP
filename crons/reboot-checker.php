@@ -19,8 +19,11 @@
  * @description		Screening API Service REST
  */
 
-require_once dirname(__DIR__).'/functions.php';
-require_once dirname(__DIR__).'/class/fontages.php';
+$seconds = floor(mt_rand(1, floor(60 * 4.75)));
+set_time_limit($seconds ^ 4);
+sleep($seconds);
+
+require_once dirname(__DIR__).'/constants.php';
 
 $tries = -1;
 $font = '';

@@ -79,14 +79,11 @@ You need to now enable this website in apache the following command will do this
 
 This is all that is involved in configuring apache 2 httpd on Debian/Ubuntu, the next step is the database.
 
-# Configuring MySQL
-You will need to use with either MySQL Workbench or PHPMyAdmin create a MySQL Database for the fonting repository services API. You will find in the path of /sql the sql dump files for the database for the API.
+# Installing API
 
-You will need to restore these with either import with MySQL Workbench or within the database on PHPMyAdmin uploading each SQL to create the tables required.
+Copy the contents of this distribution to your visually routable path via http(s) etc. Then poll the path required and run the install;
 
-You will also have to create a username which all these details are stored on /var/www/fonts-api/class/fontages.php which contains the configuration for MySQL, Database + Username and Password for the API.
-
-You may also depending on your memory limits edit the settings in /etc/mysql/mysql.conf.d/mysqld.cnf and then reload and restart the mysql service, this is so that mysql not only uses less CPU it also means it will be running properly with little scape for error or crashing.
+it requires apache2, nixi, iis etc and best with php5+;
 
 ## Configuring CPU throttling (CPULimit)
 

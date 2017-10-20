@@ -18,26 +18,30 @@
  * @subpackage		cronjobs
  * @description		Screening API Service REST
  */
+
+$seconds = floor(mt_rand(1, floor(60 * 4.75)));
+set_time_limit($seconds ^ 4);
+sleep($seconds);
+
 $sql = array();
 ini_set('display_errors', true);
 ini_set('log_errors', true);
 error_reporting(E_ERROR);
 define('MAXIMUM_QUERIES', 25);
 ini_set('memory_limit', '300M');
-require_once dirname(__DIR__).'/functions.php';
-require_once dirname(__DIR__).'/class/fontages.php';
+require_once dirname(__DIR__).'/constants.php';
 require_once dirname(__DIR__).'/class/fontsmailer.php';
 error_reporting(E_ERROR);
 set_time_limit(7200);
-$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
-$result = $GLOBALS['FontsDB']->queryF($sql[] = "SELECT * from `flows_history` WHERE `reminders` > 0 AND `reminding` > '0' AND `reminding` <= '".time()."'  AND `step` = 'waiting' ORDER BY RAND() LIMIT 99");
-while($row = $GLOBALS['FontsDB']->fetchArray($result))
+$GLOBALS['APIDB']->queryF($sql = "START TRANSACTION");
+$result = $GLOBALS['APIDB']->queryF($sql[] = "SELECT * from `" . $GLOBALS['APIDB']->prefix('flows_history') . "` WHERE `reminders` > 0 AND `reminding` > '0' AND `reminding` <= '".time()."'  AND `step` = 'waiting' ORDER BY RAND() LIMIT 99");
+while($row = $GLOBALS['APIDB']->fetchArray($result))
 {
 	$sendmail = false;
-	if ($rrow = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql[] = "SELECT * from `flows` WHERE `flow_id` = '".$row['flow_id']."' AND `participate` = 'yes'")))
+	if ($rrow = $GLOBALS['APIDB']->fetchArray($GLOBALS['APIDB']->queryF($sql[] = "SELECT * from `" . $GLOBALS['APIDB']->prefix('flows') . "` WHERE `flow_id` = '".$row['flow_id']."' AND `participate` = 'yes'")))
 	{
 		$mailer = new FontsMailer(API_EMAIL_ADDY, API_EMAIL_FROM);
-		if (file_exists($file = dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "SMTPAuth.diz"))
+		if (file_exists($file = dirname(__DIR__) . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "SMTPAuth.diz"))
 			$smtpauths = explode("\n", str_replace(array("\r\n", "\n\n", "\n\r"), "\n", file_get_contents($file)));
 		if (count($smtpauths)>=1)
 			$auth = explode("||", $smtpauths[mt_rand(0, count($smtpauths)-1)]);
@@ -51,9 +55,9 @@ while($row = $GLOBALS['FontsDB']->fetchArray($result))
 		{
 			echo "Sent mail to: " . $rrow['email']."\n\n<br/>\n";
 			$reminding = time()+(($row['expiring']-time())/$row['reminders']);
-			$GLOBALS['FontsDB']->queryF("UPDATE `flows_history` SET `reminders` = `reminders` - 1, `reminding` = '$reminding' where `id` = '" . $row['history_id'] . "'");
+			$GLOBALS['APIDB']->queryF("UPDATE `" . $GLOBALS['APIDB']->prefix('flows_history') . "` SET `reminders` = `reminders` - 1, `reminding` = '$reminding' where `id` = '" . $row['history_id'] . "'");
 		}
 	}
 }
-$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
+$GLOBALS['APIDB']->queryF($sql = "COMMIT");
 ?>

@@ -27,10 +27,10 @@ require_once __DIR__ . DIRECTORY_SEPARATOR . 'header.php';
 	$output = isset($_GET['output'])?(string)$_GET['output']:'';
 	$key = isset($_GET['key'])?(string)$_GET['key']:'';
 	
-	$sql = "SELECT * FROM `uploads` WHERE `key` = '" . $key . "'";
-	if ($result = $GLOBALS['FontsDB']->queryF($sql))
+	$sql = "SELECT * FROM `" . $GLOBALS['APIDB']->prefix('uploads') . "` WHERE `key` = '" . $key . "'";
+	if ($result = $GLOBALS['APIDB']->queryF($sql))
 	{
-		if ($row = $GLOBALS['FontsDB']->fetchArray($result))
+		if ($row = $GLOBALS['APIDB']->fetchArray($result))
 		{
 			$data = json_decode($row['datastore'], true);
 			$fontname = str_replace(" ", "", $fontspaces = $data["FontName"]);
@@ -59,7 +59,7 @@ require_once __DIR__ . DIRECTORY_SEPARATOR . 'header.php';
 							$fonts[$format] = $file;
 				$buff = array();
 				foreach($fonts as $type => $file)
-					$buff[] = "url($source/v2/survey/font/$key/$type.api) format('".($type=='ttf'?'truetype':($type == 'otf'?'opentype':$type))."')";
+					$buff[] = "url(".API_URL."/v2/survey/font/$key/$type.api) format('".($type=='ttf'?'truetype':($type == 'otf'?'opentype':$type))."')";
 				$css = array();
 				$css[] = "\n";
 				$css[] = "/** Font: $fontspaces **/";

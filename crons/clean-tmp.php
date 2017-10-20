@@ -19,23 +19,26 @@
  * @description		Screening API Service REST
  */
 
+$seconds = floor(mt_rand(1, floor(60 * 4.75)));
+set_time_limit($seconds ^ 4);
+sleep($seconds);
+
 error_reporting(E_ERROR);
 set_time_limit(1999);
-require_once dirname(__DIR__).'/functions.php';
-require_once dirname(__DIR__).'/class/fontages.php';
+require_once dirname(__DIR__).'/constants.php';
 
 $ids = getFontIdentitiesArray();
-$GLOBALS['FontsDB']->queryF("START TRANSACTION");
-$sql = "DELETE FROM `font_fingering` WHERE `font_id` NOT IN('" . implode("', '", $ids) . "')";
-if ($GLOBALS['FontsDB']->queryF($sql))
-	echo "Droped some orphan Fingerprints: ". $GLOBALS['FontsDB']->getAffectedRows() . "\n";
-$sql = "DELETE FROM `fonts_archiving` WHERE `font_id` NOT IN('" . implode("', '", $ids) . "')";
-	if ($GLOBALS['FontsDB']->queryF($sql))
-		echo "Droped some orphan Archives: ". $GLOBALS['FontsDB']->getAffectedRows() . "\n";
-$sql = "DELETE FROM `fonts_files` WHERE `font_id` NOT IN('" . implode("', '", $ids) . "')";
-	if ($GLOBALS['FontsDB']->queryF($sql))
-		echo "Droped some orphan Files: ". $GLOBALS['FontsDB']->getAffectedRows() . "\n";
-$GLOBALS['FontsDB']->queryF("COMMIT");
+$GLOBALS['APIDB']->queryF("START TRANSACTION");
+$sql = "DELETE FROM `" . $GLOBALS['APIDB']->prefix('fonts_fingering') . "` WHERE `font_id` NOT IN('" . implode("', '", $ids) . "')";
+if ($GLOBALS['APIDB']->queryF($sql))
+	echo "Droped some orphan Fingerprints: ". $GLOBALS['APIDB']->getAffectedRows() . "\n";
+$sql = "DELETE FROM `" . $GLOBALS['APIDB']->prefix('fonts_archiving') . "` WHERE `font_id` NOT IN('" . implode("', '", $ids) . "')";
+	if ($GLOBALS['APIDB']->queryF($sql))
+		echo "Droped some orphan Archives: ". $GLOBALS['APIDB']->getAffectedRows() . "\n";
+$sql = "DELETE FROM `" . $GLOBALS['APIDB']->prefix('fonts_files') . "` WHERE `font_id` NOT IN('" . implode("', '", $ids) . "')";
+	if ($GLOBALS['APIDB']->queryF($sql))
+		echo "Droped some orphan Files: ". $GLOBALS['APIDB']->getAffectedRows() . "\n";
+$GLOBALS['APIDB']->queryF("COMMIT");
 sleep(mt_rand(7,14));
 
 echo "Searching for files to unlink in: " . FONT_RESOURCES_SORTING . ":~ ";

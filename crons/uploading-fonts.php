@@ -19,17 +19,19 @@
  * @description		Screening API Service REST
  */
 
+$seconds = floor(mt_rand(1, floor(60 * 4.75)));
+set_time_limit($seconds ^ 4);
+sleep($seconds);
 
 ini_set('display_errors', true);
 ini_set('log_errors', true);
 error_reporting(E_ERROR);
 define('MAXIMUM_QUERIES', 25);
 ini_set('memory_limit', '315M');
-include_once dirname(dirname(__FILE__)).'/functions.php';
-include_once dirname(dirname(__FILE__)).'/class/fontages.php';
+include_once dirname(__DIR__).'/constants.php';
 require_once dirname(__DIR__).'/class/fontsmailer.php';
 set_time_limit(7200*99*25);
-$uploader = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
+$uploader = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include"  . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
 $keys = array_keys($uploader);
 while(!count($uploader[$ipid = $keys[mt_rand(0, count($keys)-1)]]) && count($uploader) > 0)
 {
@@ -66,7 +68,7 @@ foreach($uploader[$ipid] as $time => $data) {
 	}
 	
 	unset($uploader[$ipid][$time]);
-	file_put_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($uploader));
+	file_put_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include"  . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($uploader));
 	file_put_contents(constant("FONT_RESOURCES_UNPACKING") . $data['path'] . DIRECTORY_SEPARATOR . "upload.json", json_encode($data));
 	foreach($data['files'] as $zipii)
 	{
@@ -124,13 +126,13 @@ foreach($uploader[$ipid] as $time => $data) {
 		$data['process'] = microtime(true);
 		$data['mode'] = 'unpacking';
 		$data['current'] = $packfile;
-		$uploader = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
+		$uploader = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include"  . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
 		$uploader[$ipid][$time] = $data;
-		file_put_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($uploader));
+		file_put_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include"  . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($uploader));
 		shell_exec("rm -Rf " . constant("FONT_UPLOAD_PATH") . $data['path'] . DIRECTORY_SEPARATOR . '*');
-		$uploader = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
+		$uploader = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include"  . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
 		$uploader[$ipid][$time] = $data;
-		file_put_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($uploader));
+		file_put_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include"  . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($uploader));
 		die("Finished Unpacking this Upload from: $ipid at the time of " . date("Y-m-d H:i:s", $time));
 	} else {
 		$data['mode'] = ($data['mode']!='pack'?'store':'unpacking');
@@ -154,10 +156,10 @@ foreach($uploader[$ipid] as $time => $data) {
 					if (isset($data['form']['callback']) && !empty($data['form']['callback']))
 						@setCallBackURI($data['form']['callback'], 127, 131, array('action'=>'ignored', 'file-md5' => $finged, 'allocated' => true, 'email' => $data['form']['email'], 'name' => $data['form']['name'], 'bizo' => $data['form']['bizo'], 'filename' => basename($file), 'culled' => true));
 				}
-			$uploader = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
+			$uploader = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include"  . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
 		$data['mode'] = 'store';
 		$uploader[$ipid][$time] = $data;
-		file_put_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($uploader));
+		file_put_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include"  . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($uploader));
 		die("Finished checking Cull Listing's for Upload from: $ipid at the time of " . date("Y-m-d H:i:s", $time));
 	}
 	
@@ -204,7 +206,7 @@ foreach($uploader[$ipid] as $time => $data) {
 			$queued = array();
 			foreach($files as $type => $fontfiles)
 			{
-				$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
+				$GLOBALS['APIDB']->queryF($sql = "START TRANSACTION");
 				foreach($fontfiles as $finger => $fontfile)
 				{
 					$copypath = FONT_RESOURCES_SORTING . DIRECTORY_SEPARATOR . $data['form']['email'] . DIRECTORY_SEPARATOR . microtime(true);
@@ -242,8 +244,8 @@ foreach($uploader[$ipid] as $time => $data) {
 										$found = true;
 									}
 								$fingerprint = md5(implode("", $data));
-								$sql = "SELECT count(*) FROM `fonts_fingering` WHERE `fingerprint` LIKE '" . $fingerprint . "'";
-								list($fingers) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql));
+								$sql = "SELECT count(*) FROM `" . $GLOBALS['APIDB']->prefix('fonts_fingering') . "` WHERE `fingerprint` LIKE '" . $fingerprint . "'";
+								list($fingers) = $GLOBALS['APIDB']->fetchRow($GLOBALS['APIDB']->queryF($sql));
 								if ($fingers==0)
 								{
 									$ffile++;
@@ -255,47 +257,47 @@ foreach($uploader[$ipid] as $time => $data) {
 									sort($emailbcc);
 									$ccid = md5(json_encode($emailcc));
 									$bccid = md5(json_encode($emailbcc));
-									$sql = "SELECT count(*) FROM `emails` WHERE `id` = '$ccid'";
-									list($count) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql));
+									$sql = "SELECT count(*) FROM `" . $GLOBALS['APIDB']->prefix('emails') . "` WHERE `id` = '$ccid'";
+									list($count) = $GLOBALS['APIDB']->fetchRow($GLOBALS['APIDB']->queryF($sql));
 									if ($count == 0)
 									{
-										if (!$GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `emails` (`id`, `emails`) VALUES('$ccid', '".$GLOBALS['FontsDB']->escape(json_encode($emailcc))."')"))
+										if (!$GLOBALS['APIDB']->queryF($sql = "INSERT INTO `" . $GLOBALS['APIDB']->prefix('emails') . "` (`id`, `" . $GLOBALS['APIDB']->prefix('emails') . "`) VALUES('$ccid', '".$GLOBALS['APIDB']->escape(json_encode($emailcc))."')"))
 											echo("SQL Failed: $sql;");
 									}
-									$sql = "SELECT count(*) FROM `emails` WHERE `id` = '$bccid'";
-									list($count) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql));
+									$sql = "SELECT count(*) FROM `" . $GLOBALS['APIDB']->prefix('emails') . "` WHERE `id` = '$bccid'";
+									list($count) = $GLOBALS['APIDB']->fetchRow($GLOBALS['APIDB']->queryF($sql));
 									if ($count == 0)
 									{
-										if (!$GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `emails` (`id`, `emails`) VALUES('$bccid', '".$GLOBALS['FontsDB']->escape(json_encode($emailcc))."')"))
+										if (!$GLOBALS['APIDB']->queryF($sql = "INSERT INTO `" . $GLOBALS['APIDB']->prefix('emails') . "` (`id`, `" . $GLOBALS['APIDB']->prefix('emails') . "`) VALUES('$bccid', '".$GLOBALS['APIDB']->escape(json_encode($emailcc))."')"))
 											echo("SQL Failed: $sql;");
 									}
 									$queued[] = $fontfile;
-									$sql = "INSERT INTO `uploads` (`ip_id`, `available`, `key`, `scope`, `prefix`, `email`, `uploaded_file`, `uploaded_path`, `uploaded`, `referee_uri`, `callback`, `bytes`, `batch-size`, `datastore`, `cc`, `bcc`, `frequency`, `elapses`, `longitude`, `latitude`) VALUES ('$ipid','" . $available = mt_rand(7,13) . "','" . $GLOBALS['FontsDB']->escape(md5_file($copypath . DIRECTORY_SEPARATOR .  strtolower(basename($uploadfile)))) . "','" . $GLOBALS['FontsDB']->escape($scope) . "','" . $GLOBALS['FontsDB']->escape($prefix = $data['form']['prefix']) . "','" . $GLOBALS['FontsDB']->escape($email = $data['form']['email']) . "','" . $GLOBALS['FontsDB']->escape($filename = strtolower(basename($uploadfile))) . "','" . $GLOBALS['FontsDB']->escape($copypath) . "','" . time(). "','" . $GLOBALS['FontsDB']->escape($_SERVER['HTTP_REFERER']) . "','" . $GLOBALS['FontsDB']->escape($callback = $data['form']['callback']) . "'," . (filesize($uploadfile)==''?0:filesize($uploadfile)) . "," . $size . ",'" . $GLOBALS['FontsDB']->escape(json_encode(array('scope' => $data['form']['scope'], 'ipsec' => $locality = json_decode(getURIData("https://lookups.labs.coop/v1/country/".(in_array($ip = whitelistGetIP(true), array('127.0.0.1','10.1.1.1'))?'myself':$ip)."/json.api"), true), 'name' => $data['form']['name'], 'bizo' => $data['form']['bizo'], 'batch-size' => $size, 'font' => $fontdata))) . "','$ccid','$bccid','" . $GLOBALS['FontsDB']->escape($freq = mt_rand(2.76,6.75)*3600*24) . "','" . $GLOBALS['FontsDB']->escape($elapse = mt_rand(9,27)*3600*24) . "','". (!isset($_SESSION['locality']['location']["coordinates"]["longitude"])?"0.0001":$_SESSION['locality']['location']["coordinates"]["longitude"])."','". (!isset($_SESSION['locality']['location']["coordinates"]["latitude"])?"0.0001":$_SESSION['locality']['location']["coordinates"]["latitude"])."')";
-									if ($GLOBALS['FontsDB']->queryF($sql))
+									$sql = "INSERT INTO `" . $GLOBALS['APIDB']->prefix('uploads') . "` (`ip_id`, `available`, `key`, `scope`, `prefix`, `email`, `uploaded_file`, `uploaded_path`, `uploaded`, `referee_uri`, `callback`, `bytes`, `batch-size`, `datastore`, `cc`, `bcc`, `frequency`, `elapses`, `longitude`, `latitude`) VALUES ('$ipid','" . $available = mt_rand(7,13) . "','" . $GLOBALS['APIDB']->escape(md5_file($copypath . DIRECTORY_SEPARATOR .  strtolower(basename($uploadfile)))) . "','" . $GLOBALS['APIDB']->escape($scope) . "','" . $GLOBALS['APIDB']->escape($prefix = $data['form']['prefix']) . "','" . $GLOBALS['APIDB']->escape($email = $data['form']['email']) . "','" . $GLOBALS['APIDB']->escape($filename = strtolower(basename($uploadfile))) . "','" . $GLOBALS['APIDB']->escape($copypath) . "','" . time(). "','" . $GLOBALS['APIDB']->escape($_SERVER['HTTP_REFERER']) . "','" . $GLOBALS['APIDB']->escape($callback = $data['form']['callback']) . "'," . (filesize($uploadfile)==''?0:filesize($uploadfile)) . "," . $size . ",'" . $GLOBALS['APIDB']->escape(json_encode(array('scope' => $data['form']['scope'], 'ipsec' => $locality = json_decode(getURIData("https://lookups.labs.coop/v1/country/".(in_array($ip = whitelistGetIP(true), array('127.0.0.1','10.1.1.1'))?'myself':$ip)."/json.api"), true), 'name' => $data['form']['name'], 'bizo' => $data['form']['bizo'], 'batch-size' => $size, 'font' => $fontdata))) . "','$ccid','$bccid','" . $GLOBALS['APIDB']->escape($freq = mt_rand(2.76,6.75)*3600*24) . "','" . $GLOBALS['APIDB']->escape($elapse = mt_rand(9,27)*3600*24) . "','". (!isset($_SESSION['locality']['location']["coordinates"]["longitude"])?"0.0001":$_SESSION['locality']['location']["coordinates"]["longitude"])."','". (!isset($_SESSION['locality']['location']["coordinates"]["latitude"])?"0.0001":$_SESSION['locality']['location']["coordinates"]["latitude"])."')";
+									if ($GLOBALS['APIDB']->queryF($sql))
 									{
-										$uploadid = $GLOBALS['FontsDB']->getInsertId();
+										$uploadid = $GLOBALS['APIDB']->getInsertId();
 										if ($scope == 'none')
 										{
-											$sql = "UPDATE `uploads` SET `quizing` = UNIX_TIMESTAMP(), `expired` = UNIX_TIMESTAMP()+1831, `slotting` = 0, `needing` = 1, `finished` = 2, `surveys` = 2, `available` = 0 WHERE `id` = $uploadid";
-											$GLOBALS['FontsDB']->queryF($sql);
+											$sql = "UPDATE `" . $GLOBALS['APIDB']->prefix('uploads') . "` SET `quizing` = UNIX_TIMESTAMP(), `expired` = UNIX_TIMESTAMP()+1831, `slotting` = 0, `needing` = 1, `finished` = 2, `surveys` = 2, `available` = 0 WHERE `id` = $uploadid";
+											$GLOBALS['APIDB']->queryF($sql);
 										}
 										echo "\nCreated Upload Identity: ".$uploadid;
-										$sql = "INSERT INTO `fonts_fingering` (`type`, `upload_id`, `fingerprint`) VALUES ('" . $GLOBALS['FontsDB']->escape(API_BASE) . "','" . $GLOBALS['FontsDB']->escape($uploadid) . "','" . $GLOBALS['FontsDB']->escape($fingerprint) . "')";
-										if (!$GLOBALS['FontsDB']->queryF($sql))
+										$sql = "INSERT INTO `" . $GLOBALS['APIDB']->prefix('fonts_fingering') . "` (`type`, `upload_id`, `fingerprint`) VALUES ('" . $GLOBALS['APIDB']->escape(API_BASE) . "','" . $GLOBALS['APIDB']->escape($uploadid) . "','" . $GLOBALS['APIDB']->escape($fingerprint) . "')";
+										if (!$GLOBALS['APIDB']->queryF($sql))
 											echo "SQL Failed: $sql;\n";
 										$success[] = basename($fontfile);
 										$data['success'][] = basename($fontfile);
 										if (isset($data['form']['callback']) && !empty($data['form']['callback']))
 											@setCallBackURI($data['form']['callback'], 145, 145, array('action'=>'uploaded', 'file-md5' => $finger, 'allocated' => $available, 'key' => $key, 'email' => $data['form']['email'], 'name' => $data['form']['name'], 'bizo' => $data['form']['bizo'], 'frequency' => $freq, 'elapsing' => $elapses, 'filename' => $filename, 'culled' => false));
-											$GLOBALS["FontsDB"]->queryF('UPDATE `networking` SET `fonts` = `fonts` + 1 WHERE `ip_id` = "'.$ipid.'"');
+											$GLOBALS["APIDB"]->queryF('UPDATE `' . $GLOBALS['APIDB']->prefix('networking') . '` SET `fonts` = `fonts` + 1 WHERE `ip_id` = "'.$ipid.'"');
 										echo "\nUploaded file Queued: ".basename($fontfile);
 										if ($ffile>=mt_rand(109, 210) && API_UPLOADS_RANDOMBATCH == true)
 										{
 											$data['mode'] = 'culling';
-											$uploader = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
+											$uploader = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include"  . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
 											$uploader[$ipid][$time] = $data;
-											file_put_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($uploader));
-											$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
+											file_put_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include"  . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($uploader));
+											$GLOBALS['APIDB']->queryF($sql = "COMMIT");
 											unlink(constant("FONT_RESOURCES_UNPACKING") . $data['path'] . DIRECTORY_SEPARATOR . "upload.json");
 											die("Scheduling of font limit; reached, $ffile files for font's processed in this session!!\n");
 										}
@@ -304,14 +306,14 @@ foreach($uploader[$ipid] as $time => $data) {
 										unlink($uploadfile);
 										rmdir(dirname($uploadfile));
 									}
-									$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
-									$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
+									$GLOBALS['APIDB']->queryF($sql = "COMMIT");
+									$GLOBALS['APIDB']->queryF($sql = "START TRANSACTION");
 								} 
 							}
 						}
 					}
 				}
-				$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
+				$GLOBALS['APIDB']->queryF($sql = "COMMIT");
 				sleep(mt_rand(2,7));
 			}
 			if (count(getCompleteFontsListAsArray(constant("FONT_RESOURCES_UNPACKING") . $data['path']))==0)
@@ -344,9 +346,9 @@ foreach($uploader[$ipid] as $time => $data) {
 	}
 	if ($data['mode']!='finished')
 	{
-		$uploaders = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
+		$uploaders = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include"  . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);
 		$uploaders[$ipid][$time] = $data;
-		file_put_contents(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($data)));
+		file_put_contents(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include"  . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json", json_encode($data)));
 		unlink(constant("FONT_RESOURCES_UNPACKING") . $data['path'] . DIRECTORY_SEPARATOR . "upload.json");
 	} else {
 		shell_exec("rm -Rf " . constant("FONT_RESOURCES_UNPACKING") . $data['path']);

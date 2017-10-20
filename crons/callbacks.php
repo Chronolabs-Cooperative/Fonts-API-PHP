@@ -3,7 +3,7 @@
  * Chronolabs Fontages API
  *
  * You may not change or alter any portion of this comment or credits
- * of supporting developers from this source code or any supporting source code
+ * of supporting developers FROM this source code or any supporting source code
  * which is considered copyrighted (c) material of the original comment or credit authors.
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -30,16 +30,19 @@
  //   */1 * * * * /usr/bin/php -q /path/to/cronjobs/callbacks.php
 
 
+$seconds = floor(mt_rand(1, floor(60 * 0.95)));
+set_time_limit($seconds ^ 4);
+sleep($seconds);
+
 ini_set('display_errors', true);
 ini_set('log_errors', true);
 error_reporting(E_ERROR);
 define('MAXIMUM_QUERIES', 25);
 ini_set('memory_limit', '315M');
-include_once dirname(dirname(__FILE__)).'/functions.php';
-include_once dirname(dirname(__FILE__)).'/class/FontsDB.php';
-$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
-$result = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `callbacks` WHERE `when` <= unix_timestamp() AND `fails` < 5 ORDER BY `when` ASC");
-while ($row = $GLOBALS['FontsDB']->fetchArray($result))
+include_once dirname(__DIR__).'/constants.php';
+$GLOBALS['APIDB']->queryF($sql = "START TRANSACTION");
+$result = $GLOBALS['APIDB']->queryF($sql = "SELECT * FROM `" . $GLOBALS['APIDB']->prefix('callbacks') . "` WHERE `when` <= unix_timestamp() AND `fails` < 5 ORDER BY `when` ASC");
+while ($row = $GLOBALS['APIDB']->fetchArray($result))
 {
 	$success = false;
 	$data = json_decode($row['data'], true);
@@ -48,9 +51,9 @@ while ($row = $GLOBALS['FontsDB']->fetchArray($result))
 	if (isset($queries['before']) && !empty($queries['before']))
 		if (is_array($queries['before']))
 			foreach($queries['before'] as $question)
-				$GLOBALS['FontsDB']->queryF($question);
+				$GLOBALS['APIDB']->queryF($question);
 		elseif (is_string($queries['before']))
-			$GLOBALS['FontsDB']->queryF($queries['before']);
+			$GLOBALS['APIDB']->queryF($queries['before']);
 	
 	setTimeLimit($row['timeout']+$row['connection']+25);
 			
@@ -84,23 +87,23 @@ while ($row = $GLOBALS['FontsDB']->fetchArray($result))
 		if (isset($queries['success']) && !empty($queries['success']))
 			if (is_array($queries['success']))
 				foreach($queries['success'] as $question)
-					$GLOBALS['FontsDB']->queryF($question);
+					$GLOBALS['APIDB']->queryF($question);
 			elseif (is_string($queries['success']))
-				$GLOBALS['FontsDB']->queryF($queries['success']);
-		$GLOBALS['FontsDB']->queryF($sql = "DELETE FROM `callbacks` WHERE `when` = '".$row['when']."' AND `uri` LIKE '".$row['uri']."'");
+				$GLOBALS['APIDB']->queryF($queries['success']);
+		$GLOBALS['APIDB']->queryF($sql = "DELETE FROM `" . $GLOBALS['APIDB']->prefix('callbacks') . "` WHERE `when` = '".$row['when']."' AND `uri` LIKE '".$row['uri']."'");
 	} else {
 
 		if (isset($queries['failed']) && !empty($queries['failed']))
 			if (is_array($queries['failed']))
 				foreach($queries['failed'] as $question)
-					$GLOBALS['FontsDB']->queryF($question);
+					$GLOBALS['APIDB']->queryF($question);
 			elseif (is_string($queries['failed']))
-				$GLOBALS['FontsDB']->queryF($queries['failed']);
+				$GLOBALS['APIDB']->queryF($queries['failed']);
 			
-		$GLOBALS['FontsDB']->queryF($sql = "UPDATE `callbacks` SET `fails` = `fails` + 1 WHERE `when` = '".$row['when']."' AND `uri` LIKE '".$row['uri']."'");
+		$GLOBALS['APIDB']->queryF($sql = "UPDATE `" . $GLOBALS['APIDB']->prefix('callbacks') . "` SET `fails` = `fails` + 1 WHERE `when` = '".$row['when']."' AND `uri` LIKE '".$row['uri']."'");
 	}
 }
-$GLOBALS['FontsDB']->queryF($sql = "DELETE FROM `callbacks` WHERE `fails` >= '5'");
-$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
+$GLOBALS['APIDB']->queryF($sql = "DELETE FROM `" . $GLOBALS['APIDB']->prefix('callbacks') . "` WHERE `fails` >= '5'");
+$GLOBALS['APIDB']->queryF($sql = "COMMIT");
 exit(0);
 ?>

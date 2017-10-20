@@ -23,10 +23,10 @@
 global $domain, $protocol, $business, $entity, $contact, $referee, $peerings, $source;
 require_once __DIR__ . DIRECTORY_SEPARATOR . 'header.php';
 
-$sql = "SELECT * FROM `uploads` WHERE `key` = '" . $fontmd5 = $_REQUEST['key'] . "'";
-if ($result = $GLOBALS['FontsDB']->queryF($sql))
+$sql = "SELECT * FROM `" . $GLOBALS['APIDB']->prefix('uploads') . "` WHERE `key` = '" . $fontmd5 = $_REQUEST['key'] . "'";
+if ($result = $GLOBALS['APIDB']->queryF($sql))
 {
-	if ($row = $GLOBALS['FontsDB']->fetchArray($result))
+	if ($row = $GLOBALS['APIDB']->fetchArray($result))
 	{
 		$data = json_decode($row['datastore'], true);
 		$fontname = str_replace(" ", "", $fontspaces = $data["FontName"]);
@@ -71,11 +71,38 @@ if (in_array($_REQUEST['mode'], array('jpg', 'png', 'gif')))
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
-<head>
+<<head>
+<meta property="og:title" content="<?php echo API_VERSION; ?>"/>
+<meta property="og:type" content="api<?php echo API_TYPE; ?>"/>
+<meta property="og:image" content="<?php echo API_URL; ?>/assets/images/logo_500x500.png"/>
+<meta property="og:url" content="<?php echo (isset($_SERVER["HTTPS"])?"https://":"http://").$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]; ?>" />
+<meta property="og:site_name" content="<?php echo API_VERSION; ?> - <?php echo API_LICENSE_COMPANY; ?>"/>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title><?php echo $fontspaces; ?> Preview || Chronolabs Cooperative</title>
-<link rel="stylesheet" href="https://css.ringwould.com.au/3/gradientee/stylesheet.css" type="text/css" />
-<link rel="stylesheet" href="https://css.ringwould.com.au/3/shadowing/styleheet.css" type="text/css" />
+<meta http-equiv="rating" content="general" />
+<meta http-equiv="author" content="wishcraft@users.sourceforge.net" />
+<meta http-equiv="copyright" content="<?php echo API_LICENSE_COMPANY; ?> &copy; <?php echo date("Y"); ?>" />
+<meta http-equiv="generator" content="Chronolabs Cooperative (<?php echo $place['iso3']; ?>)" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title><?php echo API_VERSION; ?> || <?php echo API_LICENSE_COMPANY; ?></title>
+
+<link rel="stylesheet" href="<?php echo API_URL; ?>/assets/css/style.css" type="text/css" />
+<!-- Custom Fonts -->
+<link href="<?php echo API_URL; ?>/assets/media/Labtop/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Labtop Bold/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Labtop Bold Italic/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Labtop Italic/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Labtop Superwide Boldish/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Labtop Thin/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Labtop Unicase/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/LHF Matthews Thin/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Life BT Bold/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Life BT Bold Italic/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Prestige Elite/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Prestige Elite Bold/style.css" rel="stylesheet" type="text/css">
+<link href="<?php echo API_URL; ?>/assets/media/Prestige Elite Normal/style.css" rel="stylesheet" type="text/css">
+<link rel="stylesheet" href="<?php echo API_URL; ?>/assets/css/gradients.php" type="text/css" />
+<link rel="stylesheet" href="<?php echo API_URL; ?>/assets/css/shadowing.php" type="text/css" />
+
 <style>
  * {
  font-family: <?php echo $fontname; ?>;

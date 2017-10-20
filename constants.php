@@ -20,6 +20,8 @@
  * @link			http://cipher.labs.coop
  */
 
+    require_once __DIR__ . "/apiconfig.php";
+
 	if (API_DEBUG==true) echo (basename(__FILE__) . "::"  . __LINE__ . "<br/>\n");
 	/**
 	 *
@@ -77,23 +79,39 @@
 	define('API_DEFAULT_BIZO', 'Chronolabs Cooperative');
 	
 	/**
+	 * YOU NEED TO SET THESE CONSTANTS FOR RUN TIME OPERATION
 	 * 
 	 * @var string
 	 */
-	define('FONT_RESOURCES_UNPACKING', '/mnt/6c2b8804-6e70-4305-a356-bcf16c433701/fonts-api/Unpacking');
-	define('FONT_RESOURCES_SORTING', '/mnt/6c2b8804-6e70-4305-a356-bcf16c433701/fonts-api/Sorting');
-	define('FONT_RESOURCES_CONVERTING', '/mnt/6c2b8804-6e70-4305-a356-bcf16c433701/fonts-api/Converting');
-	define('FONT_RESOURCES_RESOURCE', '/mnt/6c2b8804-6e70-4305-a356-bcf16c433701/fonts-api/Repository');
-	define('FONT_RESOURCES_CACHE', '/tmp/Fonts-Cache');
+	define('FONT_RESOURCES_UNPACKING', API_PATH . '/Fonts/Unpacking');
+	define('FONT_RESOURCES_SORTING', API_PATH . '/Fonts/Sorting');
+	define('FONT_RESOURCES_CONVERTING', API_PATH . '/Fonts/Converting');
+	define('FONT_RESOURCES_RESOURCE', API_PATH . '/Fonts/Repository');
+	define('FONT_RESOURCES_CACHE', API_VAR_PATH . '/FontsAPI/Cache');
 	define('FONT_RESOURCES_STORE', 'https://sourceforge.net/p/chronolabsapis/Fonting/HEAD/tree/%s?format=raw');
 	define('FONT_RESOURCES_PEERS', 'https://sourceforge.net/p/chronolabsapis/Fonting/HEAD/tree/peers.json?format=raw');
 	define('FONT_RESOURCES_REPOMAP', 'https://sourceforge.net/p/chronolabsapis/Fonting/HEAD/tree/%s/%s--repository-mapping.json?format=raw');
 	define('FONT_RESOURCES_STORE_GIT', 'https://github.com/Chronolabs-Cooperative/Fonting-Repository/raw/master/%s');
 	define('FONT_RESOURCES_PEERS_GIT', 'https://github.com/Chronolabs-Cooperative/Fonting-Repository/raw/master/peers.json');
 	define('FONT_RESOURCES_REPOMAP_GIT', 'https://github.com/Chronolabs-Cooperative/Fonting-Repository/raw/master/%s/%s--repository-mapping.json');
-	define('FONT_UPLOAD_PATH', '/tmp/Fonts-Uploads');
+	define('FONT_UPLOAD_PATH', API_VAR_PATH . '/FontsAPI/Uploads');
 	define('FONTS_CACHE', FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . '--dumps--');
 
+	if (!is_dir(FONT_RESOURCES_UNPACKING))
+	    mkdirSecure(FONT_RESOURCES_UNPACKING, 0777, true);
+    if (!is_dir(FONT_RESOURCES_SORTING))
+        mkdirSecure(FONT_RESOURCES_SORTING, 0777, true);
+    if (!is_dir(FONT_RESOURCES_CONVERTING))
+        mkdirSecure(FONT_RESOURCES_CONVERTING, 0777, true);
+    if (!is_dir(FONT_RESOURCES_RESOURCE))
+        mkdirSecure(FONT_RESOURCES_RESOURCE, 0777, true);
+    if (!is_dir(FONT_RESOURCES_CACHE))
+        mkdirSecure(FONT_RESOURCES_CACHE, 0777, true);
+    if (!is_dir(FONT_UPLOAD_PATH))
+        mkdirSecure(FONT_UPLOAD_PATH, 0777, true);
+	if (!is_dir(FONTS_CACHE))
+	    mkdirSecure(FONTS_CACHE, 0777, true);
+	    
 	/******* DO NOT CHANGE THIS VARIABLE ****
 	 * @var string
 	 */

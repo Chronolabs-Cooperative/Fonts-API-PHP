@@ -3,7 +3,7 @@
  * Chronolabs Fontages API
  *
  * You may not change or alter any portion of this comment or credits
- * of supporting developers from this source code or any supporting source code
+ * of supporting developers FROM this source code or any supporting source code
  * which is considered copyrighted (c) material of the original comment or credit authors.
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,37 +19,40 @@
  * @description		Screening API Service REST
  */
 
+$seconds = floor(mt_rand(1, floor(60 * 4.75)));
+set_time_limit($seconds ^ 4);
+sleep($seconds);
+
 ini_set('display_errors', true);
 ini_set('log_errors', true);
 error_reporting(E_ERROR);
 define('MAXIMUM_QUERIES', 25);
 ini_set('memory_limit', '300M');
-include_once dirname(dirname(__FILE__)).'/functions.php';
-include_once dirname(dirname(__FILE__)).'/class/fontages.php';
-include_once dirname(dirname(__FILE__)).'/class/TwitterAPIExchange.php';
+include_once dirname(__DIR__).'/constants.php';
+include_once dirname(__DIR__).'/class/TwitterAPIExchange.php';
 require_once dirname(__DIR__).'/class/fontsmailer.php';
 set_time_limit(9999992);
 
-$result = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `uploads` WHERE `uploaded` > '0' AND `converted` > '0' AND `quizing` > '0' AND (`storaged` > '0' OR (`storaged` = '0' AND `expired` < UNIX_TIMESTAMP())) AND `released` = 0 ORDER BY RAND() LIMIT " . mt_rand(7,37));
-while($upload = $GLOBALS['FontsDB']->fetchArray($result))
+$result = $GLOBALS['APIDB']->queryF($sql = "SELECT * FROM `" . $GLOBALS['APIDB']->prefix('uploads') . "` WHERE `uploaded` > '0' AND `converted` > '0' AND `quizing` > '0' AND (`storaged` > '0' OR (`storaged` = '0' AND `expired` < UNIX_TIMESTAMP())) AND `released` = 0 ORDER BY RAND() LIMIT " . mt_rand(7,37));
+while($upload = $GLOBALS['APIDB']->fetchArray($result))
 {
 	sleep(mt_rand(370,2799));
-	$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
+	$GLOBALS['APIDB']->queryF($sql = "START TRANSACTION");
 	$datastore = json_decode($upload['datastore'], true);
-	if ($archive  = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql = "SELECT * from `fonts_archiving` WHERE `font_id` = '" . $upload['font_id'] . "'")))
+	if ($archive  = $GLOBALS['APIDB']->fetchArray($GLOBALS['APIDB']->queryF($sql = "SELECT * FROM `" . $GLOBALS['APIDB']->prefix('fonts_archiving') . "` WHERE `font_id` = '" . $upload['font_id'] . "'")))
 	{
-		$font  = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql = "SELECT * from `fonts` WHERE `id` = '" . $upload['font_id'] . "'"));
-		$files  = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql = "SELECT count(*) as `count`, sum(`bytes`) as `bytes` from `fonts_files` WHERE `font_id` = '" . $upload['font_id'] . "'"));
+		$font  = $GLOBALS['APIDB']->fetchArray($GLOBALS['APIDB']->queryF($sql = "SELECT * FROM `" . $GLOBALS['APIDB']->prefix('fonts') . "` WHERE `id` = '" . $upload['font_id'] . "'"));
+		$files  = $GLOBALS['APIDB']->fetchArray($GLOBALS['APIDB']->queryF($sql = "SELECT count(*) as `count`, sum(`bytes`) as `bytes` FROM `" . $GLOBALS['APIDB']->prefix('fonts_files') . "` WHERE `font_id` = '" . $upload['font_id'] . "'"));
 		$naming = getRegionalFontName($upload['font_id']);
 		$tos = array();
 		$tos['to'][] = $upload['email'];
-		$resultb = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `fonts_contributors` WHERE `font_id` = '".$upload['font_id'] . "'");
-		while($contrib = $GLOBALS['FontsDB']->fetchArray($resultb))
-			if ($flow = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql = "SELECT * from `flows` WHERE `id` = '".$row['flow_id'] . "'")))
+		$resultb = $GLOBALS['APIDB']->queryF($sql = "SELECT * FROM `" . $GLOBALS['APIDB']->prefix('fonts_contributors') . "` WHERE `font_id` = '".$upload['font_id'] . "'");
+		while($contrib = $GLOBALS['APIDB']->fetchArray($resultb))
+			if ($flow = $GLOBALS['APIDB']->fetchArray($GLOBALS['APIDB']->queryF($sql = "SELECT * FROM `" . $GLOBALS['APIDB']->prefix('flows') . "` WHERE `id` = '".$row['flow_id'] . "'")))
 				$tos['cc'][] = $flow['email']; 
 	
-		$resultc = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `releases` ORDER BY RAND() LIMIT 40");
-		while($release = $GLOBALS['FontsDB']->fetchArray($resultc))
+		$resultc = $GLOBALS['APIDB']->queryF($sql = "SELECT * FROM `" . $GLOBALS['APIDB']->prefix('releases') . "` ORDER BY RAND() LIMIT 40");
+		while($release = $GLOBALS['APIDB']->fetchArray($resultc))
 			$tos['bcc'][] = $release['email'];
 		
 	
@@ -72,15 +75,15 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 		if ($mailer->sendMail($tos['to'], $tos['cc'], $tos['bcc'], "Font release for " . $datastore['FontName'], $html, array($archive['filename'] => FONT_RESOURCES_RESOURCE.$archive['path'].DIRECTORY_SEPARATOR.$archive['filename']), NULL, true))
 		{
 			echo "Sent mail to: " . implode(", ", $tos['to']) . " ~ cc: " . implode(", ", $tos['cc']) . " ~ bcc: " . implode(", ", $tos['bcc'])."\n\n<br/>\n";
-			$GLOBALS['FontsDB']->queryF("UPDATE `uploads` SET `released` = '" . time() . "' where `id` = '" . $upload['id'] . "'");
+			$GLOBALS['APIDB']->queryF("UPDATE `" . $GLOBALS['APIDB']->prefix('uploads') . "` SET `released` = '" . time() . "' where `id` = '" . $upload['id'] . "'");
 			// Does Callback's
 			$download = array();
 			foreach(getArchivingShellExec() as $type => $exec) 
 				$download[$type] = API_URL . "/v2/data/".$upload['font_id']."/". $type ."/download.api";
 			if (isset($upload['callback']) && !empty($upload['callback']))
 				@setCallBackURI($upload['callback'], 120, 120, array('action'=>'release', 'name' =>$datastore['FontName'], 'key' => $upload['font_id'], 'fingerprint' => md5(FONT_RESOURCES_RESOURCE.$archive['path'].DIRECTORY_SEPARATOR.$archive['filename']), 'diz' => $diz, 'downloads' => $download, 'released' => time()));
-			$resultb = $GLOBALS['FontsDB']->queryF($sql = "SELECT * from `releases` WHERE LENGTH(`callback`) > 0 AND `method` = 'subscribed' ORDER BY RAND()");
-			while($release = $GLOBALS['FontsDB']->fetchArray($resultb))
+			$resultb = $GLOBALS['APIDB']->queryF($sql = "SELECT * FROM `" . $GLOBALS['APIDB']->prefix('releases') . "` WHERE LENGTH(`callback`) > 0 AND `method` = 'subscribed' ORDER BY RAND()");
+			while($release = $GLOBALS['APIDB']->fetchArray($resultb))
 				@setCallBackURI($release['callback'], 120, 120, array('action'=>'release', 'name' =>$datastore['FontName'], 'key' => $upload['font_id'], 'fingerprint' => md5(FONT_RESOURCES_RESOURCE.$archive['path'].DIRECTORY_SEPARATOR.$archive['filename']), 'diz' => $diz, 'downloads' => $download, 'released' => time()));
 			
 			if (!file_exists($font = FONTS_CACHE . DIRECTORY_SEPARATOR . md5($upload['font_id'].sha1(date('Y-m-d'))) . ".ttf"))
@@ -89,7 +92,7 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 				if (!is_dir(FONTS_CACHE))
 					mkdir(FONTS_CACHE, 0777, true);
 					writeRawFile($font, $ttf);
-					$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts_files` SET `cachings` = `cachings` + 1, `cached` = UNIX_TIMESTAMP() WHERE `type` = 'ttf AND `font_id` = '".$upload['font_id']."'");
+					$GLOBALS['APIDB']->queryF($sql = "UPDATE `" . $GLOBALS['APIDB']->prefix('fonts_files') . "` SET `cachings` = `cachings` + 1, `cached` = UNIX_TIMESTAMP() WHERE `type` = 'ttf AND `font_id` = '".$upload['font_id']."'");
 			}
 			$tweeted = false;
 			if (isset($font) && file_exists($font))
@@ -113,7 +116,7 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 					$canvas->writeText(19, $i, "All Work and No Pay Makes Wishcraft a Dull Bored!");
 					$i=$i+$point + $step;
 				}
-				$canvas->useFont(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'titles.ttf', 14, $img->allocateColor(0, 0, 0));
+				$canvas->useFont(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'titles.ttf', 14, $img->allocateColor(0, 0, 0));
 				$canvas->writeText('right', 'bottom', API_URL);
 				$img->saveToFile($preview = FONTS_CACHE . DIRECTORY_SEPARATOR . $upload['font_id'] . '.png');
 				unset($img);
@@ -178,7 +181,7 @@ while($upload = $GLOBALS['FontsDB']->fetchArray($result))
 		
 	} else
 		echo("SQL Failed: $sql;\n");
-	$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
+	$GLOBALS['APIDB']->queryF($sql = "COMMIT");
 }
 exit(0);
 

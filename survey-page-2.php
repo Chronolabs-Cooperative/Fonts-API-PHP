@@ -28,18 +28,18 @@
 	
 	$key = (isset($_REQUEST['key'])?$_REQUEST['key']:md5(NULL));
 	
-	$sql = "SELECT * FROM `flows_history` WHERE md5(concat(`key`, `flow_id`)) LIKE '" . $key . "'";
-	if ($history = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql)))
+	$sql = "SELECT * FROM `" . $GLOBALS['APIDB']->prefix('flows_history') . "` WHERE md5(concat(`key`, `flow_id`)) LIKE '" . $key . "'";
+	if ($history = $GLOBALS['APIDB']->fetchArray($GLOBALS['APIDB']->queryF($sql)))
 	{
-		$flow = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF('SELECT * from `flows` WHERE `flow_id` = "' . $history['flow_id'].'"'));
-		$upload = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF('SELECT * from `uploads` WHERE `id` = "' . $history['upload_id'].'"'));
+		$flow = $GLOBALS['APIDB']->fetchArray($GLOBALS['APIDB']->queryF('SELECT * from `" . $GLOBALS['APIDB']->prefix('flows') . "` WHERE `flow_id` = "' . $history['flow_id'].'"'));
+		$upload = $GLOBALS['APIDB']->fetchArray($GLOBALS['APIDB']->queryF('SELECT * from `" . $GLOBALS['APIDB']->prefix('uploads') . "` WHERE `id` = "' . $history['upload_id'].'"'));
 		$survey = json_decode($history['data'], true);
 		$data = json_decode($upload['datastore'], true);
 		$survey['ipid'][$ipid['ip_id']] = $_SESSION['survey'][$key]['ipid'][$ipid['ip_id']] = $data['survey'][$key]['ipid'][$ipid['ip_id']] = $ipid;
 		$history['longitude'] = $ipid['longitude'];
 		$history['latitude'] = $ipid['latitude'];
-		$GLOBALS['FontsDB']->queryF("UDPATE `flows_history` SET `ip_id` = '" . $ipid['ip_id'] . "', `latitude` = '" . $history['latitude'] . "', `longitude` = '" . $history['longitude'] . "', `data` = '" . mysql_escape_string(json_encode($survey)) . "' WHERE `history_id` = '" . $history['history_id'] . "'");
-		$GLOBALS['FontsDB']->queryF("UDPATE `flows` SET `ip_id` = '" . $ipid['ip_id'] . "' WHERE `flow_id` = '" . $history['flow_id']."'");
+		$GLOBALS['APIDB']->queryF("UDPATE `" . $GLOBALS['APIDB']->prefix('flows_history') . "` SET `ip_id` = '" . $ipid['ip_id'] . "', `latitude` = '" . $history['latitude'] . "', `longitude` = '" . $history['longitude'] . "', `data` = '" . mysql_escape_string(json_encode($survey)) . "' WHERE `history_id` = '" . $history['history_id'] . "'");
+		$GLOBALS['APIDB']->queryF("UDPATE `" . $GLOBALS['APIDB']->prefix('flows') . "` SET `ip_id` = '" . $ipid['ip_id'] . "' WHERE `flow_id` = '" . $history['flow_id']."'");
 		if ($history['questions']==0)
 		{
 			header("Location: $source/v2/survey/finish/$key/html.api");
@@ -107,9 +107,9 @@
 							unset($nodes[$type][$naming]);	
 				$data['nodes']=$nodes;
 				$_SESSION['survey'][$key]['nodes'] = $survey['nodes'] = $data['survey'][$key]['nodes'] = $nodes;
-				$GLOBALS['FontsDB']->queryF("UPDATE `uploads` SET `surveys` = `surveys` + 1, `finished` = `finished` + 1, `datastore` = '" . mysql_escape_string(json_encode($data)) . "' where `id` = '" . $upload['id'] . "'");
-				$GLOBALS['FontsDB']->queryF("UPDATE `flows_history` SET `step` = 'finished', `keys` = '".count($nodes['keys'])."',  `fixes` = '".count($nodes['fixes'])."',  `typal` = '".count($nodes['typal'])."',  `questions` = '0',  `expiring` = '0',  `reminders` = '0',  `reminding` = '0', `score` = '$score', `data` = '" . mysql_escape_string(json_encode($survey)) . "' WHERE md5(concat(`key`, `flow_id`)) LIKE '" . $key . "'");
-				$GLOBALS['FontsDB']->queryF("UPDATE `flows` SET `last_history_id` = '".$history['history_id']. "', `last` = '".time(). "', `score` = `score` + '".$score. "', `surveys` = `surveys` +1, `currently` = `currently` - 1, `available` = `available` + 1 WHERE `flow_id` = '" . $history['flow_id'] . "'");
+				$GLOBALS['APIDB']->queryF("UPDATE `" . $GLOBALS['APIDB']->prefix('uploads') . "` SET `surveys` = `surveys` + 1, `finished` = `finished` + 1, `datastore` = '" . mysql_escape_string(json_encode($data)) . "' where `id` = '" . $upload['id'] . "'");
+				$GLOBALS['APIDB']->queryF("UPDATE `" . $GLOBALS['APIDB']->prefix('flows_history') . "` SET `step` = 'finished', `keys` = '".count($nodes['keys'])."',  `fixes` = '".count($nodes['fixes'])."',  `typal` = '".count($nodes['typal'])."',  `questions` = '0',  `expiring` = '0',  `reminders` = '0',  `reminding` = '0', `score` = '$score', `data` = '" . mysql_escape_string(json_encode($survey)) . "' WHERE md5(concat(`key`, `flow_id`)) LIKE '" . $key . "'");
+				$GLOBALS['APIDB']->queryF("UPDATE `" . $GLOBALS['APIDB']->prefix('flows') . "` SET `last_history_id` = '".$history['history_id']. "', `last` = '".time(). "', `score` = `score` + '".$score. "', `surveys` = `surveys` +1, `currently` = `currently` - 1, `available` = `available` + 1 WHERE `flow_id` = '" . $history['flow_id'] . "'");
 				if (isset($upload['callback']) && !empty($upload['callback']))
 					@setCallBackURI($upload['callback'], 127, 131, array('action'=>'completed', 'key' => $key, 'fingerprint' => $fingerprint, 'email' => $flow['email'], 'name' => $flow['name'], 'expired' => $history['expiring'], 'data' => $survey));
 				header("Location: " . API_URL . "/v2/survey/finish/".$key."/html.api");
@@ -121,31 +121,42 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
+    <meta property="og:title" content="<?php echo API_VERSION; ?>"/>
+    <meta property="og:type" content="api<?php echo API_TYPE; ?>"/>
+    <meta property="og:image" content="<?php echo API_URL; ?>/assets/images/logo_500x500.png"/>
+    <meta property="og:url" content="<?php echo (isset($_SERVER["HTTPS"])?"https://":"http://").$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"]; ?>" />
+    <meta property="og:site_name" content="<?php echo API_VERSION; ?> - <?php echo API_LICENSE_COMPANY; ?>"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="rating" content="general" />
+    <meta http-equiv="author" content="wishcraft@users.sourceforge.net" />
+    <meta http-equiv="copyright" content="<?php echo API_LICENSE_COMPANY; ?> &copy; <?php echo date("Y"); ?>" />
+    <meta http-equiv="generator" content="Chronolabs Cooperative (<?php echo $place['iso3']; ?>)" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title><?php echo API_VERSION; ?> || <?php echo API_LICENSE_COMPANY; ?></title>
+    
+    <link rel="stylesheet" href="<?php echo API_URL; ?>/assets/css/style.css" type="text/css" />
+    <!-- Custom Fonts -->
+    <link href="<?php echo API_URL; ?>/assets/media/Labtop/style.css" rel="stylesheet" type="text/css">
+    <link href="<?php echo API_URL; ?>/assets/media/Labtop Bold/style.css" rel="stylesheet" type="text/css">
+    <link href="<?php echo API_URL; ?>/assets/media/Labtop Bold Italic/style.css" rel="stylesheet" type="text/css">
+    <link href="<?php echo API_URL; ?>/assets/media/Labtop Italic/style.css" rel="stylesheet" type="text/css">
+    <link href="<?php echo API_URL; ?>/assets/media/Labtop Superwide Boldish/style.css" rel="stylesheet" type="text/css">
+    <link href="<?php echo API_URL; ?>/assets/media/Labtop Thin/style.css" rel="stylesheet" type="text/css">
+    <link href="<?php echo API_URL; ?>/assets/media/Labtop Unicase/style.css" rel="stylesheet" type="text/css">
+    <link href="<?php echo API_URL; ?>/assets/media/LHF Matthews Thin/style.css" rel="stylesheet" type="text/css">
+    <link href="<?php echo API_URL; ?>/assets/media/Life BT Bold/style.css" rel="stylesheet" type="text/css">
+    <link href="<?php echo API_URL; ?>/assets/media/Life BT Bold Italic/style.css" rel="stylesheet" type="text/css">
+    <link href="<?php echo API_URL; ?>/assets/media/Prestige Elite/style.css" rel="stylesheet" type="text/css">
+    <link href="<?php echo API_URL; ?>/assets/media/Prestige Elite Bold/style.css" rel="stylesheet" type="text/css">
+    <link href="<?php echo API_URL; ?>/assets/media/Prestige Elite Normal/style.css" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="<?php echo API_URL; ?>/assets/css/gradients.php" type="text/css" />
+    <link rel="stylesheet" href="<?php echo API_URL; ?>/assets/css/shadowing.php" type="text/css" />
 
-	<?php 	$servicename = "Fonting Repository Services"; 
-		$servicecode = "FRS"; ?>
-	<meta property="og:url" content="<?php echo (isset($_SERVER["HTTPS"])?"https://":"http://").$_SERVER["HTTP_HOST"]; ?>" />
-	<meta property="og:site_name" content="<?php echo $servicename; ?> Open Services API's (With Source-code)"/>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<meta http-equiv="rating" content="general" />
-	<meta http-equiv="author" content="wishcraft@users.sourceforge.net" />
-	<meta http-equiv="copyright" content="Chronolabs Cooperative &copy; <?php echo date("Y")-1; ?>-<?php echo date("Y")+1; ?>" />
-	<meta http-equiv="generator" content="wishcraft@users.sourceforge.net" />
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<link rel="shortcut icon" href="//labs.partnerconsole.net/execute2/external/reseller-logo">
-	<link rel="icon" href="//labs.partnerconsole.net/execute2/external/reseller-logo">
-	<link rel="apple-touch-icon" href="//labs.partnerconsole.net/execute2/external/reseller-logo">
-	<meta property="og:image" content="//labs.partnerconsole.net/execute2/external/reseller-logo"/>
-	<link rel="stylesheet" href="/style.css" type="text/css" />
-	<link rel="stylesheet" href="//css.ringwould.com.au/3/gradientee/stylesheet.css" type="text/css" />
-	<link rel="stylesheet" href="//css.ringwould.com.au/3/shadowing/styleheet.css" type="text/css" />
-	<title><?php echo $servicename; ?> (<?php echo $servicecode; ?>) Survey Question 1/2 || Chronolabs Cooperative</title>
-	<meta property="og:title" content="<?php echo $servicecode; ?> API"/>
-	<meta property="og:type" content="<?php echo strtolower($servicecode); ?>-api"/>
 </head>
 <body>
 <div class="main">
-    <h1><?php echo $servicename; ?> (<?php echo $servicecode; ?>) Survey Question 2/2 || Chronolabs Cooperative</h1>
+	<img style="float: right; margin: 11px; width: auto; height: auto; clear: none;" src="<?php echo API_URL; ?>/assets/images/logo_350x350.png" />
+    <h1><?php echo API_VERSION; ?> (<?php echo API_LICENSE_COMPANY; ?>) Survey Question 2/2 || Chronolabs Cooperative</h1>
 	<?php if (!empty($error)) { ?>
     <h2>Error Occured</h2>
     <p style="color: rgb(197,0, 0); font-size: 130%; font-weight: bold;"><?php echo $error; ?></p>

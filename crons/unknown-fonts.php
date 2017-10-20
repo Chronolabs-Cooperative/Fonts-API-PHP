@@ -19,6 +19,10 @@
  * @description		Screening API Service REST
  */
 
+$seconds = floor(mt_rand(1, floor(60 * 4.75)));
+set_time_limit($seconds ^ 4);
+sleep($seconds);
+
 use FontLib\Font;
 require_once dirname(__DIR__).'/class/FontLib/Autoloader.php';
 
@@ -26,9 +30,8 @@ ini_set('display_errors', true);
 ini_set('log_errors', true);
 error_reporting(E_ERROR);
 ini_set('memory_limit', '555M');
-include_once dirname(dirname(__FILE__)).'/functions.php';
-include_once dirname(dirname(__FILE__)).'/class/fontages.php';
-include_once dirname(dirname(__FILE__)).'/class/xcp.class.php';
+include_once dirname(__DIR__).'/constants.php';
+include_once dirname(__DIR__).'/class/xcp.class.php';
 set_time_limit(7200);
 // Searches For Unrecorded Fonts
 $folders = array_unique(array_merge(array('0','1','2','3','4','5','6','7','8','9','_','%','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'), getDirListAsArray(FONT_RESOURCES_RESOURCE)));
@@ -49,13 +52,13 @@ foreach($folders as $folder)
 	}
 	foreach($zips as $md5 => $file)
 	{
-		$GLOBALS['FontsDB']->queryF($sql = "START TRANSACTION");
+		$GLOBALS['APIDB']->queryF($sql = "START TRANSACTION");
 		echo "File: $file\n";
 		$data = json_decode(getArchivedZIPFile($file, 'font-resource.json'), true);
-		$sql = "SELECT count(*) from `fonts` WHERE `id` LIKE '%s'";
+		$sql = "SELECT count(*) from `" . $GLOBALS['APIDB']->prefix('fonts') . "` WHERE `id` LIKE '%s'";
 		$count = -1;
 		if (!empty($data["FontIdentity"]))
-			list($count) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF(sprintf($sql, $data["FontIdentity"])));
+			list($count) = $GLOBALS['APIDB']->fetchRow($GLOBALS['APIDB']->queryF(sprintf($sql, $data["FontIdentity"])));
 		if ($count==0 && !empty($data["FontIdentity"]))
 		{
 			$fingerprint = $data["FontIdentity"];
@@ -72,9 +75,9 @@ foreach($folders as $folder)
 			echo implode("\n", $output);
 			
 			$fonts = getFontsListAsArray($currently);
-			$totalmaking = count(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts-upload.pe"))-1;
+			$totalmaking = count(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts-upload.pe"))-1;
 			$output = array(); exec("cd $currently", $output, $return);
-			$covertscript = cleanWhitespaces(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts-upload.pe"));
+			$covertscript = cleanWhitespaces(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts-upload.pe"));
 			foreach($covertscript as $line => $value)
 				foreach(getFontsListAsArray($currently) as $file => $values)
 					if (strpos($value, $values['type']))
@@ -94,9 +97,9 @@ foreach($folders as $folder)
 				}
 			deleteFilesNotListedByArray($currently, array(".".API_BASE));
 			$fonts = getFontsListAsArray($currently);
-			$totalmaking = count(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"))-1;
+			$totalmaking = count(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"))-1;
 			$output = array(); exec("cd $currently", $output, $return);
-			$covertscript = cleanWhitespaces(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"));
+			$covertscript = cleanWhitespaces(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"));
 			foreach($covertscript as $line => $value)
 				foreach(getFontsListAsArray($currently) as $file => $values)
 					if (strpos($value, $values['type']))
@@ -112,7 +115,7 @@ foreach($folders as $folder)
 			{
 				$filesold = count($fontfiles = getFontsListAsArray($currently));
 				@$output = array(); exec("cd $currently", $output, $return);
-				$covertscript = cleanWhitespaces(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"));
+				$covertscript = cleanWhitespaces(file(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts.pe"));
 				$ttffile = $afmfile = '';
 				foreach($covertscript as $line => $value)
 					foreach($fontfiles as $file => $values)
@@ -210,9 +213,9 @@ foreach($folders as $folder)
 							{
 								$names[$title]['longitude'] = $ipdata['longitude'];
 								$names[$title]['latitude'] = $ipdata['latitude'];
-								$names[$title]['country'] = $GLOBALS['FontsDB']->escape($ipdata['country']);
-								$names[$title]['region'] = $GLOBALS['FontsDB']->escape($ipdata['region']);
-								$names[$title]['city'] = $GLOBALS['FontsDB']->escape($ipdata['city']);
+								$names[$title]['country'] = $GLOBALS['APIDB']->escape($ipdata['country']);
+								$names[$title]['region'] = $GLOBALS['APIDB']->escape($ipdata['region']);
+								$names[$title]['city'] = $GLOBALS['APIDB']->escape($ipdata['city']);
 							} else {
 								$names[$title]['longitude'] = $names[$title]['longitude'] + $ipdata['longitude'] / 2;
 								$names[$title]['latitude'] = $names[$title]['latitude'] + $ipdata['latitude'] / 2;
@@ -235,8 +238,8 @@ foreach($folders as $folder)
 	
 			// gets networking
 			$networking = array();
-			$resultc = $GLOBALS['FontsDB']->queryF("SELECT * from `networking` WHERE `ip_id` IN ('".implode("', '", $ipnet) . "')");
-			while($net = $GLOBALS['FontsDB']->fetchArray($resultc))
+			$resultc = $GLOBALS['APIDB']->queryF("SELECT * from `networking` WHERE `ip_id` IN ('".implode("', '", $ipnet) . "')");
+			while($net = $GLOBALS['APIDB']->fetchArray($resultc))
 			{
 				$networking[$net['ip_id']] = $net;
 			}
@@ -383,19 +386,19 @@ foreach($folders as $folder)
 				$names[$naming]['name'] = spacerName($naming);
 				$names[$naming]['longitude'] = number_format(!isset($data['ipsec']['location']['coordinates']['longitude'])||empty($data['ipsec']['location']['coordinates']['longitude'])?0.00000001:$data['ipsec']['location']['coordinates']['longitude'], 8);
 				$names[$naming]['latitude'] = number_format(!isset($data['ipsec']['location']['coordinates']['latitude'])||empty($data['ipsec']['location']['coordinates']['latitude'])?0.00000001:$data['ipsec']['location']['coordinates']['latitude'], 8);
-				$names[$naming]['country'] = $GLOBALS['FontsDB']->escape($data['ipsec']['country']['name']);
-				$names[$naming]['region'] = $GLOBALS['FontsDB']->escape($data['ipsec']['location']['region']);
-				$names[$naming]['city'] = $GLOBALS['FontsDB']->escape($data['ipsec']['location']['city']);
+				$names[$naming]['country'] = $GLOBALS['APIDB']->escape($data['ipsec']['country']['name']);
+				$names[$naming]['region'] = $GLOBALS['APIDB']->escape($data['ipsec']['location']['region']);
+				$names[$naming]['city'] = $GLOBALS['APIDB']->escape($data['ipsec']['location']['city']);
 				
 				$namings = 0;
 				if (count($names)>0)
 				{
 					foreach($names as $key => $values)
 					{
-						if ($GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `fonts_names` (`" . implode('`, `', array_keys($values)) . "`) VALUES('" . implode("', '", $values) . "')"))
+						if ($GLOBALS['APIDB']->queryF($sql = "INSERT INTO `fonts_names` (`" . implode('`, `', array_keys($values)) . "`) VALUES('" . implode("', '", $values) . "')"))
 							$namings++;
-						elseif ($GLOBALS['FontsDB']->errno()<>0)
-							die("SQL Failed: $sql :: ".$GLOBALS['FontsDB']->error());
+						elseif ($GLOBALS['APIDB']->errno()<>0)
+							die("SQL Failed: $sql :: ".$GLOBALS['APIDB']->error());
 					}
 				}
 				$nodings = 0;
@@ -404,12 +407,12 @@ foreach($folders as $folder)
 					foreach($nodes as $node => $values)
 					{
 						$nodings++;
-						if ($row = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF("SELECT * from `nodes` WHERE `node` = '".$values['node']."' AND `type` = '".$values['type']."'"))) {
+						if ($row = $GLOBALS['APIDB']->fetchArray($GLOBALS['APIDB']->queryF("SELECT * from `" . $GLOBALS['APIDB']->prefix('nodes') . "` WHERE `node` = '".$values['node']."' AND `type` = '".$values['type']."'"))) {
 							$nodes[$node]['node_id'] = $row['id'];
-							$GLOBALS['FontsDB']->queryF("UPDATE `nodes` SET `usage` = `usage` + '" . $values['usage'] . "' WHERE `id` = '".$row['id']."'");
+							$GLOBALS['APIDB']->queryF("UPDATE `" . $GLOBALS['APIDB']->prefix('nodes') . "` SET `usage` = `usage` + '" . $values['usage'] . "' WHERE `id` = '".$row['id']."'");
 						} else {
-							$GLOBALS['FontsDB']->queryF("INSERT INTO `nodes` (`" . implode('`, `', array_keys($values)) . "`) VALUES('" . implode("', '", $values) . "')");
-							$nodes[$node]['node_id'] = $GLOBALS['FontsDB']->getInsertId();
+							$GLOBALS['APIDB']->queryF("INSERT INTO `" . $GLOBALS['APIDB']->prefix('nodes') . "` (`" . implode('`, `', array_keys($values)) . "`) VALUES('" . implode("', '", $values) . "')");
+							$nodes[$node]['node_id'] = $GLOBALS['APIDB']->getInsertId();
 						}
 					}
 				}
@@ -423,20 +426,20 @@ foreach($folders as $folder)
 				writeRawFile($currently . DIRECTORY_SEPARATOR . "file.diz", $comment = getFileDIZ(0, 0, $fingerprint, $filename = $packname.'.zip', $expanded, $filez));
 				$comment = addslashes($comment);
 	
-				list($fingercount) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF("SELECT count(*) FROM  `fonts_fingering` WHERE `font_id` = '$fingerprint'"));
+				list($fingercount) = $GLOBALS['APIDB']->fetchRow($GLOBALS['APIDB']->queryF("SELECT count(*) FROM  `" . $GLOBALS['APIDB']->prefix('fonts_fingering') . "` WHERE `font_id` = '$fingerprint'"));
 				if (file_exists($packfile))
 				{
-					if (!$GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `fonts_archiving` (`font_id`, `filename`, `path`, `repository`, `files`, `bytes`, `fingerprint`, `hits`, `packing`) VALUES ('$fingerprint', '".basename($packfile)."', '" . str_replace(FONT_RESOURCES_RESOURCE, '', dirname($packfile)) . "', '" . FONT_RESOURCES_STORE . "', '$filecount', '" . filesize($packfile) . "', '" . md5_file($packfile) . "', 0, 'zip')"))
+					if (!$GLOBALS['APIDB']->queryF($sql = "INSERT INTO `" . $GLOBALS['APIDB']->prefix('fonts_archiving') . "` (`font_id`, `filename`, `path`, `repository`, `files`, `bytes`, `fingerprint`, `hits`, `packing`) VALUES ('$fingerprint', '".basename($packfile)."', '" . str_replace(FONT_RESOURCES_RESOURCE, '', dirname($packfile)) . "', '" . FONT_RESOURCES_STORE . "', '$filecount', '" . filesize($packfile) . "', '" . md5_file($packfile) . "', 0, 'zip')"))
 						die("SQL Failed: $sql;");
 					else
-						$archive_id = $GLOBALS['FontsDB']->getInsertId();
+						$archive_id = $GLOBALS['APIDB']->getInsertId();
 					if (!empty($archive_id))
 					{
 						foreach($filez as $path => $files)
 						{
 							foreach($files as $ky => $filz)
 							{
-								list($count) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF($sql = "SELECT count(*) from `fonts_files` WHERE `font_id` = '" . $fingerprint. "' AND  `archive_id` = '" . $archive_id. "' AND `path` = '$path' AND `filename` = '$filz'"));
+								list($count) = $GLOBALS['APIDB']->fetchRow($GLOBALS['APIDB']->queryF($sql = "SELECT count(*) from `" . $GLOBALS['APIDB']->prefix('fonts_files') . "` WHERE `font_id` = '" . $fingerprint. "' AND  `archive_id` = '" . $archive_id. "' AND `path` = '$path' AND `filename` = '$filz'"));
 								if ($count==0)
 								{
 									$exts = explode('.', $filz);
@@ -445,10 +448,10 @@ foreach($folders as $folder)
 									foreach(array('json', 'diz', 'pfa', 'pfb', 'pt3', 't42', 'sfd', 'ttf', 'bdf', 'otf', 'otb', 'cff', 'cef', 'gai', 'woff', 'svg', 'ufo', 'pf3', 'ttc', 'gsf', 'cid', 'bin', 'hqx', 'dfont', 'mf', 'ik', 'fon', 'fnt', 'pcf', 'pmf', 'pdb', 'eot', 'afm', 'php', 'z', 'png', 'gif', 'jpg', 'data', 'css', 'other') as $fileext)
 										if (strpos($filz, ".$fileext")>0)
 											$type = $fileext;
-									if ($GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `fonts_files` (`font_id`, `archive_id`, `type`, `extension`, `filename`, `path`, `bytes`, `hits`, `created`) VALUES('" . $fingerprint. "', '" . $archive_id. "','$type','$ext',".$GLOBALS['FontsDB']->quote($filz).",".$GLOBALS['FontsDB']->quote($path).",'".filesize($currently . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . $filz)."',0,unix_timestamp())"))
+									if ($GLOBALS['APIDB']->queryF($sql = "INSERT INTO `" . $GLOBALS['APIDB']->prefix('fonts_files') . "` (`font_id`, `archive_id`, `type`, `extension`, `filename`, `path`, `bytes`, `hits`, `created`) VALUES('" . $fingerprint. "', '" . $archive_id. "','$type','$ext',".$GLOBALS['APIDB']->quote($filz).",".$GLOBALS['APIDB']->quote($path).",'".filesize($currently . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . $filz)."',0,unix_timestamp())"))
 									{
 										echo "\nFile Missing from Database added: $path/$filz for font";
-										if ($GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `fonts_fingering` (`upload_id`,`font_id`, `archive_id`, `type`, `file_id`, `fingerprint`, `created`) VALUES('-1','" . $fingerprint. "', '" . $archive_id. "','$type','".$GLOBALS['FontsDB']->getInsertId()."','".md5_file($currently . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . $filz)."',unix_timestamp())"))
+										if ($GLOBALS['APIDB']->queryF($sql = "INSERT INTO `" . $GLOBALS['APIDB']->prefix('fonts_fingering') . "` (`upload_id`,`font_id`, `archive_id`, `type`, `file_id`, `fingerprint`, `created`) VALUES('-1','" . $fingerprint. "', '" . $archive_id. "','$type','".$GLOBALS['APIDB']->getInsertId()."','".md5_file($currently . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . $filz)."',unix_timestamp())"))
 										{
 											echo " (fingered!)";
 											$fingercount++;
@@ -459,9 +462,9 @@ foreach($folders as $folder)
 											$glyph = getGlyphArrayFromXML(xml2array(file_get_contents($currently . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . $filz)));
 											if (!empty($glyph))
 											{
-												$sql = "SELECT * FROM `fonts_glyphs` WHERE `fingerprint` LIKE '" . $glyph['fingerprint'] . "'";
+												$sql = "SELECT * FROM `" . $GLOBALS['APIDB']->prefix('fonts_glyphs') . "` WHERE `fingerprint` LIKE '" . $glyph['fingerprint'] . "'";
 												$glyphid = md5($fingerprint.$glyph['fingerprint'].json_encode($glyph));
-												if (!$row = $GLOBALS['FontsDB']->fetchArray($GLOBALS['FontsDB']->queryF($sql)))
+												if (!$row = $GLOBALS['APIDB']->fetchArray($GLOBALS['APIDB']->queryF($sql)))
 												{
 													$contours = $pointers = $smoothers = 0;
 													foreach($glyph['contours'] as $contour => $points)
@@ -469,19 +472,19 @@ foreach($folders as $folder)
 														$contours++;
 														foreach($points as $weight => $values)
 														{
-															$sql = "INSERT INTO `fonts_glyphs_contours` (`font_id`, `glyph_id`, `contour`, `weight`, `x`, `y`, `type`, `smooth`, `created`) VALUES('$fingerprint', '$glyphid', '$contour', '$weight', '" . $values['x'] . "', '" . $values['y'] . "', '" . $values['type'] . "', '" . $values['smooth'] . "', UNIX_TIMESTAMP())";
-															if ($GLOBALS['FontsDB']->queryF($sql)) { $updated = true; } else { echo("SQL Failed: $sql"); }
+															$sql = "INSERT INTO `" . $GLOBALS['APIDB']->prefix('fonts_glyphs_contours') . "` (`font_id`, `glyph_id`, `contour`, `weight`, `x`, `y`, `type`, `smooth`, `created`) VALUES('$fingerprint', '$glyphid', '$contour', '$weight', '" . $values['x'] . "', '" . $values['y'] . "', '" . $values['type'] . "', '" . $values['smooth'] . "', UNIX_TIMESTAMP())";
+															if ($GLOBALS['APIDB']->queryF($sql)) { $updated = true; } else { echo("SQL Failed: $sql"); }
 															if ($values['smooth']!='-----') { $smoothers++; }
 															$pointers++;
 														}
 													}
-													$sql = "INSERT INTO `fonts_glyphs` (`font_id`, `glyph_id`, `fingerprint`, `name`, `ufofile`, `unicode`, `format`, `width`, `contours`, `pointers`, `smoothers`, `created`, `occurences`, `addon`) VALUES('$fingerprint', '$glyphid', '".$glyph['fingerprint']."', '".$glyph['name']."', '" . basename($file) . "', '".$glyph['unicode']."', '".(empty($glyph['format'])?'1':$glyph['format'])."', '" . (empty($glyph['width'])?'0':$glyph['width']) . "', '$contours', '$pointers', '$smoothers', UNIX_TIMESTAMP(), 1, 'no')";
-													if ($GLOBALS['FontsDB']->queryF($sql)) { $updated = true; } else { echo("SQL Failed: $sql"); }
+													$sql = "INSERT INTO `" . $GLOBALS['APIDB']->prefix('fonts_glyphs') . "` (`font_id`, `glyph_id`, `fingerprint`, `name`, `ufofile`, `unicode`, `format`, `width`, `contours`, `pointers`, `smoothers`, `created`, `occurences`, `addon`) VALUES('$fingerprint', '$glyphid', '".$glyph['fingerprint']."', '".$glyph['name']."', '" . basename($file) . "', '".$glyph['unicode']."', '".(empty($glyph['format'])?'1':$glyph['format'])."', '" . (empty($glyph['width'])?'0':$glyph['width']) . "', '$contours', '$pointers', '$smoothers', UNIX_TIMESTAMP(), 1, 'no')";
+													if ($GLOBALS['APIDB']->queryF($sql)) { $updated = true; } else { echo("SQL Failed: $sql"); }
 												} elseif (!empty($row)) {
-													$sql = "INSERT INTO `fonts_glyphs` (`font_id`, `glyph_id`, `fingerprint`, `name`, `ufofile`, `created`, `addon`, `addon_font_id`, `addon_glyph_id`) VALUES('$fingerprint', '$glyphid', '".$glyph['fingerprint']."', '".$glyph['name']."', '" . basename($filz) . "', UNIX_TIMESTAMP(), 'yes', '".$row['font_id'] . "', '" . $row['glyph_id'] . "')";
-													if ($GLOBALS['FontsDB']->queryF($sql)) { $updated = true; } else { echo("SQL Failed: $sql"); }
-													$sql = "UPDATE `fonts_glyphs` SET `occurences` = `occurences` + 1 WHERE `glyph_id` = '".$row['glyph_id']. "'";
-													if ($GLOBALS['FontsDB']->queryF($sql)) { $updated = true; } else { echo("SQL Failed: $sql"); }
+													$sql = "INSERT INTO `" . $GLOBALS['APIDB']->prefix('fonts_glyphs') . "` (`font_id`, `glyph_id`, `fingerprint`, `name`, `ufofile`, `created`, `addon`, `addon_font_id`, `addon_glyph_id`) VALUES('$fingerprint', '$glyphid', '".$glyph['fingerprint']."', '".$glyph['name']."', '" . basename($filz) . "', UNIX_TIMESTAMP(), 'yes', '".$row['font_id'] . "', '" . $row['glyph_id'] . "')";
+													if ($GLOBALS['APIDB']->queryF($sql)) { $updated = true; } else { echo("SQL Failed: $sql"); }
+													$sql = "UPDATE `" . $GLOBALS['APIDB']->prefix('fonts_glyphs') . "` SET `occurences` = `occurences` + 1 WHERE `glyph_id` = '".$row['glyph_id']. "'";
+													if ($GLOBALS['APIDB']->queryF($sql)) { $updated = true; } else { echo("SQL Failed: $sql"); }
 												}
 											}
 										}
@@ -494,7 +497,7 @@ foreach($folders as $folder)
 						}
 						foreach($nodes as $type => $values)
 						{
-							if (!$GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `nodes_linking` (`font_id`, `node_id`) VALUES ('$fingerprint', '".$values['node_id']."')"))
+							if (!$GLOBALS['APIDB']->queryF($sql = "INSERT INTO `" . $GLOBALS['APIDB']->prefix('nodes_linking') . "` (`font_id`, `node_id`) VALUES ('$fingerprint', '".$values['node_id']."')"))
 								die("Failed SQL: $sql;\n");
 						}
 						deleteFilesNotListedByArray($currently, array(API_BASE, 'file.diz', 'resource.json', 'LICENCE'));
@@ -502,7 +505,7 @@ foreach($folders as $folder)
 							if (substr($file, strlen($file)-strlen(API_BASE), strlen(API_BASE)) == API_BASE)
 								writeFontRepositoryHeader($currently . DIRECTORY_SEPARATOR . $file, $data['Font']['licence'], $data['Font']);
 						if (!file_exists($currently . DIRECTORY_SEPARATOR . 'LICENCE'))
-							copy(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . $data['Font']['licence'] . DIRECTORY_SEPARATOR . 'LICENCE', $currently . DIRECTORY_SEPARATOR . 'LICENCE');
+							copy(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'licences' . DIRECTORY_SEPARATOR . $data['Font']['licence'] . DIRECTORY_SEPARATOR . 'LICENCE', $currently . DIRECTORY_SEPARATOR . 'LICENCE');
 						foreach(getFontsListAsArray($currently.$currently) as $filez)
 						{
 							if (file_exists($currently.DIRECTORY_SEPARATOR.$filez['file']))
@@ -530,15 +533,15 @@ foreach($folders as $folder)
 						echo implode("\n", $output);
 						if (file_exists($packfile))
 						{
-							list($nodecount) = $GLOBALS['FontsDB']->fetchRow($GLOBALS['FontsDB']->queryF("SELECT count(*) FROM  `nodes_linking` WHERE `font_id` = '" . $fingerprint . "'"));
-							if (!$GLOBALS['FontsDB']->queryF($sql = "INSERT INTO `fonts` (`id`, `peer_id`, `archive_id`, `type`, `state`, `names`, `fingers`, `nodes`, `created`, `normal`, `italic`, `bold`, `wide`, `condensed`, `light`, `semi`, `book`, `body`, `header`, `heading`, `footer`, `graphic`, `system`, `quote`, `block`, `admin`, `logo`, `slogon`, `legal`, `script`, `medium`, `data`, `longitude`, `latitude`, `added`) VALUES ('$fingerprint', '".$GLOBALS['peer-id']."','$archive_id', 'local', 'online', '".$namings."', '".$fingercount."', '".$nodings."', '".time()."', '".(in_array('normal', $types)?'yes':'no')."', '".(in_array('italic', $types)?'yes':'no')."', '".(in_array('bold', $types)?'yes':'no')."', '".(in_array('wide', $types)?'yes':'no')."', '".(in_array('condensed', $types)?'yes':'no')."', '".(in_array('light', $types)?'yes':'no')."', '".(in_array('semi', $types)?'yes':'no')."', '".(in_array('book', $types)?'yes':'no')."', '".(in_array('body', $types)?'yes':'no')."', '".(in_array('header', $types)?'yes':'no')."', '".(in_array('heading', $types)?'yes':'no')."', '".(in_array('footer', $types)?'yes':'no')."', '".(in_array('graphic', $types)?'yes':'no')."', '".(in_array('system', $types)?'yes':'no')."', '".(in_array('quote', $types)?'yes':'no')."', '".(in_array('block', $types)?'yes':'no')."', '".(in_array('admin', $types)?'yes':'no')."', '".(in_array('logo', $types)?'yes':'no')."', '".(in_array('slogon', $types)?'yes':'no')."', '".(in_array('legal', $types)?'yes':'no')."', '".(in_array('script', $types)?'yes':'no')."', '".'FONT_RESOURCES_RESOURCE'."', \"" . $GLOBALS['FontsDB']->escape(json_encode($data)) . "\", '" . (!isset($upload['longitude'])||empty($upload['longitude'])?'0.000001':$upload['longitude']) . "', '" . (!isset($upload['latitude'])||empty($upload['latitude'])?'0.000001':$upload['latitude']) . "', UNIX_TIMESTAMP())"))
+							list($nodecount) = $GLOBALS['APIDB']->fetchRow($GLOBALS['APIDB']->queryF("SELECT count(*) FROM  `" . $GLOBALS['APIDB']->prefix('nodes_linking') . "` WHERE `font_id` = '" . $fingerprint . "'"));
+							if (!$GLOBALS['APIDB']->queryF($sql = "INSERT INTO `" . $GLOBALS['APIDB']->prefix('fonts') . "` (`id`, `peer_id`, `archive_id`, `type`, `state`, `names`, `fingers`,`nodes`, `created`, `normal`, `italic`, `bold`, `wide`, `condensed`, `light`, `semi`, `book`, `body`, `header`, `heading`, `footer`, `graphic`, `system`, `quote`, `block`, `admin`, `logo`, `slogon`, `legal`, `script`, `medium`, `data`, `longitude`, `latitude`, `added`) VALUES ('$fingerprint', '".$GLOBALS['peer-id']."','$archive_id', 'local', 'online', '".$namings."', '".$fingercount."', '".$nodings."', '".time()."', '".(in_array('normal', $types)?'yes':'no')."', '".(in_array('italic', $types)?'yes':'no')."', '".(in_array('bold', $types)?'yes':'no')."', '".(in_array('wide', $types)?'yes':'no')."', '".(in_array('condensed', $types)?'yes':'no')."', '".(in_array('light', $types)?'yes':'no')."', '".(in_array('semi', $types)?'yes':'no')."', '".(in_array('book', $types)?'yes':'no')."', '".(in_array('body', $types)?'yes':'no')."', '".(in_array('header', $types)?'yes':'no')."', '".(in_array('heading', $types)?'yes':'no')."', '".(in_array('footer', $types)?'yes':'no')."', '".(in_array('graphic', $types)?'yes':'no')."', '".(in_array('system', $types)?'yes':'no')."', '".(in_array('quote', $types)?'yes':'no')."', '".(in_array('block', $types)?'yes':'no')."', '".(in_array('admin', $types)?'yes':'no')."', '".(in_array('logo', $types)?'yes':'no')."', '".(in_array('slogon', $types)?'yes':'no')."', '".(in_array('legal', $types)?'yes':'no')."', '".(in_array('script', $types)?'yes':'no')."', '".'FONT_RESOURCES_RESOURCE'."', \"" . $GLOBALS['APIDB']->escape(json_encode($data)) . "\", '" . (!isset($upload['longitude'])||empty($upload['longitude'])?'0.000001':$upload['longitude']) . "', '" . (!isset($upload['latitude'])||empty($upload['latitude'])?'0.000001':$upload['latitude']) . "', UNIX_TIMESTAMP())"))
 								die("Failed SQL: $sql;\n");
-							if (!$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts` SET `medium` = 'FONT_RESOURCES_RESOURCE', `version` = '" . number_format(floatval($data['Font']['version']), 3) . "', `date` = '" . $data['Font']['date'] . "', `uploaded` = UNIX_TIMESTAMP(), `licence` = '" . $data['Font']['licence'] . "', `company` = '" . $data['Font']['company'] . "', `matrix` = '" . $data['Font']['matrix'] . "', `bbox` = '" . $data['Font']['bbox'] . "', `painttype` = '" . $data['Font']['painttype'] . "', `info` = '" . $data['Font']['info'] . "', `family` = '" . $data['Font']['family'] . "', `weight` = '" . $data['Font']['weight'] . "', `fstype` = '" . $data['Font']['fstype'] . "', `italicangle` = '" . $data['Font']['italicangle'] . "', `fixedpitch` = '" . $data['Font']['fixedpitch'] . "', `underlineposition` = '" . $data['Font']['underlineposition'] . "', `underlinethickness` = '" . $data['Font']['underlinethickness'] . "', `barcode_id` = '" . $data['barcode'] . "', `referee_id` = '" . $data['referee'] . "' WHERE `id` = '$fingerprint'"))
+							if (!$GLOBALS['APIDB']->queryF($sql = "UPDATE `" . $GLOBALS['APIDB']->prefix('fonts') . "` SET `medium` = 'FONT_RESOURCES_RESOURCE', `version` = '" . number_format(floatval($data['Font']['version']), 3) . "', `date` = '" . $data['Font']['date'] . "', `uploaded` = UNIX_TIMESTAMP(), `licence` = '" . $data['Font']['licence'] . "', `company` = '" . $data['Font']['company'] . "', `matrix` = '" . $data['Font']['matrix'] . "', `bbox` = '" . $data['Font']['bbox'] . "', `painttype` = '" . $data['Font']['painttype'] . "', `info` = '" . $data['Font']['info'] . "', `family` = '" . $data['Font']['family'] . "', `weight` = '" . $data['Font']['weight'] . "', `fstype` = '" . $data['Font']['fstype'] . "', `italicangle` = '" . $data['Font']['italicangle'] . "', `fixedpitch` = '" . $data['Font']['fixedpitch'] . "', `underlineposition` = '" . $data['Font']['underlineposition'] . "', `underlinethickness` = '" . $data['Font']['underlinethickness'] . "', `barcode_id` = '" . $data['barcode'] . "', `referee_id` = '" . $data['referee'] . "' WHERE `id` = '$fingerprint'"))
 														die("Failed SQL: $sql;\n");
 							if (!empty($upload['callback']))
 							{
 								$cbid = md5($fingerprint.$archive_id.$upload['callback']);
-								$GLOBALS['FontsDB']->queryF("INSERT INTO `fonts_callbacks` (`id`, `type`, `font_id`, `archive_id`, `upload_id`, `uri`, `email`) VALUES ('$cbid', 'upload', '$fingerprint', '$archive_id', '-1', '".$upload['callback']."','".$upload['email']."')");
+								$GLOBALS['APIDB']->queryF("INSERT INTO `" . $GLOBALS['APIDB']->prefix('fonts_callbacks') . "` (`id`, `type`, `font_id`, `archive_id`, `upload_id`, `uri`, `email`) VALUES ('$cbid', 'upload', '$fingerprint', '$archive_id', '-1', '".$upload['callback']."','".$upload['email']."')");
 							}
 							$output = array();
 							$output = array(); exec($cmd = "rm -Rfv $currently", $output);
@@ -579,7 +582,7 @@ foreach($folders as $folder)
 				echo "x";
 			}
 		}
-		$GLOBALS['FontsDB']->queryF($sql = "COMMIT");
+		$GLOBALS['APIDB']->queryF($sql = "COMMIT");
 		sleep(mt_rand(5,17));
 	}
 }
