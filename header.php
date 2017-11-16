@@ -20,10 +20,9 @@
 * @link			http://cipher.labs.coop
 */
     
-    include_once './apiconfig.php';
-    include_once './mainfile.php';
+    include_once './constants.php';
     include_once './include/functions.php';
-    
+ 
 	$GLOBAL['header'] = array();
 	$GLOBAL['header']['start'] = microtime(true);
 

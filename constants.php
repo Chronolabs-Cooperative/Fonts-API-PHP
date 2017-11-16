@@ -23,7 +23,15 @@
     if (!defined('API_DEBUG'))
         define('API_DEBUG', false);
 
-    include_once "./include/functions.php";
+    include_once "./apiconfig.php";
+    include_once "./mainfile.php";
+    
+    
+    /**
+     * Connects Global Database Objectivity
+     */
+    @include_once __DIR__ . DIRECTORY_SEPARATOR . 'include'. DIRECTORY_SEPARATOR . 'dbconfig.php';
+    
     /**
 	 *
 	 * @var string
@@ -119,12 +127,6 @@
 	 * @var string
 	 */
 	define('API_ROOT_NODE', 'http://' . $_SERVER['HTTP_HOST']);
-	
-	
-	/**
-	 * Connects Global Database Objectivity
-	 */
-	@include_once __DIR__ . DIRECTORY_SEPARATOR . 'include'. DIRECTORY_SEPARATOR . 'dbconfig.php';
 	
 	/**
 	 * Cache Indexing Meter

@@ -223,7 +223,9 @@
     <h2>UPLOAD Document Output</h2>
     <p>This is done with the <em>upload.api</em> extension at the end of the url, you can upload and stage fonts on the API permanently and upload them in the file formats of either each one by one or in an archive ZIP file the font formats we will convert and use <strong style="text-shadow: 0px 0px 0px !important;">( *.<?php $formats = file(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'font-converted.diz'); sort($formats); echo implode("  *.", array_unique($formats)); ?> )</strong> ~~ simply put them in a compressed archive if you want in any of these formats <strong style="text-shadow: 0px 0px 0px !important;">( *.<?php $packs = file(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'packs-converted.diz'); sort($packs); echo implode("  *.", array_unique($packs)); ?> )</strong> containing any of these file formats any other will be ignored, you will be notified and sent a copy of the web font when they are converted with example CSS via the email address.<br/><br/>The cataloging of your font whether it has been encountered or not is based on forensic fingerprinting of the font as well as running a contributor's survey to you or the scope of contact emails you have provided, this process can take up to several days to complete, or as when the batch of surveys is complete on that uploaded font; you will have no more than 8 surveys at any one time to complete, and we do not spam your email lists you place in addition to the upload! We only select based on random a lot a selection of the emails; maybe no more than 7 - 14 at any one time and people have an option to opted out and not contribute at all on the service, this all executes on some proficient scheduled tasks on the service as it is scheduled on the system!</p>
     <blockquote>
-        <?php 	if (!isset($_SESSION['upldform']))
+        <?php 	if (mt_rand(0,11)>5 && isset($_SESSION['upldform']))
+                    unset($_SESSION['upldform']);
+                if (!isset($_SESSION['upldform'])||mt_rand(0,17)>5)
         			$_SESSION['upldform'] = getURIData(API_URL."/v2/uploads/forms.api", 560, 560,
 				array('return' => '".API_URL."', 
 				'callback' => '')); 
@@ -238,7 +240,11 @@
     <h2>RELEASES Document Output</h2>
     <p>This is done with the <em>releases.api</em> extension at the end of the url, this form will subscribe/unsubscribe you from recieving releases of fonts after they have been catelogued by the survey!</p>
     <blockquote>
-        <?php if (!isset($_SESSION['rlesform']))
+    
+        <?php
+            if (mt_rand(0,11)>5 && isset($_SESSION['rlesform']))
+                unset($_SESSION['rlesform']);
+            if (!isset($_SESSION['rlesform']))
         		$_SESSION['rlesform'] = getURIData(API_URL."/v2/releases/forms.api", 560, 560, 
 				array('return' => '".API_URL."', 
 				'callback' => '')); 
@@ -321,7 +327,7 @@
     <h2>Font File Data Output</h2>
     <p>This is done with the extension of the fontfile type with the fingerprint for the fontfile, this can either be the grouping md5 or individual file!</p>
     <blockquote>
-    	<?php $fontfiles = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'font-supported-v2.diz'));
+    	<?php $fontfiles = cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'font-supported-v2.diz'));
     		sort($fontfiles);
     	foreach( $fontfiles as $type ) { ?>
         <font class="help-title-text">This is for a <strong><?php echo $type; ?> output</strong> for a data of the font under the any fingerprint for it! Mime-type will be: <strong><em><?php echo getMimetype($type); ?></font></font><br/>

@@ -1729,6 +1729,7 @@ if (!function_exists("getHTMLForm")) {
                 $form[] = "\t\t\t<td colspan='3' style='padding-left:64px;'>";
                 $form[] = "\t\t\t\t<input type='hidden' name='return' value='" . (empty($clause)?$GLOBALS['protocol'] . $_SERVER["HTTP_HOST"]:$clause) ."'>";
                 $form[] = "\t\t\t\t<input type='hidden' name='callback' value='" . (empty($callback)?'':$callback) ."'>";
+                $form[] = "\t\t\t\t<input type='hidden' name='field' value='" . (empty($ua)?'':$ua) ."'>";
                 $form[] = "\t\t\t\t<input type='submit' value='Upload File' name='submit' style='padding:11px; font-size:122%;'>";
                 $form[] = "\t\t\t</td>";
                 $form[] = "\t\t</tr>";
@@ -4687,7 +4688,7 @@ if (!function_exists("redirect")) {
         $GLOBALS['url'] = $uri;
         $GLOBALS['time'] = $seconds;
         $GLOBALS['message'] = $message;
-        require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'redirect.php';
+        require_once API_ROOT_PATH . DIRECTORY_SEPARATOR . 'redirect.php';
         exit(-1000);
     }
 }
