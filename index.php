@@ -299,7 +299,8 @@
 			echo '</pre>';
 			break;
 		case 'raw':
-			echo implode("} | {", $data);
+		    header('Content-type: application/x-httpd-php');
+			echo "<?php\n\nreturn " . var_export($data, true) . ";\n\n?>";
 			break;
 		case 'json':
 			header('Content-type: application/json');
