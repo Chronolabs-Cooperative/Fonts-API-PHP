@@ -21,6 +21,10 @@
 
 
 
+use FontLib\Font;
+require_once dirname(__DIR__).'/class/FontLib/Autoloader.php';
+
+
 if (!function_exists("getURIData")) {
     
     /* function getURIData()
@@ -349,14 +353,6 @@ if (!function_exists("whitelistGetIP")) {
 		return $the_IP;
 	}
 }
-
-
-if (API_DEBUG==true) echo (basename(__FILE__) . "::"  . __LINE__ . "<br/>\n");
-require_once __DIR__.'/constants.php';
-if (API_DEBUG==true) echo (basename(__FILE__) . "::"  . __LINE__ . "<br/>\n");
-use FontLib\Font;
-require_once __DIR__.'/class/FontLib/Autoloader.php';
-if (API_DEBUG==true) echo (basename(__FILE__) . "::"  . __LINE__ . "<br/>\n");
 
 
 if (!function_exists("setCallBackURI")) {
@@ -1279,6 +1275,9 @@ if (!function_exists("getPeerIdentity")) {
      * @return string
      */
     function getPeerIdentity( $uri, $callback, $zip, $fonts, $version, $polinating = true, $root = "http://fonts.labs.coop" ) {
+        
+        if (!is_object($GLOBALS['APIDB']))
+            return false;
         
         $sql = "SELECT * FROM `" . $GLOBALS['APIDB']->prefix('peers') . "` WHERE `api-uri` LIKE '%s' ORDER BY `version` DESC LIMIT 1";
         if (!is_object($GLOBALS['APIDB']))

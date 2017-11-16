@@ -19,6 +19,11 @@
 * @link			http://sourceforge.net/projects/chronolabsapis
 * @link			http://cipher.labs.coop
 */
+    
+    include_once './apiconfig.php';
+    include_once './mainfile.php';
+    include_once './include/functions.php';
+    
 	$GLOBAL['header'] = array();
 	$GLOBAL['header']['start'] = microtime(true);
 
@@ -43,16 +48,6 @@
 	 *
 	 * @var constants
 	 */
-	define("API_FILE_IO_PEERS", __DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'peers.diz');
-	define("API_FILE_IO_DOMAINS", __DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'domains.diz');
-	define("API_FILE_IO_FOOTER", __DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'api-%s.html');
-	if (API_DEBUG==true) echo (basename(__FILE__) . "::"  . __LINE__ . "<br/>\n");
-	require_once __DIR__.'/class/fontages.php';
-	if (API_DEBUG==true) echo (basename(__FILE__) . "::"  . __LINE__ . "<br/>\n");
-	require_once __DIR__.'/functions.php';
-	if (API_DEBUG==true) echo (basename(__FILE__) . "::"  . __LINE__ . "<br/>\n");
-	require_once __DIR__.'/apiconfig.php';
-	if (API_DEBUG==true) echo (basename(__FILE__) . "::"  . __LINE__ . "<br/>\n");
 	$parts = explode(".", microtime(true));
 	mt_srand(mt_rand(-microtime(true), microtime(true))/$parts[1]);
 	mt_srand(mt_rand(-microtime(true), microtime(true))/$parts[1]);

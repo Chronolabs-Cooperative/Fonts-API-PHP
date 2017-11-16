@@ -20,15 +20,15 @@
  * @link			http://cipher.labs.coop
  */
 
-    require_once __DIR__ . "/apiconfig.php";
+    if (!defined('API_DEBUG'))
+        define('API_DEBUG', false);
 
-	if (API_DEBUG==true) echo (basename(__FILE__) . "::"  . __LINE__ . "<br/>\n");
-	/**
+    include_once "./include/functions.php";
+    /**
 	 *
 	 * @var string
 	 */
-	if (!defined('API_DEBUG'))
-		define('API_DEBUG', true);
+
 	define('API_VERSION', '2.4.13');
 	define('MAXIMUM_QUERIES', 2600);
 	define('DEFAULT_VERSION', 2.001);
@@ -50,11 +50,11 @@
 		define("API_TWITTER_RELEASES", "Zero-day Font Release: %s\nFiles Packed: %s\nInflated: %sMb's\nDownload: %s\nPreview: %s");
 	
 	// Added version 2.2.1 - Pertanence too the local API Session
-	define('API_URL', (!isset($_SERVER["HTTP_HOST"])?"http://fonts.labs.coop":(isset($_SERVER["HTTPS"])?"https://":"http://").$_SERVER["HTTP_HOST"]));
+	define('API_URL', (!isset($_SERVER["HTTP_HOST"])?"http://fonty.snails.email":(isset($_SERVER["HTTPS"])?"https://":"http://").$_SERVER["HTTP_HOST"]));
 	define('API_URL_CALLBACK', '/v2/%s/callback.api');
 	define('API_URL_ZIP', '/v2/data/%s/zip/download.api');
 	define('API_URL_FONTS', '/v2/fonts/all/%s-%s/json.api?local=only');
-	define('API_POLINATING', (strpos(API_URL, 'localhost')||strpos(API_URL, 'labs.coop')?false:true));
+	define('API_POLINATING', (strpos(API_URL, 'localhost')||strpos(API_URL, 'snails.email')?false:true));
 	define('API_REPOSITORY', 'git,svn'); // = git or svn or git,svn
 	define('API_BASE', 'eot');
 	define('API_LICENCE', 'gpl3');
@@ -77,6 +77,9 @@
 	// Prefix for Identity Tags for Fonts..
 	define('API_IDENTITY_TAG', 'labscoop:');
 	define('API_DEFAULT_BIZO', 'Chronolabs Cooperative');
+	
+	if (!defined("API_PATH"))
+	    return false;
 	
 	/**
 	 * YOU NEED TO SET THESE CONSTANTS FOR RUN TIME OPERATION
@@ -121,7 +124,7 @@
 	/**
 	 * Connects Global Database Objectivity
 	 */
-	@include_once __DIR__ . DIRECTORY_SEPARATOR . 'class'. DIRECTORY_SEPARATOR . 'fontages.php';
+	@include_once __DIR__ . DIRECTORY_SEPARATOR . 'include'. DIRECTORY_SEPARATOR . 'dbconfig.php';
 	
 	/**
 	 * Cache Indexing Meter

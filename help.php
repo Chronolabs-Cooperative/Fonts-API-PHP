@@ -148,7 +148,7 @@
         <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/fonts/<?php echo $nodes; ?>/preview.api" target="_blank"><?php echo API_URL; ?>/v2/fonts/<?php echo $nodes; ?>/preview.api</a></font><br /><br />
         <font class="help-title-text">This is for a html output for one of any as a random font based on the resource!! The font will have the name: 'Font Named As';</font><br/>
         <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/random/any/font-named-as/preview.api" target="_blank"><?php echo API_URL; ?>/v2/random/any/font-named-as/preview.api</a></font><br /><br />
-        <font class="help-title-text">This is for a html output for one of node based random which is <strong>bold</strong> &amp;  <strong><em>italic</font> font. The font will have the name: 'Font Named As';<br/>
+        <font class="help-title-text">This is for a html output for one of node based random which is <strong>bold</strong> &amp;  <strong><em>italic</em></strong> font. The font will have the name: 'Font Named As';<br/>
         <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/random/any-bold-italic/font-named-as/preview.api" target="_blank"><?php echo API_URL; ?>/v2/random/any-bold-italic/font-named-as/preview.api</a></font><br /><br />
         <font class="help-title-text">This is for a html output for a selection of a random font based on the node list!! The font will have the name: 'Font Named As';</font><br/>
         <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/random/<?php echo $random; ?>/font-named-as/preview.api" target="_blank"><?php echo API_URL; ?>/v2/random/<?php echo $random; ?>/font-named-as/preview.api</a></font><br /><br />
@@ -162,7 +162,7 @@
         <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/fonts/<?php echo $nodes; ?>/css.api" target="_blank"><?php echo API_URL; ?>/v2/fonts/<?php echo $nodes; ?>/css.api</a></font><br /><br />
         <font class="help-title-text">This is for a css output for a stylesheet for a selection of one of any of the font libraries a random font! The font will have the name: 'Font Named As';</font><br/>
         <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/random/any/font-named-as/css.api" target="_blank"><?php echo API_URL; ?>/v2/random/any/font-named-as/css.api</a></font><br /><br />
-        <font class="help-title-text">This is for a css output for one of node based random any which is <strong>bold</strong> &amp;  <strong><em>italic</font> font. The font will have the name: 'Font Named As';<br/>
+        <font class="help-title-text">This is for a css output for one of node based random any which is <strong>bold</strong> &amp;  <strong><em>italic</em></strong> font. The font will have the name: 'Font Named As';<br/>
         <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/random/any-bold-italic/font-named-as/css.api" target="_blank"><?php echo API_URL; ?>/v2/random/any-bold-italic/font-named-as/css.api</a></font><br /><br />
         <font class="help-title-text">This is for a css output for a stylesheet for a selection of a random font based on the node list! The font will have the name: 'Font Named As';</font><br/>
         <font class="help-url-example"><a href="<?php echo API_URL; ?>/v2/random/<?php echo $random; ?>/font-named-as/css.api" target="_blank"><?php echo API_URL; ?>/v2/random/<?php echo $random; ?>/font-named-as/css.api</a></font><br /><br />

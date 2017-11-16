@@ -19,14 +19,12 @@
  * @link			http://sourceforge.net/projects/chronolabsapis
  * @link			http://cipher.labs.coop
  */
-	define('API_DEBUG', false);
+    if (!defined("API_DEBUG"))
+	   define('API_DEBUG', false);
 
-	global $domain, $protocol, $business, $entity, $contact, $referee, $peerings, $source;
-	require_once __DIR__ . DIRECTORY_SEPARATOR . 'functions.php';
-	setExecutionTimer('header');
-	require_once __DIR__ . DIRECTORY_SEPARATOR . 'header.php';
-	
-	
+	include_once './apiconfig.php';
+	include_once './header.php';
+		
 	/**
 	 * URI Path Finding of API URL Source Locality
 	 * @var unknown_type

@@ -27,6 +27,9 @@
  **/
 
 require_once './include/common.inc.php';
+require_once './include/functions.php';
+require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'functions.php';
+
 defined('API_INSTALL') || die('API Installation wizard die');
 
 $pageHasForm = false;
