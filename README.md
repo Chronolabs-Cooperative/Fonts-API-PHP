@@ -1,5 +1,5 @@
-# Chronolabs Cooperative
-# Fonting Repository Services API  - http://api.fonts.snails.email -
+## Chronolabs Cooperative presents
+# Fonting Repository Services API  - http://fonty.snails.email -
 
 # BASIC INSTALLATION MANUAL
 ## by. Simon Antony Roberts (Sydney)
