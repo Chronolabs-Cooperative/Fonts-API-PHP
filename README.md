@@ -222,7 +222,7 @@ You need to run the following command from root with sudo at the start unless yo
 
 To enable and access and edit the root cron scheduler on Ubuntu run following command:
 
-   $ sudo crontab -e
+    $ sudo crontab -e
 
 
 ## Mod URL Rewrite (Apache URL Rewrite Module)
@@ -272,8 +272,8 @@ This goes in your API_ROOT_PATH/.htaccess for the apache module rewrite!
 
 To enable apaches module for URL rewrite run the following commands:
 
-   $ sudo a2enmod rewrite
-   $ sudo service apache2 restart
+    $ sudo a2enmod rewrite
+    $ sudo service apache2 restart
 
 
 That's pretty much the basic of setting up, you can of course make changes to the paths, even store your SVN remotely for larger file support. I hope this installation guide will help you in configuring the Font's API
