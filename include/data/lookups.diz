@@ -1,3 +1,1 @@
-http://lookups.labs.coop/v1/country/%s/%s.api
-http://lookups.dev.labs.coop/v1/country/%s/%s.api
-http://lookups.fonts.labs.coop/v1/country/%s/%s.api
+http://lookups.snails.email/v1/country/%s/%s.api

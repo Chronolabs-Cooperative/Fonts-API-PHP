@@ -1,3 +1,2 @@
-http://whois.labs.coop/v1/%s/%s.api
-http://whois.fonts.labs.coop/v1/%s/%s.api
-http://whois.dev.labs.coop/v1/%s/%s.api
+http://whois.snails,email/v2/%s/%s.api
+http://whois.xortify.com/v2/%s/%s.api

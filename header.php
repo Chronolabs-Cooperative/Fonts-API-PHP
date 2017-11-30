@@ -21,6 +21,7 @@
 */
     
     include_once './constants.php';
+    include_once './include/dbconfig.php';
     include_once './include/functions.php';
  
 	$GLOBAL['header'] = array();
