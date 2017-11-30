@@ -33,6 +33,7 @@ error_reporting(E_ERROR);
 define('MAXIMUM_QUERIES', 25);
 ini_set('memory_limit', '128M');
 include_once dirname(dirname(__FILE__)).'/constants.php';
+include_once dirname(__DIR__).'/include/functions.php';
 include_once dirname(dirname(__FILE__)).'/class/xcp.class.php';
 set_time_limit(7200);
 $result = $GLOBALS['APIDB']->queryF($sql = "SELECT * from `" . $GLOBALS['APIDB']->prefix('uploads') . "` WHERE `uploaded` > '0' AND `converted` > '0' AND `quizing` > '0' AND `storaged` <= '0'  AND (`finished` >= `needing` OR `expired` < UNIX_TIMESTAMP()) ORDER BY RAND() LIMIT " . mt_rand(7,42));

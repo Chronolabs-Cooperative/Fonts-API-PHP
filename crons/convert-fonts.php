@@ -29,6 +29,7 @@ require_once dirname(__DIR__).'/class/FontLib/Autoloader.php';
 error_reporting(E_ERROR);
 set_time_limit(1999);
 require_once dirname(__DIR__).'/constants.php';
+include_once dirname(__DIR__).'/include/functions.php';
 $result = $GLOBALS['APIDB']->queryF("SELECT * FROM `" . $GLOBALS['APIDB']->prefix('uploads') . "` WHERE `uploaded` > '0' AND `converted` = '0' AND `storaged` = 0 ORDER BY RAND() LIMIT ".mt_rand(17,77));
 while($row = $GLOBALS['APIDB']->fetchArray($result))
 {

@@ -29,6 +29,7 @@ error_reporting(E_ERROR);
 define('MAXIMUM_QUERIES', 25);
 ini_set('memory_limit', '315M');
 include_once dirname(__DIR__).'/constants.php';
+include_once dirname(__DIR__).'/include/functions.php';
 require_once dirname(__DIR__).'/class/fontsmailer.php';
 set_time_limit(7200*99*25);
 $uploader = json_decode(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . "include"  . DIRECTORY_SEPARATOR . "data". DIRECTORY_SEPARATOR . "uploads.json"), true);

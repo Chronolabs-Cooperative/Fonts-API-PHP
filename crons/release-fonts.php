@@ -29,6 +29,7 @@ error_reporting(E_ERROR);
 define('MAXIMUM_QUERIES', 25);
 ini_set('memory_limit', '300M');
 include_once dirname(__DIR__).'/constants.php';
+include_once dirname(__DIR__).'/include/functions.php';
 include_once dirname(__DIR__).'/class/TwitterAPIExchange.php';
 require_once dirname(__DIR__).'/class/fontsmailer.php';
 set_time_limit(9999992);

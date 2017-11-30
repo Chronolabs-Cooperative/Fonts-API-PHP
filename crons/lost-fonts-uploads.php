@@ -29,6 +29,7 @@ require_once dirname(__DIR__).'/class/FontLib/Autoloader.php';
 error_reporting(E_ERROR);
 set_time_limit(1999);
 require_once dirname(__DIR__).'/constants.php';
+include_once dirname(__DIR__).'/include/functions.php';
 require_once dirname(__DIR__).'/class/fontsmailer.php';
 $basefolders = getDirListAsArray(FONT_RESOURCES_UNPACKING);
 mt_srand(mt_rand(-microtime(true), microtime(true)));

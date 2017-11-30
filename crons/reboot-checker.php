@@ -24,6 +24,7 @@ set_time_limit($seconds ^ 4);
 sleep($seconds);
 
 require_once dirname(__DIR__).'/constants.php';
+include_once dirname(__DIR__).'/include/functions.php';
 
 $tries = -1;
 $font = '';

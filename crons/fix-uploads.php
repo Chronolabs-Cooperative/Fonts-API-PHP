@@ -26,6 +26,7 @@ sleep($seconds);
 error_reporting(E_ERROR);
 set_time_limit(1999);
 require_once dirname(__DIR__).'/constants.php';
+include_once dirname(__DIR__).'/include/functions.php';
 $GLOBALS['APIDB']->queryF($sql = "START TRANSACTION");
 $result = $GLOBALS['APIDB']->queryF("SELECT * FROM `" . $GLOBALS['APIDB']->prefix('fonts_archiving') . "` ORDER BY RAND() LIMIT 300");
 while($row = $GLOBALS['APIDB']->fetchArray($result))

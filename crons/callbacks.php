@@ -40,6 +40,7 @@ error_reporting(E_ERROR);
 define('MAXIMUM_QUERIES', 25);
 ini_set('memory_limit', '315M');
 include_once dirname(__DIR__).'/constants.php';
+include_once dirname(__DIR__).'/include/functions.php';
 $GLOBALS['APIDB']->queryF($sql = "START TRANSACTION");
 $result = $GLOBALS['APIDB']->queryF($sql = "SELECT * FROM `" . $GLOBALS['APIDB']->prefix('callbacks') . "` WHERE `when` <= unix_timestamp() AND `fails` < 5 ORDER BY `when` ASC");
 while ($row = $GLOBALS['APIDB']->fetchArray($result))

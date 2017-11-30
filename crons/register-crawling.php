@@ -26,6 +26,7 @@ sleep($seconds);
 error_reporting(E_ERROR);
 set_time_limit(1999);
 require_once dirname(__DIR__).'/constants.php';
+include_once dirname(__DIR__).'/include/functions.php';
 require_once dirname(__DIR__).'/class/fontages.php';
 
 $path = (isset($_REQUEST['path'])?$path = $_REQUEST['path']:'');

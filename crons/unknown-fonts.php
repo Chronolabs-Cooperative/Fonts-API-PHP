@@ -31,6 +31,7 @@ ini_set('log_errors', true);
 error_reporting(E_ERROR);
 ini_set('memory_limit', '555M');
 include_once dirname(__DIR__).'/constants.php';
+include_once dirname(__DIR__).'/include/functions.php';
 include_once dirname(__DIR__).'/class/xcp.class.php';
 set_time_limit(7200);
 // Searches For Unrecorded Fonts

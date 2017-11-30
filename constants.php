@@ -23,9 +23,9 @@
     if (!defined('API_DEBUG'))
         define('API_DEBUG', false);
 
-    include_once "./apiconfig.php";
-    include_once "./mainfile.php";
-    
+    include_once __DIR__ . DIRECTORY_SEPERATOR . "apiconfig.php";
+    include_once __DIR__ . DIRECTORY_SEPERATOR . "mainfile.php";
+    include_once __DIR__ . DIRECTORY_SEPERATOR . "include" . DIRECTORY_SEPERATOR . "functions.php";
     
     /**
      * Connects Global Database Objectivity

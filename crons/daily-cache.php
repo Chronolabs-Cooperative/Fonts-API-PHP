@@ -9,6 +9,7 @@
 	error_reporting(0);
 	ini_set('memory_limit', '245M');
 	include_once dirname(__DIR__).'/constants.php';
+	include_once dirname(__DIR__).'/include/functions.php';
 	error_reporting(E_ERROR);
 	set_time_limit(7200);
 	var_dump(getFontsListArray('all', 'raw'));
