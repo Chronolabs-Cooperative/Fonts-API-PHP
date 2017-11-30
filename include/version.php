@@ -29,5 +29,5 @@ defined('API_ROOT_PATH') || exit('Restricted access');
 /**
  *  Define API version
  */
-define('API_VERSION', 'Fonts Repository Services (Rest API) 2.7.2');
+define('API_VERSION', 'Fonts Repository Services (Rest API) 2.7.3');
 define('API_TYPE', 'fonty');
