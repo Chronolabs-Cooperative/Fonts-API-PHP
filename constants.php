@@ -25,12 +25,7 @@
 
     include_once __DIR__ . DIRECTORY_SEPERATOR . "apiconfig.php";
     include_once __DIR__ . DIRECTORY_SEPERATOR . "mainfile.php";
-    include_once __DIR__ . DIRECTORY_SEPERATOR . "include" . DIRECTORY_SEPERATOR . "functions.php";
-    
-    /**
-     * Connects Global Database Objectivity
-     */
-    @include_once __DIR__ . DIRECTORY_SEPARATOR . 'include'. DIRECTORY_SEPARATOR . 'dbconfig.php';
+    include_once __DIR__ . DIRECTORY_SEPERATOR . "include" . DIRECTORY_SEPERATOR . "common.php";
     
     /**
 	 *

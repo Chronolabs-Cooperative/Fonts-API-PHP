@@ -24,8 +24,8 @@
 use FontLib\Font;
 require_once dirname(__DIR__).'/class/FontLib/Autoloader.php';
 
-// Include Database
-include_once __DIR__.'/dbconfig.php';
+// Include Database + Commons
+include_once dirname(__DIR__).'/mainfile.php';
 
 if (!function_exists("getURIData")) {
     

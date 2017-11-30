@@ -13,7 +13,6 @@
  * @license             GNU GPL 2 (http://www.gnu.org/licenses/gpl-2.0.html)
  * @package             kernel
  */
-defined('API_MAINFILE_INCLUDED') || die('Restricted access');
 
 /**
  * YOU SHOULD NEVER USE THE FOLLOWING TO CONSTANTS, THEY WILL BE REMOVED
@@ -24,6 +23,7 @@ defined('NWLINE') or define('NWLINE', "\n");
 /**
  * Include files with definitions
  */
+include_once dirname(__DIR__) . DS . 'mainfile.php';
 include_once __DIR__ . DS . 'functions.php';
 include_once __DIR__ . DS . 'version.php';
 include_once __DIR__ . DS . 'license.php';

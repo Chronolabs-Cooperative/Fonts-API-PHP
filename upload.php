@@ -20,7 +20,6 @@
  * @link			http://cipher.labs.coop
  */
 
-
 	require_once __DIR__ . DIRECTORY_SEPARATOR . 'header.php';
     
 	error_reporting(E_ALL);

@@ -31,7 +31,6 @@ if (!is_file(__DIR__ . DIRECTORY_SEPARATOR . 'mainfile.php') || !is_file(__DIR__
 }
 
 require_once __DIR__ . DIRECTORY_SEPARATOR . 'mainfile.php';
-require_once __DIR__ . DIRECTORY_SEPARATOR . 'constants.php';
 
 
 /**
