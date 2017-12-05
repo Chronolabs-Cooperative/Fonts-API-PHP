@@ -20,22 +20,22 @@
 * @link			http://cipher.labs.coop
 */
     
-    require_once __DIR__ . '/constants.php';
-    require_once __DIR__ . '/include/common.php';
-    require_once __DIR__ . '/include/functions.php';
- 
+	require_once __DIR__ . '/constants.php';
+	require_once __DIR__ . '/include/common.php';
+	require_once __DIR__ . '/include/functions.php';
+
 	$GLOBAL['header'] = array();
 	$GLOBAL['header']['start'] = microtime(true);
 
 	if (!defined('API_DEBUG'))
 		define('API_DEBUG', false);
-	
+
 	/**
 	 * Opens Access Origin Via networking Route NPN
 	*/
 	header('Access-Control-Allow-Origin: *');
 	header('Origin: *');
-	
+
 	/**
 	 * Turns of GZ Lib Compression for Document Incompatibility
 	 */
@@ -43,7 +43,7 @@
 	ini_set("zlib.output_compression_level", -1);
 
 	if (API_DEBUG==true) echo (basename(__FILE__) . "::"  . __LINE__ . "<br/>\n");
-	
+
 	/**
 	 *
 	 * @var constants
@@ -58,7 +58,7 @@
 	if (API_DEBUG==true) echo (basename(__FILE__) . "::"  . __LINE__ . "<br/>\n");
 	global $domain, $protocol, $business, $entity, $contact, $referee, $peerings, $source, $ipid, $fontnames;
 	$fontnames = array();
-	
+
 	if (API_DEBUG==true) echo (basename(__FILE__) . "::"  . __LINE__ . "<br/>\n");
 	if (defined("MAXIMUM_QUERIES")) {
 		session_start();
@@ -87,5 +87,5 @@
 	 */
 	$ipid = getIPIdentity(whitelistGetIP(true));
 	if (API_DEBUG==true) echo (basename(__FILE__) . "::"  . __LINE__ . "<br/>\n");
-	
+
 	$GLOBAL['header']['end'] = microtime(true);
