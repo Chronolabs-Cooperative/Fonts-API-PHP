@@ -23,9 +23,9 @@
     if (!defined('API_DEBUG'))
         define('API_DEBUG', false);
 
-    include_once __DIR__ . DIRECTORY_SEPERATOR . "apiconfig.php";
-    include_once __DIR__ . DIRECTORY_SEPERATOR . "mainfile.php";
-    include_once __DIR__ . DIRECTORY_SEPERATOR . "include" . DIRECTORY_SEPERATOR . "common.php";
+    require_once __DIR__ . DIRECTORY_SEPERATOR . "apiconfig.php";
+    require_once __DIR__ . DIRECTORY_SEPERATOR . "mainfile.php";
+    require_once __DIR__ . DIRECTORY_SEPERATOR . "include" . DIRECTORY_SEPERATOR . "common.php";
     
     /**
 	 *
@@ -80,10 +80,7 @@
 	// Prefix for Identity Tags for Fonts..
 	define('API_IDENTITY_TAG', 'labscoop:');
 	define('API_DEFAULT_BIZO', 'Chronolabs Cooperative');
-	
-	if (!defined("API_PATH"))
-	    return false;
-	
+
 	/**
 	 * YOU NEED TO SET THESE CONSTANTS FOR RUN TIME OPERATION
 	 * 
