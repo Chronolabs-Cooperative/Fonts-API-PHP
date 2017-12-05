@@ -31,7 +31,7 @@
 	 * @var unknown_type
 	 */
 	$odds = $inner = array();
-	foreach($inner as $key => $values) {
+	foreach($_GET as $key => $values) {
 	    if (!isset($inner[$key])) {
 	        $inner[$key] = $values;
 	    } elseif (!in_array(!is_array($values) ? $values : md5(json_encode($values, true)), array_keys($odds[$key]))) {
