@@ -23,9 +23,9 @@
     if (!defined('API_DEBUG'))
         define('API_DEBUG', false);
 
-    require_once __DIR__ . DIRECTORY_SEPERATOR . "apiconfig.php";
-    require_once __DIR__ . DIRECTORY_SEPERATOR . "mainfile.php";
-    require_once __DIR__ . DIRECTORY_SEPERATOR . "include" . DIRECTORY_SEPERATOR . "common.php";
+    require_once __DIR__ . DIRECTORY_SEPARATOR . "apiconfig.php";
+    require_once __DIR__ . DIRECTORY_SEPARATOR . "mainfile.php";
+    require_once __DIR__ . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "functions.php";
     
     /**
 	 *
