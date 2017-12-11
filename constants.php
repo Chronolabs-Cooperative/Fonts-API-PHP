@@ -85,14 +85,14 @@
 	define('FONT_RESOURCES_SORTING', API_PATH . '/Fonts/Sorting');
 	define('FONT_RESOURCES_CONVERTING', API_PATH . '/Fonts/Converting');
 	define('FONT_RESOURCES_RESOURCE', API_PATH . '/Fonts/Repository');
-	define('FONT_RESOURCES_CACHE', API_VAR_PATH . '/FontsAPI/Cache');
+	define('FONT_RESOURCES_CACHE', API_VAR_PATH . '/FontsCache');
 	define('FONT_RESOURCES_STORE', 'https://sourceforge.net/p/chronolabsapis/Fonting/HEAD/tree/%s?format=raw');
 	define('FONT_RESOURCES_PEERS', 'https://sourceforge.net/p/chronolabsapis/Fonting/HEAD/tree/peers.json?format=raw');
 	define('FONT_RESOURCES_REPOMAP', 'https://sourceforge.net/p/chronolabsapis/Fonting/HEAD/tree/%s/%s--repository-mapping.json?format=raw');
 	define('FONT_RESOURCES_STORE_GIT', 'https://github.com/Chronolabs-Cooperative/Fonting-Repository/raw/master/%s');
 	define('FONT_RESOURCES_PEERS_GIT', 'https://github.com/Chronolabs-Cooperative/Fonting-Repository/raw/master/peers.json');
 	define('FONT_RESOURCES_REPOMAP_GIT', 'https://github.com/Chronolabs-Cooperative/Fonting-Repository/raw/master/%s/%s--repository-mapping.json');
-	define('FONT_UPLOAD_PATH', API_VAR_PATH . '/FontsAPI/Uploads');
+	define('FONT_UPLOAD_PATH', API_VAR_PATH . '/FontsUploads');
 	define('FONTS_CACHE', FONT_RESOURCES_CACHE . DIRECTORY_SEPARATOR . '--dumps--');
 
 	if (!is_dir(FONT_RESOURCES_UNPACKING))
