@@ -23,18 +23,15 @@
     if (!defined('API_DEBUG'))
         define('API_DEBUG', false);
 
-    require_once __DIR__ . DIRECTORY_SEPARATOR . "apiconfig.php";
-    require_once __DIR__ . DIRECTORY_SEPARATOR . "mainfile.php";
-    require_once __DIR__ . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "functions.php";
+    include_once __DIR__ . DIRECTORY_SEPARATOR . "apiconfig.php";
+    include_once __DIR__ . DIRECTORY_SEPARATOR . "mainfile.php";
+    include_once __DIR__ . DIRECTORY_SEPARATOR . "include" . DIRECTORY_SEPARATOR . "functions.php";
     
     /**
 	 *
 	 * @var string
 	 */
-
-	define('API_VERSION', '2.4.13');
 	define('MAXIMUM_QUERIES', 2600);
-	define('DEFAULT_VERSION', 2.001);
 	
 	/**
 	 * Twitter Setting for Releases Announces etc
@@ -53,14 +50,12 @@
 		define("API_TWITTER_RELEASES", "Zero-day Font Release: %s\nFiles Packed: %s\nInflated: %sMb's\nDownload: %s\nPreview: %s");
 	
 	// Added version 2.2.1 - Pertanence too the local API Session
-	define('API_URL', (!isset($_SERVER["HTTP_HOST"])?"http://fonty.snails.email":(isset($_SERVER["HTTPS"])?"https://":"http://").$_SERVER["HTTP_HOST"]));
 	define('API_URL_CALLBACK', '/v2/%s/callback.api');
 	define('API_URL_ZIP', '/v2/data/%s/zip/download.api');
 	define('API_URL_FONTS', '/v2/fonts/all/%s-%s/json.api?local=only');
 	define('API_POLINATING', (strpos(API_URL, 'localhost')||strpos(API_URL, 'snails.email')?false:true));
 	define('API_REPOSITORY', 'git,svn'); // = git or svn or git,svn
 	define('API_BASE', 'eot');
-	define('API_LICENCE', 'gpl3');
 	$short = file("https://raw.githubusercontent.com/Chronolabs-Cooperative/Jump-API-PHP/master/services.txt");
 	define("API_SHORTENING_URL", "http://".str_replace("\n", "", trim($short[mt_rand(0, count($short)-1)]))."/"); // URL for your shortener API see: https://github.com/Chronolabs-Cooperative/Jump-API-PHP
 	define("API_SHORTENING_TYPE", "random"); // can be either random, domain, short, original
@@ -78,7 +73,7 @@
 	define('API_CRAWLERS_LEVELS', 17);
 	
 	// Prefix for Identity Tags for Fonts..
-	define('API_IDENTITY_TAG', 'labscoop:');
+	define('API_IDENTITY_TAG', 'snailsemail:');
 	define('API_DEFAULT_BIZO', 'Chronolabs Cooperative');
 
 	/**

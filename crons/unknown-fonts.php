@@ -29,13 +29,13 @@ require_once dirname(__DIR__).'/class/FontLib/Autoloader.php';
 ini_set('display_errors', true);
 ini_set('log_errors', true);
 error_reporting(E_ERROR);
-require_once dirname(__DIR__).'/constants.php';
-require_once dirname(__DIR__).'/include/functions.php';
-require_once dirname(__DIR__).'/class/xcp.class.php';
+ini_set('memory_limit', '555M');
+include_once dirname(__DIR__).'/constants.php';
+include_once dirname(__DIR__).'/include/functions.php';
+include_once dirname(__DIR__).'/class/xcp.class.php';
 set_time_limit(7200);
 // Searches For Unrecorded Fonts
-$folders = array_unique(array_merge(array(FONT_RESOURCES_RESOURCE.DS.'0','1','2','3','4','5','6','7','8','9','_','%','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'), getDirListAsArray(FONT_RESOURCES_RESOURCE)));
-echo "\nLooking in Folder: ". FONT_RESOURCES_RESOURCE;
+$folders = array_unique(array_merge(array('0','1','2','3','4','5','6','7','8','9','_','%','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'), getDirListAsArray(FONT_RESOURCES_RESOURCE)));
 while(mt_rand(-4,7)<5)
 {
 	shuffle($folders);
@@ -44,7 +44,6 @@ while(mt_rand(-4,7)<5)
 }
 foreach($folders as $folder)
 {
-	echo "\nSearching in Folder: ". FONT_RESOURCES_RESOURCE . DIRECTORY_SEPARATOR . $folder;
 	$zips = getCompleteZipListAsArray(FONT_RESOURCES_RESOURCE . DIRECTORY_SEPARATOR . $folder);
 	while(mt_rand(-14,7)<5)
 	{

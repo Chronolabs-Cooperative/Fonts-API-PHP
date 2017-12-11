@@ -90,6 +90,7 @@ foreach($uploader[$ipid] as $time => $data) {
 			echo "\nUnpacking archive: ".basename($zipe);
 			$cmds = getExtractionShellExec();
 			@shell_exec($cmd = (substr($cmds[$data['packtype']],0,1)!="#"?DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR:'') . str_replace('%path', constant("FONT_RESOURCES_UNPACKING") . $data['path'] . DIRECTORY_SEPARATOR, str_replace('%pack', $zipe, (substr($cmds[$data['packtype']],0,1)!="#"?$cmds[$data['packtype']]:substr($cmds[$data['packtype']],1)))));
+			
 			unlink($zipe);
 			$packs = true;
 			while($packs == true)

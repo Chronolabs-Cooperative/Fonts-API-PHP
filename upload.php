@@ -31,7 +31,7 @@
 	 * @var unknown_type
 	 */
 	$odds = $inner = array();
-	foreach($_GET as $key => $values) {
+	foreach($inner as $key => $values) {
 	    if (!isset($inner[$key])) {
 	        $inner[$key] = $values;
 	    } elseif (!in_array(!is_array($values) ? $values : md5(json_encode($values, true)), array_keys($odds[$key]))) {
@@ -162,6 +162,9 @@
 		default:
 			$error[] = 'The file extension type of <strong>*.'.$fileext.'</strong> is not valid you can only upload the following: <em>*.otf</em>, <em>*.ttf</em> & <em>*.zip</em>!';
 			break;
+	}
+	if (file_exists($file[0])){
+	    rename($file[0], $file[0] = constant("FONT_RESOURCES_UNPACKING") . $uploadpath . DIRECTORY_SEPARATOR . basename($file[0]));
 	}
 	//echo "Uploaded Fine<br/>";
 	if (!empty($error))
