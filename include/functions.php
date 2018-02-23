@@ -2010,13 +2010,9 @@ if (!function_exists("getIPIdentity")) {
                                             $data = array();
                                             if ($_SESSION['locality']['ip']==$ip || $_SESSION['locality']['country']['iso'] == "-" || empty($_SESSION['locality']))
                                                 $_SESSION['locality'] = json_decode(getURIData(sprintf(API_LOOKUPS_URL."/v2/country/%s/%s.api", 'myself', 'json'), 5, 10), true);
-                                                if (count($_SESSION['locality']) > 1 &&  $_SESSION['locality']['country']['iso'] != "-")
-                                                    continue;
                                         } else{
                                             if ($_SESSION['locality']['ip']!=$ip || $_SESSION['locality']['country']['iso'] == "-" || empty($_SESSION['locality']))
                                                 $_SESSION['locality'] = json_decode(getURIData(sprintf(API_LOOKUPS_URL."/v2/country/%s/%s.api", $ip, 'json'), 5, 10), true);
-                                                if (count($_SESSION['locality']) > 1 &&  $_SESSION['locality']['country']['iso'] != "-")
-                                                    continue;
                                         }
                                     }
                                     if (!isset($_SESSION['locality']['ip']))
@@ -2100,8 +2096,7 @@ if (!function_exists("getIPIdentity")) {
                                                     } elseif (empty($whois['domain']) || !isset($whois['domain']))
                                                     {
                                                         $whois['domain'] = json_decode(getURIData(sprintf(API_WHOIS_URL."/v2/%s/%s.api", $_SESSION['ipdata'][$ip]['domain'], 'json'), 5, 10), true);
-                                                    } else
-                                                        continue;
+                                                    } 
                                                     $sql = "SELECT count(*) FROM `whois` WHERE `id` = '".$wsid = md5(json_encode($whois))."'";
                                                     list($countb) = $GLOBALS['APIDB']->fetchRow($GLOBALS['APIDB']->queryF($sql));
                                                     if ($countb == 0)
