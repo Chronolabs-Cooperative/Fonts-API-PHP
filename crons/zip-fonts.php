@@ -332,7 +332,7 @@ while($upload = $GLOBALS['APIDB']->fetchArray($result))
 		{
 			$ffls++;
 			echo "Checking file $ffls missing in files index: $path/$files\n";
-			list($count) = $GLOBALS['APIDB']->fetchRow($GLOBALS['APIDB']->queryF($sql = "SELECT count(*) from `fonts_files` WHERE `font_id` = '" . $upload['font_id']. "' AND  `archive_id` = '" . $archive_id. "' AND `path` = '/' AND `filename` = '$files'"));
+			list($count) = $GLOBALS['APIDB']->fetchRow($GLOBALS['APIDB']->queryF($sql = "SELECT count(*) from `" . $GLOBALS['APIDB']->prefix('fonts_files') . "` WHERE `font_id` = '" . $upload['font_id']. "' AND  `archive_id` = '" . $archive_id. "' AND `path` = '/' AND `filename` = '$files'"));
 			if ($count==0)
 			{
 				$exts = explode('.', $files);
@@ -343,7 +343,7 @@ while($upload = $GLOBALS['APIDB']->fetchArray($result))
 						$type = $filetype;
 				if (empty($type))
 					$type = 'other';
-				if ($GLOBALS['APIDB']->queryF($sql = "INSERT INTO `fonts_files` (`font_id`, `archive_id`, `type`, `extension`, `filename`, `path`, `bytes`, `hits`, `created`) VALUES('" . $upload['font_id']. "', '" . $archive_id. "','$type','$ext','$files','/','" .filesize($currently . DIRECTORY_SEPARATOR . $files) . "',0,unix_timestamp())"))
+				if ($GLOBALS['APIDB']->queryF($sql = "INSERT INTO `" . $GLOBALS['APIDB']->prefix('fonts_files') . "` (`font_id`, `archive_id`, `type`, `extension`, `filename`, `path`, `bytes`, `hits`, `created`) VALUES('" . $upload['font_id']. "', '" . $archive_id. "','$type','$ext','$files','/','" .filesize($currently . DIRECTORY_SEPARATOR . $files) . "',0,unix_timestamp())"))
 					echo "Index for File Missing added: $path/$files for font\n";
 				else
 					die("SQL Failed: $sql;");
@@ -354,7 +354,7 @@ while($upload = $GLOBALS['APIDB']->fetchArray($result))
 			{
 				$ffls++;
 				echo "Checking file $ffls missing in files index: $path/$filz\n";
-				list($count) = $GLOBALS['APIDB']->fetchRow($GLOBALS['APIDB']->queryF($sql = "SELECT count(*) from `fonts_files` WHERE `font_id` = '" . $upload['font_id']. "' AND  `archive_id` = '" . $archive_id. "' AND `path` = '$path' AND `filename` = '$filz'"));
+				list($count) = $GLOBALS['APIDB']->fetchRow($GLOBALS['APIDB']->queryF($sql = "SELECT count(*) from `" . $GLOBALS['APIDB']->prefix('fonts_files') . "` WHERE `font_id` = '" . $upload['font_id']. "' AND  `archive_id` = '" . $archive_id. "' AND `path` = '$path' AND `filename` = '$filz'"));
 				if ($count==0)
 				{
 					$exts = explode('.', $filz);
@@ -365,7 +365,7 @@ while($upload = $GLOBALS['APIDB']->fetchArray($result))
 							$type = $filetype;
 					if (empty($type))
 						$type = 'other';
-					if ($GLOBALS['APIDB']->queryF($sql = "INSERT INTO `fonts_files` (`font_id`, `archive_id`, `type`, `extension`, `filename`, `path`, `bytes`, `hits`, `created`) VALUES('" . $upload['font_id']. "', '" . $archive_id. "','$type','$ext','$filz','$path','" .filesize($currently . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . $filz) . "',0,unix_timestamp())"))
+					if ($GLOBALS['APIDB']->queryF($sql = "INSERT INTO `" . $GLOBALS['APIDB']->prefix('fonts_files') . "` (`font_id`, `archive_id`, `type`, `extension`, `filename`, `path`, `bytes`, `hits`, `created`) VALUES('" . $upload['font_id']. "', '" . $archive_id. "','$type','$ext','$filz','$path','" .filesize($currently . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . $filz) . "',0,unix_timestamp())"))
 						echo "Index for File Missing added: $path/$filz for font\n";
 					else
 						die("SQL Failed: $sql;");
