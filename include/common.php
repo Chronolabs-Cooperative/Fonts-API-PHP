@@ -24,6 +24,7 @@ defined('NWLINE') or define('NWLINE', "\n");
  * Include files with definitions
  */
 include_once dirname(__DIR__) . DS . 'mainfile.php';
+include_once __DIR__ . DS . 'constants.php';
 include_once __DIR__ . DS . 'functions.php';
 include_once __DIR__ . DS . 'version.php';
 include_once __DIR__ . DS . 'license.php';
@@ -60,6 +61,7 @@ include_once API_ROOT_PATH . DS . 'include' . DS . 'functions.php';
  * Get database for making it global
  * Requires APILogger, API_DB_PROXY;
  */
-require_once API_ROOT_PATH . DS . 'include' . DS . 'dbconfig.php';
-require_once API_ROOT_PATH . DS . 'class' . DS . 'database' . DS . 'databasefactory.php';
-$GLOBALS['APIDB'] = APIDatabaseFactory::getDatabaseConnection();
+if (include_once API_ROOT_PATH . DS . 'include' . DS . 'dbconfig.php') {
+    include_once API_ROOT_PATH . DS . 'class' . DS . 'database' . DS . 'databasefactory.php';
+    $GLOBALS['APIDB'] = APIDatabaseFactory::getDatabaseConnection();
+}

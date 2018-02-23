@@ -22,7 +22,7 @@
 defined('API_ROOT_PATH') || exit('Restricted access');
 
 define('API_LICENSE_CODE', 'GPL');
-define('API_LICENSE_TEXT', 'General Public License (GPL) (v. 3.0)');
+define('API_LICENSE_TEXT', 'GPL General Public License (GPL) (v. 2.0)');
 define('API_LICENSE_KEY', '000000-000000-000000-000000-0000000');
 define('API_LICENSE_COMPANY', '');
 define('API_LICENSE_UNAME', '');

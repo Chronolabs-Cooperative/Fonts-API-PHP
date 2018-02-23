@@ -269,29 +269,61 @@
 		 * @author 		Simon Roberts (labs.coop) wishcraft@users.sourceforge.net
 		 * @return 		string
 		 */
-		function getURIData($uri = '', $timeout = 25, $connectout = 25, $post_data = array())
-		{
-			if (!function_exists("curl_init"))
-			{
-				return file_get_contents($uri);
-			}
-			if (!$btt = curl_init($uri)) {
-				return false;
-			}
-			curl_setopt($btt, CURLOPT_HEADER, 0);
-			curl_setopt($btt, CURLOPT_POST, (count($posts)==0?false:true));
-			if (count($posts)!=0)
-				curl_setopt($btt, CURLOPT_POSTFIELDS, http_build_query($post_data));
-			curl_setopt($btt, CURLOPT_CONNECTTIMEOUT, $connectout);
-			curl_setopt($btt, CURLOPT_TIMEOUT, $timeout);
-			curl_setopt($btt, CURLOPT_RETURNTRANSFER, true);
-			curl_setopt($btt, CURLOPT_VERBOSE, false);
-			curl_setopt($btt, CURLOPT_SSL_VERIFYHOST, false);
-			curl_setopt($btt, CURLOPT_SSL_VERIFYPEER, false);
-			$data = curl_exec($btt);
-			curl_close($btt);
-			return $data;
-		}
+		function getURIData($uri = '', $timeout = 25, $connectout = 25, $post = array(), $headers = array())
+        {
+            if (!function_exists("curl_init"))
+            {
+                die("Install PHP Curl Extension ie: $ sudo apt-get install php-curl -y");
+            }
+            $GLOBALS['php-curl'][md5($uri)] = array();
+            if (!$btt = curl_init($uri)) {
+                return false;
+            }
+            if (count($post)==0 || empty($post))
+                curl_setopt($btt, CURLOPT_POST, false);
+                else {
+                    $uploadfile = false;
+                    foreach($post as $field => $value)
+                        if (substr($value , 0, 1) == '@' && !file_exists(substr($value , 1, strlen($value) - 1)))
+                            unset($post[$field]);
+                        else
+                            $uploadfile = true;
+                    curl_setopt($btt, CURLOPT_POST, true);
+                    curl_setopt($btt, CURLOPT_POSTFIELDS, http_build_query($post));
+                    
+                    if (!empty($headers))
+                        foreach($headers as $key => $value)
+                            if ($uploadfile==true && substr($value, 0, strlen('Content-Type:')) == 'Content-Type:')
+                                unset($headers[$key]);
+                    if ($uploadfile==true)
+                        $headers[]  = 'Content-Type: multipart/form-data';
+                }
+                if (count($headers)==0 || empty($headers))
+                    curl_setopt($btt, CURLOPT_HEADER, false);
+                else {
+                    curl_setopt($btt, CURLOPT_HEADER, true);
+                    curl_setopt($btt, CURLOPT_HTTPHEADER, $headers);
+                }
+                curl_setopt($btt, CURLOPT_CONNECTTIMEOUT, $connectout);
+                curl_setopt($btt, CURLOPT_TIMEOUT, $timeout);
+                curl_setopt($btt, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($btt, CURLOPT_VERBOSE, false);
+                curl_setopt($btt, CURLOPT_SSL_VERIFYHOST, false);
+                curl_setopt($btt, CURLOPT_SSL_VERIFYPEER, false);
+                $data = curl_exec($btt);
+                $GLOBALS['php-curl'][md5($uri)]['http']['posts'] = $post;
+                $GLOBALS['php-curl'][md5($uri)]['http']['headers'] = $headers;
+                $GLOBALS['php-curl'][md5($uri)]['http']['code'] = curl_getinfo($btt, CURLINFO_HTTP_CODE);
+                $GLOBALS['php-curl'][md5($uri)]['header']['size'] = curl_getinfo($btt, CURLINFO_HEADER_SIZE);
+                $GLOBALS['php-curl'][md5($uri)]['header']['value'] = curl_getinfo($btt, CURLINFO_HEADER_OUT);
+                $GLOBALS['php-curl'][md5($uri)]['size']['download'] = curl_getinfo($btt, CURLINFO_SIZE_DOWNLOAD);
+                $GLOBALS['php-curl'][md5($uri)]['size']['upload'] = curl_getinfo($btt, CURLINFO_SIZE_UPLOAD);
+                $GLOBALS['php-curl'][md5($uri)]['content']['length']['download'] = curl_getinfo($btt, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+                $GLOBALS['php-curl'][md5($uri)]['content']['length']['upload'] = curl_getinfo($btt, CURLINFO_CONTENT_LENGTH_UPLOAD);
+                $GLOBALS['php-curl'][md5($uri)]['content']['type'] = curl_getinfo($btt, CURLINFO_CONTENT_TYPE);
+                curl_close($btt);
+                return $data;
+        	}
 	}
 ?&gt;
 

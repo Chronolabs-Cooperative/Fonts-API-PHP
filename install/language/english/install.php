@@ -15,6 +15,15 @@
 // _LANGCODE: en
 // _CHARSET : UTF-8
 // Translator: API Translation Team
+define('API_LOOKUPS_API_URL_LABEL', 'IP Lookups API (see: <a href="https://github.com/Chronolabs-Cooperative/Lookups-API-PHP" target="_blank">github.com</a>)');
+define('API_LOOKUPS_API_URL_HELP', 'IP Lookups API (see: <a href="https://github.com/Chronolabs-Cooperative/Lookups-API-PHP" target="_blank">github.com</a>)');
+define('API_STRATA_API_URL_LABEL', 'Domain/Realms Strata+Fallouts API (see: <a href="https://github.com/Chronolabs-Cooperative/Strata-API-PHP" target="_blank">github.com</a>)');
+define('API_STRATA_API_URL_HELP', 'Domain/Realms Strata+Fallouts API (see: <a href="https://github.com/Chronolabs-Cooperative/Strata-API-PHP" target="_blank">github.com</a>)');
+define('API_WHOIS_API_URL_LABEL', 'IP+Domain WhoIS API (see: <a href="https://github.com/Chronolabs-Cooperative/WhoIS-API-PHP" target="_blank">github.com</a>)');
+define('API_WHOIS_API_URL_HELP', 'IP+Domain WhoIS API (see: <a href="https://github.com/Chronolabs-Cooperative/WhoIS-API-PHP" target="_blank">github.com</a>)');
+define('PATHS_EXTRA', 'Extra Settings');
+define('PATHS_EXTRA_TITLE', 'Extra Settings Configurations');
+
 define('SHOW_HIDE_HELP', 'Show/hide help text');
 // License
 define('LICENSE_NOT_WRITEABLE', 'License file "%s" is NOT writable!');

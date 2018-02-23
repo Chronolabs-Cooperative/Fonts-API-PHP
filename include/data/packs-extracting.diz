@@ -1,4 +1,4 @@
-7z||7z x -y -q -o"%path" "%pack"
+7z||7z x -y -o"%path" "%pack"
 tar||#tar -xf --directory="%path" "%pack"
 tar.7z||#tar -xf --directory="%path" "%pack"
 tar.Z||#tar -xf --directory="%path" "%pack"

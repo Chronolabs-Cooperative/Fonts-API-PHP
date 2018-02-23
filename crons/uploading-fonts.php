@@ -222,12 +222,23 @@ foreach($uploader[$ipid] as $time => $data) {
 							if (file_exists($uploadfile = $copypath . DIRECTORY_SEPARATOR .  strtolower(basename($fontfile))))
 							{
 								@exec("cd $copypath", $out, $return);
-								@exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", dirname(__DIR__ ) . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts-upload.pe", $uploadfile), $out, $return);
-								deleteFilesNotListedByArray($copypath, array(API_BASE=>API_BASE));
+								@exec($exe = sprintf(DIRECTORY_SEPARATOR . "usr" . DIRECTORY_SEPARATOR . "bin" . DIRECTORY_SEPARATOR . "fontforge -script \"%s\" \"%s\"", dirname(__DIR__ ) . DIRECTORY_SEPARATOR . "include"  . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "convert-fonts-upload.pe", $uploadfile), $out, $return);
+								deleteFilesNotListedByArray($copypath, array(API_BASE=>API_BASE, 'ufo'=>'ufo'));
 								unlink($fontfile);
+								$glyphsfingerprint = '';
 								foreach(getFontsListAsArray($copypath) as $file)
 									if ($file['type']==API_BASE)
 										$uploadfile = $copypath . DIRECTORY_SEPARATOR . $file['file'];
+									elseif($file['type']=='ufo') {
+									    $glyphs = array();
+									    $fileglyphs = getFileListAsArray($copypath . DIRECTORY_SEPARATOR . $file['file'] . DIRECTORY_SEPARATOR . 'glyphs');
+									    sort($fileglyphs);
+									    foreach($fileglyphs as $glyph)
+									    {
+									        $glyphs[] = md5_file($copypath . DIRECTORY_SEPARATOR . $file['file'] . DIRECTORY_SEPARATOR . 'glyphs' . DIRECTORY_SEPARATOR . $glyph);
+									    }
+									    $glyphsfingerprint = md5(implode('', $glyphs));
+									}
 								$fontdata = getBaseFontValueStore($uploadfile);
 								if (isset($fontdata['version']))
 									$fontdata['version'] = $fontdata['version'] + 1.001;
@@ -246,9 +257,15 @@ foreach($uploader[$ipid] as $time => $data) {
 										$found = true;
 									}
 								$fingerprint = md5(implode("", $data));
+								
+								if (!empty($glyphsfingerprint))
+								{
+    								$sql = "SELECT count(*) FROM `" . $GLOBALS['APIDB']->prefix('fonts_fingering') . "` WHERE `fingerprint` LIKE '" . $glyphsfingerprint . "'";
+    								list($gfingers) = $GLOBALS['APIDB']->fetchRow($GLOBALS['APIDB']->queryF($sql));
+								}
 								$sql = "SELECT count(*) FROM `" . $GLOBALS['APIDB']->prefix('fonts_fingering') . "` WHERE `fingerprint` LIKE '" . $fingerprint . "'";
 								list($fingers) = $GLOBALS['APIDB']->fetchRow($GLOBALS['APIDB']->queryF($sql));
-								if ($fingers==0)
+								if ($fingers==0 && $gfingers == 0)
 								{
 									$ffile++;
 									$data['process'] = microtime(true);
@@ -284,6 +301,9 @@ foreach($uploader[$ipid] as $time => $data) {
 											$GLOBALS['APIDB']->queryF($sql);
 										}
 										echo "\nCreated Upload Identity: ".$uploadid;
+										$sql = "INSERT INTO `" . $GLOBALS['APIDB']->prefix('fonts_fingering') . "` (`type`, `upload_id`, `fingerprint`) VALUES ('" . $GLOBALS['APIDB']->escape(API_BASE) . "','" . $GLOBALS['APIDB']->escape($uploadid) . "','" . $GLOBALS['APIDB']->escape($glyphsfingerprint) . "')";
+										if (!$GLOBALS['APIDB']->queryF($sql))
+										    echo "SQL Failed: $sql;\n";
 										$sql = "INSERT INTO `" . $GLOBALS['APIDB']->prefix('fonts_fingering') . "` (`type`, `upload_id`, `fingerprint`) VALUES ('" . $GLOBALS['APIDB']->escape(API_BASE) . "','" . $GLOBALS['APIDB']->escape($uploadid) . "','" . $GLOBALS['APIDB']->escape($fingerprint) . "')";
 										if (!$GLOBALS['APIDB']->queryF($sql))
 											echo "SQL Failed: $sql;\n";

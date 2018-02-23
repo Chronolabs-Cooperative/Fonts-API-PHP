@@ -36,17 +36,41 @@ if (!function_exists("getURIData")) {
      *
      * @return 		float()
      */
-    function getURIData($uri = '', $timeout = 25, $connectout = 25)
+    function getURIData($uri = '', $timeout = 25, $connectout = 25, $post = array(), $headers = array())
     {
         if (!function_exists("curl_init"))
         {
-            return file_get_contents($uri);
+            die("Install PHP Curl Extension ie: $ sudo apt-get install php-curl -y");
         }
+        $GLOBALS['php-curl'][md5($uri)] = array();
         if (!$btt = curl_init($uri)) {
             return false;
         }
-        curl_setopt($btt, CURLOPT_HEADER, 0);
-        curl_setopt($btt, CURLOPT_POST, 0);
+        if (count($post)==0 || empty($post))
+            curl_setopt($btt, CURLOPT_POST, false);
+        else {
+            $uploadfile = false;
+            foreach($post as $field => $value)
+                if (substr($value , 0, 1) == '@' && !file_exists(substr($value , 1, strlen($value) - 1)))
+                    unset($post[$field]);
+                else
+                    $uploadfile = true;
+            curl_setopt($btt, CURLOPT_POST, true);
+            curl_setopt($btt, CURLOPT_POSTFIELDS, http_build_query($post));
+                        
+            if (!empty($headers))
+                foreach($headers as $key => $value)
+                    if ($uploadfile==true && substr($value, 0, strlen('Content-Type:')) == 'Content-Type:')
+                        unset($headers[$key]);
+            if ($uploadfile==true)
+                $headers[]  = 'Content-Type: multipart/form-data';
+        }
+        if (count($headers)==0 || empty($headers))
+            curl_setopt($btt, CURLOPT_HEADER, false);
+        else {
+            curl_setopt($btt, CURLOPT_HEADER, true);
+            curl_setopt($btt, CURLOPT_HTTPHEADER, $headers);
+        }
         curl_setopt($btt, CURLOPT_CONNECTTIMEOUT, $connectout);
         curl_setopt($btt, CURLOPT_TIMEOUT, $timeout);
         curl_setopt($btt, CURLOPT_RETURNTRANSFER, true);
@@ -54,6 +78,16 @@ if (!function_exists("getURIData")) {
         curl_setopt($btt, CURLOPT_SSL_VERIFYHOST, false);
         curl_setopt($btt, CURLOPT_SSL_VERIFYPEER, false);
         $data = curl_exec($btt);
+        $GLOBALS['php-curl'][md5($uri)]['http']['posts'] = $post;
+        $GLOBALS['php-curl'][md5($uri)]['http']['headers'] = $headers;
+        $GLOBALS['php-curl'][md5($uri)]['http']['code'] = curl_getinfo($btt, CURLINFO_HTTP_CODE);
+        $GLOBALS['php-curl'][md5($uri)]['header']['size'] = curl_getinfo($btt, CURLINFO_HEADER_SIZE);
+        $GLOBALS['php-curl'][md5($uri)]['header']['value'] = curl_getinfo($btt, CURLINFO_HEADER_OUT);
+        $GLOBALS['php-curl'][md5($uri)]['size']['download'] = curl_getinfo($btt, CURLINFO_SIZE_DOWNLOAD);
+        $GLOBALS['php-curl'][md5($uri)]['size']['upload'] = curl_getinfo($btt, CURLINFO_SIZE_UPLOAD);
+        $GLOBALS['php-curl'][md5($uri)]['content']['length']['download'] = curl_getinfo($btt, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+        $GLOBALS['php-curl'][md5($uri)]['content']['length']['upload'] = curl_getinfo($btt, CURLINFO_CONTENT_LENGTH_UPLOAD);
+        $GLOBALS['php-curl'][md5($uri)]['content']['type'] = curl_getinfo($btt, CURLINFO_CONTENT_TYPE);
         curl_close($btt);
         return $data;
     }
@@ -1971,26 +2005,18 @@ if (!function_exists("getIPIdentity")) {
                                     $_SESSION['locality'] = array();
                                     if (API_NETWORK_LOGISTICS==true)
                                     {
-                                        $uris = cleanWhitespaces(file($file = __DIR__ . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "lookups.diz"));
-                                        shuffle($uris); shuffle($uris); shuffle($uris); shuffle($uris);
                                         if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE || FILTER_FLAG_NO_RES_RANGE) === false || substr($ip,3,0)=="10." || substr($ip,4,0)=="127.")
                                         {
                                             $data = array();
-                                            foreach($uris as $uri)
-                                            {
-                                                if ($_SESSION['locality']['ip']==$ip || $_SESSION['locality']['country']['iso'] == "-" || empty($_SESSION['locality']))
-                                                    $_SESSION['locality'] = json_decode(getURIData(sprintf($uri, 'myself', 'json'), 5, 10), true);
-                                                    if (count($_SESSION['locality']) > 1 &&  $_SESSION['locality']['country']['iso'] != "-")
-                                                        continue;
-                                            }
+                                            if ($_SESSION['locality']['ip']==$ip || $_SESSION['locality']['country']['iso'] == "-" || empty($_SESSION['locality']))
+                                                $_SESSION['locality'] = json_decode(getURIData(sprintf(API_LOOKUPS_URL."/v2/country/%s/%s.api", 'myself', 'json'), 5, 10), true);
+                                                if (count($_SESSION['locality']) > 1 &&  $_SESSION['locality']['country']['iso'] != "-")
+                                                    continue;
                                         } else{
-                                            foreach($uris as $uri)
-                                            {
-                                                if ($_SESSION['locality']['ip']!=$ip || $_SESSION['locality']['country']['iso'] == "-" || empty($_SESSION['locality']))
-                                                    $_SESSION['locality'] = json_decode(getURIData(sprintf($uri, $ip, 'json'), 5, 10), true);
-                                                    if (count($_SESSION['locality']) > 1 &&  $_SESSION['locality']['country']['iso'] != "-")
-                                                        continue;
-                                            }
+                                            if ($_SESSION['locality']['ip']!=$ip || $_SESSION['locality']['country']['iso'] == "-" || empty($_SESSION['locality']))
+                                                $_SESSION['locality'] = json_decode(getURIData(sprintf(API_LOOKUPS_URL."/v2/country/%s/%s.api", $ip, 'json'), 5, 10), true);
+                                                if (count($_SESSION['locality']) > 1 &&  $_SESSION['locality']['country']['iso'] != "-")
+                                                    continue;
                                         }
                                     }
                                     if (!isset($_SESSION['locality']['ip']))
@@ -2068,19 +2094,14 @@ if (!function_exists("getIPIdentity")) {
                                                 if (API_NETWORK_LOGISTICS==true)
                                                 {
                                                     $whois = array();
-                                                    $whoisuris = cleanWhitespaces(file(__DIR__  . DIRECTORY_SEPARATOR .  "data" . DIRECTORY_SEPARATOR . "whois.diz"));
-                                                    shuffle($whoisuris); shuffle($whoisuris); shuffle($whoisuris); shuffle($whoisuris);
-                                                    foreach($whoisuris as $uri)
+                                                    if (empty($whois[$_SESSION['ipdata'][$ip]['type']]) || !isset($whois[$_SESSION['ipdata'][$ip]['type']]))
                                                     {
-                                                        if (empty($whois[$_SESSION['ipdata'][$ip]['type']]) || !isset($whois[$_SESSION['ipdata'][$ip]['type']]))
-                                                        {
-                                                            $whois[$_SESSION['ipdata'][$ip]['type']] = json_decode(getURIData(sprintf($uri, $_SESSION['ipdata'][$ip]['ipaddy'], 'json'), 5, 10), true);
-                                                        } elseif (empty($whois['domain']) || !isset($whois['domain']))
-                                                        {
-                                                            $whois['domain'] = json_decode(getURIData(sprintf($uri, $_SESSION['ipdata'][$ip]['domain'], 'json'), 5, 10), true);
-                                                        } else
-                                                            continue;
-                                                    }
+                                                        $whois[$_SESSION['ipdata'][$ip]['type']] = json_decode(getURIData(sprintf(API_WHOIS_URL."/v2/%s/%s.api", $_SESSION['ipdata'][$ip]['ipaddy'], 'json'), 5, 10), true);
+                                                    } elseif (empty($whois['domain']) || !isset($whois['domain']))
+                                                    {
+                                                        $whois['domain'] = json_decode(getURIData(sprintf(API_WHOIS_URL."/v2/%s/%s.api", $_SESSION['ipdata'][$ip]['domain'], 'json'), 5, 10), true);
+                                                    } else
+                                                        continue;
                                                     $sql = "SELECT count(*) FROM `whois` WHERE `id` = '".$wsid = md5(json_encode($whois))."'";
                                                     list($countb) = $GLOBALS['APIDB']->fetchRow($GLOBALS['APIDB']->queryF($sql));
                                                     if ($countb == 0)
@@ -2148,31 +2169,15 @@ if (!function_exists("getBaseDomain")) {
         {
             if (empty($classes))
             {
-                if (empty($stratauris)) {
-                    $stratauris = cleanWhitespaces(file(__DIR__  . DIRECTORY_SEPARATOR .  "data" . DIRECTORY_SEPARATOR . "stratas.diz"));
-                    shuffle($stratauris); shuffle($stratauris); shuffle($stratauris); shuffle($stratauris);
-                }
-                shuffle($stratauris);
+               
                 $attempts = 0;
-                while(empty($classes) || $attempts <= (count($stratauris) * 1.65))
-                {
-                    $attempts++;
-                    $classes = array_keys(json_decode(getURIData($stratauris[mt_rand(0, count($stratauris)-1)] ."/v1/strata/serial.api", 15, 10), true));
-                }
+                $attempts++;
+                $classes = array_keys(json_decode(getURIData(API_STRATA_URL ."/v1/strata/serial.api", 15, 10), true));
+           
             }
             if (empty($fallout))
             {
-                if (empty($stratauris)) {
-                    $stratauris = cleanWhitespaces(file(__DIR__  . DIRECTORY_SEPARATOR .  "data" . DIRECTORY_SEPARATOR . "stratas.diz"));
-                    shuffle($stratauris); shuffle($stratauris); shuffle($stratauris); shuffle($stratauris);
-                }
-                shuffle($stratauris);
-                $attempts = 0;
-                while(empty($fallout) || $attempts <= (count($stratauris) * 1.65))
-                {
-                    $attempts++;
-                    $fallout = array_keys(json_decode(getURIData($stratauris[mt_rand(0, count($stratauris)-1)] ."/v1/fallout/serial.api", 15, 10), true));
-                }
+                $fallout = array_keys(json_decode(getURIData(API_STRATA_URL ."/v1/fallout/serial.api", 15, 10), true));
             }
             
             // Get Full Hostname

@@ -1,5 +1,7 @@
 ## Chronolabs Cooperative presents
-# Fonting Repository Services API  - http://fonty.snails.email -
+# Fonting Repository Services API  
+## Version 2.7.7
+### Demo: http://fonty.snails.email -
 
 # BASIC INSTALLATION MANUAL
 ## by. Simon Antony Roberts (Sydney)
