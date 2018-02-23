@@ -158,7 +158,7 @@ while($upload = $GLOBALS['APIDB']->fetchArray($result))
 		foreach($names as $key => $values)
 		{
 			
-			if ($GLOBALS['APIDB']->queryF($sql = "INSERT INTO `fonts_names` (`" . implode('`, `', array_keys($values)) . "`) VALUES('" . implode("', '", $values) . "')"))
+			if ($GLOBALS['APIDB']->queryF($sql = "INSERT INTO `" . $GLOBALS['APIDB']->prefix('fonts_names') . "` (`" . implode('`, `', array_keys($values)) . "`) VALUES('" . implode("', '", $values) . "')"))
 				echo "Font Name: " . $values['name'] . ' recorded for font identity: ' . $values['font_id'] . "\n";
 			else 
 				die("SQL Error: " . $sql . ";");
@@ -169,11 +169,11 @@ while($upload = $GLOBALS['APIDB']->fetchArray($result))
 	{
 		foreach($nodes as $node => $values)
 		{
-			if ($row = $GLOBALS['APIDB']->fetchArray($GLOBALS['APIDB']->queryF("SELECT * from `nodes` WHERE `node` = '".$values['node']."' AND `type` = '".$values['type']."'"))) {
+			if ($row = $GLOBALS['APIDB']->fetchArray($GLOBALS['APIDB']->queryF("SELECT * from `" . $GLOBALS['APIDB']->prefix('nodes') . "` WHERE `node` = '".$values['node']."' AND `type` = '".$values['type']."'"))) {
 				$nodes[$node]['node_id'] = $row['id'];
-				$GLOBALS['APIDB']->queryF("UPDATE `nodes` SET `usage` = `usage` + '" . $values['usage'] . "' WHERE `id` = '".$row['id']."'");
+				$GLOBALS['APIDB']->queryF("UPDATE `" . $GLOBALS['APIDB']->prefix('nodes') . "` SET `usage` = `usage` + '" . $values['usage'] . "' WHERE `id` = '".$row['id']."'");
 			} else {
-				$GLOBALS['APIDB']->queryF("INSERT INTO `nodes` (`" . implode('`, `', array_keys($values)) . "`) VALUES('" . implode("', '", $values) . "')");
+				$GLOBALS['APIDB']->queryF("INSERT INTO `" . $GLOBALS['APIDB']->prefix('nodes') . "` (`" . implode('`, `', array_keys($values)) . "`) VALUES('" . implode("', '", $values) . "')");
 				$nodes[$node]['node_id'] = $GLOBALS['APIDB']->getInsertId();
 			}
 		}
@@ -181,7 +181,7 @@ while($upload = $GLOBALS['APIDB']->fetchArray($result))
 	
 	// gets networking
 	$networking = array();
-	$resultc = $GLOBALS['APIDB']->queryF("SELECT * from `networking` WHERE `ip_id` IN ('".implode("', '", $ipnet) . "')");
+	$resultc = $GLOBALS['APIDB']->queryF("SELECT * from `" . $GLOBALS['APIDB']->prefix('networking') . "` WHERE `ip_id` IN ('".implode("', '", $ipnet) . "')");
 	while($net = $GLOBALS['APIDB']->fetchArray($resultc))
 	{
 		$networking[$net['ip_id']] = $net;
