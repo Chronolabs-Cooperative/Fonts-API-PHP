@@ -46,7 +46,7 @@ while($upload = $GLOBALS['APIDB']->fetchArray($result))
 	$reserves = getReserves($datastore["FontName"]);
 	$currently = $upload['currently_path'];
 	$packname = urlencode($datastore["FontName"]);
-	$sortpath = str_replace(DIRECTORY_SEPARATOR.DIRECTORY_SEPARATOR,DIRECTORY_SEPARATOR,str_replace(DIRECTORY_SEPARATOR.DIRECTORY_SEPARATOR,DIRECTORY_SEPARATOR,FONT_RESOURCES_RESOURCE . DIRECTORY_SEPARATOR . urlencode(substr(strtolower($datastore["FontName"]),0, 1)) . DIRECTORY_SEPARATOR . urlencode(substr(strtolower($datastore["FontName"]),0, 2)) . DIRECTORY_SEPARATOR . urlencode(substr(strtolower($datastore["FontName"]),0, 3)) . DIRECTORY_SEPARATOR . urlencode($datastore["FontName"]) . (count($reserves['parent'])>0?DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, $reserves['parent']):"")));;
+	$sortpath = FONT_RESOURCES_RESOURCE . DIRECTORY_SEPARATOR . urlencode(substr(strtolower($datastore["FontName"]),0, 1)) . DIRECTORY_SEPARATOR . urlencode(substr(strtolower($datastore["FontName"]),0, 2)) . DIRECTORY_SEPARATOR . urlencode(substr(strtolower($datastore["FontName"]),0, 3)) . DIRECTORY_SEPARATOR . urlencode($datastore["FontName"]);
 	$packfile = $sortpath . (substr($sortpath, strlen($sortpath)-1, 1)!=DIRECTORY_SEPARATOR?DIRECTORY_SEPARATOR:"") . $packname . '.zip';
 	
 	// Builds types table
