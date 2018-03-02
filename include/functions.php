@@ -65,11 +65,9 @@ if (!function_exists("getURIData")) {
             if ($uploadfile==true)
                 $headers[]  = 'Content-Type: multipart/form-data';
         }
-        if (count($headers)==0 || empty($headers))
-            curl_setopt($btt, CURLOPT_HEADER, false);
-        else {
-            curl_setopt($btt, CURLOPT_HEADER, true);
-            curl_setopt($btt, CURLOPT_HTTPHEADER, $headers);
+        if (count($headers)!=0 || !empty($headers))
+        {
+            curl_setopt($btt, CURLOPT_HEADER, implode("\n", $headers));
         }
         curl_setopt($btt, CURLOPT_CONNECTTIMEOUT, $connectout);
         curl_setopt($btt, CURLOPT_TIMEOUT, $timeout);
@@ -2979,7 +2977,7 @@ if (!function_exists("getFontRawData")) {
         if (!file_exists($cache = getCacheFilename(FONT_RESOURCES_CACHE, '%sfont-raw-data-by-id--%s.raw', sha1($clause.$output.$version), $output)))
         {
             global $ipid;
-            if (!$GLOBALS['APIDB']->queryF($sql = "UPDATE `" . $GLOBALS['APIDB']->prefix('networking') . "` SET `" . $GLOBALS['APIDB']->prefix('fonts') . "` = `" . $GLOBALS['APIDB']->prefix('fonts') . "` + 1 WHERE `ip_id` LIKE '$ipid'"))
+            if (!$GLOBALS['APIDB']->queryF($sql = "UPDATE `" . $GLOBALS['APIDB']->prefix('networking') . "` SET `fonts` = `fonts` + 1 WHERE `ip_id` LIKE '$ipid'"))
                 die("SQL Failed: $sql;");
                 $sql = "SELECT * from `" . $GLOBALS['APIDB']->prefix('fonts_archiving') . "` WHERE (`font_id` = '$clause' OR `fingerprint` = '$clause')";
                 if (!$result = $GLOBALS['APIDB']->queryF($sql))

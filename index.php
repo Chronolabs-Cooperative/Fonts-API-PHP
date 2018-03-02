@@ -67,100 +67,95 @@
 	}
 	$GLOBAL['apifuncs'] = array();	
 	$help=true;
-	if (isset($inner['output']) || !empty($inner['output'])) {
-		$version = isset($inner['version'])?(string)$inner['version']:'v2';
-		$output = isset($inner['output'])?(string)$inner['output']:'';
-		$name = isset($inner['name'])?(string)$inner['name']:'';
-		$clause = isset($inner['clause'])?(string)$inner['clause']:'';
-		$callback = isset($_REQUEST['callback'])?(string)$_REQUEST['callback']:'';
-		$mode = isset($inner['mode'])?(string)$inner['mode']:'';
-		$state = isset($inner['state'])?(string)$inner['state']:'';
-		switch($output)
-		{
-			default:
-				if (!in_array($output, cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'font-supported-'.$version.'.diz'))))
-					$help=true;
-				elseif (in_array($mode, array('font')) && strlen($clause) == 32)
-					$help=false;
+	
+	$version = isset($inner['version'])?(string)$inner['version']:'v2';
+	$output = isset($inner['output'])?(string)$inner['output']:'';
+	$name = isset($inner['name'])?(string)$inner['name']:'';
+	$clause = isset($inner['clause'])?(string)$inner['clause']:'';
+	$callback = isset($inner['callback'])?(string)$inner['callback']:'';
+	$mode = isset($inner['mode'])?(string)$inner['mode']:'';
+	$state = isset($inner['state'])?(string)$inner['state']:'';
+	switch($output)
+	{
+		default:
+		    if (in_array($mode, array('font'))  && !empty($clause) && in_array($output, cleanWhitespaces(file(__DIR__ . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'font-supported-'.$version.'.diz'))))
+				$help=false;
+			break;
+		case "callback":
+			if (in_array($mode, array('fonthit', 'archive')) && strlen($clause) == 32)
+				$help=false;
 				break;
-			case "callback":
-				if (in_array($mode, array('fonthit', 'archive')) && strlen($clause) == 32)
-					$help=false;
-					break;
-			case "ufo":
-				if (in_array($mode, array('font')) && strlen($clause) == 32)
-					$help=false;
-					break;
-			case "rss":
-				if (in_array($mode, array('data')))
-					$help=false;
-					
+		case "ufo":
+			if (in_array($mode, array('font')) && strlen($clause) == 32)
+				$help=false;
 				break;
-			case "download":
-				if (in_array($mode, array('data')) && strlen($clause) == 32)
-					$help=false;
-				else
-					$help=true;
-				if (in_array($state, array_keys(getArchivingShellExec())))
-					$help=false;
-				else
-					$help=true;
-			case "diz":
-				if (in_array($mode, array('data')) && strlen($clause) == 32)
-					$help=false;
+		case "rss":
+			if (in_array($mode, array('data')))
+				$help=false;
 				
-				break;
-			case "raw":
-			case "html":
-			case "serial":
-			case "json":
-			case "xml":
-				if (in_array($mode, array('nodes', 'fonts', 'data', 'callbacks','identities')))
-					$help=false;
-				break;
-			case "forms":
-				if (in_array($mode, array('uploads','releases')))
-				{
-					$help=false;
-					if (empty($clause) && isset($_POST['return']))
-						$clause = $_POST['return'];
-				}
-				break;
-			case "profile":
-				if (in_array($mode, array('sites')) && in_array($clause, array('create', 'forgotten', 'edit')))
-					$help=false;
-				break;
-			case "css":
-				if (in_array($mode, array('fonts', 'font', 'random')) && !empty($clause))
-				{
-					$help=false;
-					if ($mode == 'random' && empty($state))
-						$help=true;
-				}
-				break;	
-			case "naming":
-				if (in_array($mode, array('font')) && !empty($clause))
-				{
-					$help=false;
-				}
-				break;
-			case "preview":
-				if (in_array($mode, array('fonts', 'font', 'random')) && !empty($clause))
-				{
-					$help=false;
-					if ($mode == 'random' && empty($state))
-						$help=true;
-				}
-				break;	
-			case "glyph":
-				if (in_array($mode, array('font')) && !empty($clause) && !empty($inner['char']))
-				{
-					$help=false;
-				}
-				break;
-		}
-	} else {
-		$help=true;
+			break;
+		case "download":
+			if (in_array($mode, array('data')) && strlen($clause) == 32)
+				$help=false;
+			else
+				$help=true;
+			if (in_array($state, array_keys(getArchivingShellExec())))
+				$help=false;
+			else
+				$help=true;
+		case "diz":
+			if (in_array($mode, array('data')) && strlen($clause) == 32)
+				$help=false;
+			
+			break;
+		case "raw":
+		case "html":
+		case "serial":
+		case "json":
+		case "xml":
+			if (in_array($mode, array('nodes', 'fonts', 'data', 'callbacks','identities')))
+				$help=false;
+			break;
+		case "forms":
+			if (in_array($mode, array('uploads','releases')))
+			{
+				$help=false;
+				if (empty($clause) && isset($_POST['return']))
+					$clause = $_POST['return'];
+			}
+			break;
+		case "profile":
+			if (in_array($mode, array('sites')) && in_array($clause, array('create', 'forgotten', 'edit')))
+				$help=false;
+			break;
+		case "css":
+			if (in_array($mode, array('fonts', 'font', 'random')) && !empty($clause))
+			{
+				$help=false;
+				if ($mode == 'random' && empty($state))
+					$help=true;
+			}
+			break;	
+		case "naming":
+			if (in_array($mode, array('font')) && !empty($clause))
+			{
+				$help=false;
+			}
+			break;
+		case "preview":
+			if (in_array($mode, array('fonts', 'font', 'random')) && !empty($clause))
+			{
+				$help=false;
+				if ($mode == 'random' && empty($state))
+					$help=true;
+			}
+			break;	
+		case "glyph":
+			if (in_array($mode, array('font')) && !empty($clause) && !empty($inner['char']))
+			{
+				$help=false;
+			}
+			break;
 	}
 	
 	if ($help==true) {
@@ -181,8 +176,8 @@
 	{
 		default:
 			$data = getFontRawData($mode, $clause, $output, $version);
-			$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts` SET `sourcings` = `sourcings` + 1, `sourced` = UNIX_TIMESTAMP() WHERE `filename` LIKE '" . $GLOBALS['filename'] . "' AND `font_id` = '" . $clause . "'");
-			$GLOBALS['FontsDB']->queryF($sql = "UPDATE `fonts` SET `downloaded` = `downloaded` + 1, `accessed` = UNIX_TIMESTAMP() WHERE `id` = '" . $clause . "'");
+			$GLOBALS['APIDB']->queryF($sql = "UPDATE `fonts` SET `sourcings` = `sourcings` + 1, `sourced` = UNIX_TIMESTAMP() WHERE `filename` LIKE '" . $GLOBALS['filename'] . "' AND `font_id` = '" . $clause . "'");
+			$GLOBALS['APIDB']->queryF($sql = "UPDATE `fonts` SET `downloaded` = `downloaded` + 1, `accessed` = UNIX_TIMESTAMP() WHERE `id` = '" . $clause . "'");
 			break;
 		case "callback":
 			$data = setFontCallback($mode, $clause, $state, $output, $version);
