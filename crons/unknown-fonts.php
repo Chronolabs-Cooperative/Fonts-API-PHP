@@ -239,7 +239,7 @@ foreach($folders as $folder)
 	
 			// gets networking
 			$networking = array();
-			$resultc = $GLOBALS['APIDB']->queryF("SELECT * from `networking` WHERE `ip_id` IN ('".implode("', '", $ipnet) . "')");
+			$resultc = $GLOBALS['APIDB']->queryF("SELECT * FROM `" . $GLOBALS['APIDB']->prefix('networking') . "` WHERE `ip_id` IN ('".implode("', '", $ipnet) . "')");
 			while($net = $GLOBALS['APIDB']->fetchArray($resultc))
 			{
 				$networking[$net['ip_id']] = $net;
@@ -396,7 +396,7 @@ foreach($folders as $folder)
 				{
 					foreach($names as $key => $values)
 					{
-						if ($GLOBALS['APIDB']->queryF($sql = "INSERT INTO `fonts_names` (`" . implode('`, `', array_keys($values)) . "`) VALUES('" . implode("', '", $values) . "')"))
+						if ($GLOBALS['APIDB']->queryF($sql = "INSERT INTO `" . $GLOBALS['APIDB']->prefix('fonts_names') . "` (`" . implode('`, `', array_keys($values)) . "`) VALUES('" . implode("', '", $values) . "')"))
 							$namings++;
 						elseif ($GLOBALS['APIDB']->errno()<>0)
 							die("SQL Failed: $sql :: ".$GLOBALS['APIDB']->error());

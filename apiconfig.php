@@ -31,7 +31,8 @@ if (!is_file(__DIR__ . DIRECTORY_SEPARATOR . 'mainfile.php') || !is_file(__DIR__
 }
 
 require_once __DIR__ . DIRECTORY_SEPARATOR . 'mainfile.php';
-
+error_reporting(E_ALL);
+ini_set('display_errors', true);
 
 /**
  * Opens Access Origin Via networking Route NPN

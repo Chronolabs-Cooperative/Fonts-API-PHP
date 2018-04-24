@@ -6,7 +6,7 @@ body {
 	text-align:justify;
 }
 .main {
-	font-family: "Labtop Thin" !important;
+	font-family: "Labtop Thin";
 	font-size: 1.179894em;
 	border:3px solid #000000;
 	border-radius:15px;
@@ -18,7 +18,7 @@ body {
 	box-shadow:         7px 7px 10px 0px rgba(108, 80, 99, 0.72);
 }
 h1 {
-	font-family: "Labtop Superwide Boldish" !important;
+	font-family: "Labtop Superwide Boldish";
 	font-weight:bold;
 	font-size:1.456554em;
 	background-color:#FFEED9;
@@ -27,7 +27,7 @@ h1 {
 	text-shadow: 4px 4px 2px rgba(150, 150, 150, 1);
 }
 h2 {
-	font-family: "Labtop Bold" !important;
+	font-family: "Labtop Bold";
 	font-weight:500;
 	font-size:1.2495em;
 	text-shadow: 4px 4px 2px rgba(150, 150, 150, 1);
@@ -35,7 +35,7 @@ h2 {
 blockquote {
 	margin-left:25px;
 	margin-right:25px;
-	font-family: "Prestige Elite", "Courier New", Courier, monospace !important;
+	font-family: "Prestige Elite", "Courier New", Courier, monospace;
 	font-size: 0,844441em;
 	margin-bottom:25px;
 	padding: 25px 25px 25px 25px;
@@ -57,7 +57,7 @@ p {
 
 input, button, textarea, radio, select, label
 {
-	font-family: "Prestigue Elite Bold" !important;
+	font-family: "Prestigue Elite Bold";
 	font-size:1.211115em;
 	margin: 3px;
 	-webkit-border-radius: 4px;
@@ -67,16 +67,16 @@ input, button, textarea, radio, select, label
 
 .help-title-text
 {
-	font-family: "Labtop Bold Italics" !important;
+	font-family: "Labtop Bold Italics";
 	font-weight:300;
 	font-size:0.8761145em;
 	margin-top: 6px;
-	color: rgb(0,120,0) !important;
+	color: rgb(0,120,0);
 }
 
 .help-url-example
 {
-	font-family: "Prestige Elite Bold" !important;
+	font-family: "Prestige Elite Bold";
 	font-weight:600;
 	font-size:0.6781115em;
 	margin-top: 3px;

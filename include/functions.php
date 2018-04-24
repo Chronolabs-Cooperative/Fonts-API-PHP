@@ -2301,8 +2301,8 @@ if (!function_exists("getPreviewHTML")) {
                         }
                         if (isset($font) && file_exists($font))
                         {
-                            require_once __DIR__ . DIRECTORY_SEPARATOR . 'class' . DIRECTORY_SEPARATOR . 'WideImage' . DIRECTORY_SEPARATOR . 'WideImage.php';
-                            $img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-preview.png');
+                            require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'class' . DIRECTORY_SEPARATOR . 'WideImage' . DIRECTORY_SEPARATOR . 'WideImage.php';
+                            $img = WideImage::load(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-preview.png');
                             if ($state == 'jpg')
                             {
                                 $bg = $img->allocateColor(255, 255, 255);
@@ -2425,19 +2425,19 @@ if (!function_exists("getNamingImage")) {
         if (isset($font) && file_exists($font))
         {
             $naming = getRegionalFontName($clause);
-            require_once __DIR__ . DIRECTORY_SEPARATOR . 'class' . DIRECTORY_SEPARATOR . 'WideImage' . DIRECTORY_SEPARATOR . 'WideImage.php';
+            require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'class' . DIRECTORY_SEPARATOR . 'WideImage' . DIRECTORY_SEPARATOR . 'WideImage.php';
             if (strlen($naming)<=9)
             {
-                $img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-title-small.png');
+                $img = WideImage::load(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-title-small.png');
             } elseif (strlen($naming)<=12)
             {
-                $img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-title-medium.png');
+                $img = WideImage::load(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-title-medium.png');
             }elseif (strlen($naming)<=21)
             {
-                $img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-title-large.png');
+                $img = WideImage::load(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-title-large.png');
             } else
             {
-                $img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-title-extra.png');
+                $img = WideImage::load(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-title-extra.png');
             }
             $height = $img->getHeight();
             $point = $height * (32/99);
@@ -2506,8 +2506,8 @@ if (!function_exists("getGlyphPreview")) {
         
         if (isset($font) && file_exists($font))
         {
-            require_once __DIR__ . DIRECTORY_SEPARATOR . 'class' . DIRECTORY_SEPARATOR . 'WideImage' . DIRECTORY_SEPARATOR . 'WideImage.php';
-            $img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-glyph.png');
+            require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'class' . DIRECTORY_SEPARATOR . 'WideImage' . DIRECTORY_SEPARATOR . 'WideImage.php';
+            $img = WideImage::load(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-glyph.png');
             if ($state == 'jpg')
             {
                 $bg = $img->allocateColor(255, 255, 255);
@@ -3555,8 +3555,8 @@ if (!function_exists("getFontDownload")) {
                                                         {
                                                             if (isset($preview) && file_exists($preview))
                                                             {
-                                                                require_once __DIR__ . DIRECTORY_SEPARATOR . 'class' . DIRECTORY_SEPARATOR . 'WideImage' . DIRECTORY_SEPARATOR . 'WideImage.php';
-                                                                $img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-preview.png');
+                                                                require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'class' . DIRECTORY_SEPARATOR . 'WideImage' . DIRECTORY_SEPARATOR . 'WideImage.php';
+                                                                $img = WideImage::load(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-preview.png');
                                                                 $height = $img->getHeight();
                                                                 $lsize = 66;
                                                                 $ssize = 14;
@@ -3592,13 +3592,13 @@ if (!function_exists("getFontDownload")) {
                                                                         unset($img);
                                                                         $title = spacerName(getRegionalFontName($row['font_id']));
                                                                         if (strlen($title)<=9)
-                                                                            $img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-title-small.png');
+                                                                            $img = WideImage::load(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-title-small.png');
                                                                             elseif (strlen($title)<=18)
-                                                                            $img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-title-medium.png');
+                                                                            $img = WideImage::load(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-title-medium.png');
                                                                             elseif (strlen($title)<=35)
-                                                                            $img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-title-large.png');
+                                                                            $img = WideImage::load(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-title-large.png');
                                                                             elseif (strlen($title)>=36)
-                                                                            $img = WideImage::load(__DIR__ . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-title-extra.png');
+                                                                            $img = WideImage::load(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'font-title-extra.png');
                                                                             $canvas->useFont($preview, 78, $img->allocateColor(0, 0, 0));
                                                                             $canvas->writeText('center', 'center', $title);
                                                                             $img->saveToFile($currently . DIRECTORY_SEPARATOR . 'font-name-banner.png');
@@ -3812,16 +3812,16 @@ if (!function_exists("getFontUFORawData")) {
             $html .= "<table>\n";
             $html .= "<tbody>";
             $html .= "<tr><th colspan=\"5\"><hr></th></tr>";
-            $html .= "<tr><td valign=\"top\"><img src=\"".API_URL."/images/back.gif\" alt=\"[PARENTDIR]\"></td><td><a href=\"".$filez['parent']."\">Parent Directory</a></td><td>&nbsp;</td><td align=\"right\">  - </td><td>&nbsp;</td></tr>\n";
+            $html .= "<tr><td valign=\"top\"><img src=\"".API_URL."/assets/images/back.gif\" alt=\"[PARENTDIR]\"></td><td><a href=\"".$filez['parent']."\">Parent Directory</a></td><td>&nbsp;</td><td align=\"right\">  - </td><td>&nbsp;</td></tr>\n";
             if (isset($filez['folder']))
             {
                 foreach($filez['folder'] as $md5 => $folder)
-                    $html .= "<tr><td valign=\"top\"><img src=\"".API_URL."/images/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"".$filez['root']."/$folder/\">$folder/</a></td><td align=\"right\">".date("Y-m-d H:i:s")."</td><td align=\"right\">  - </td><td>&nbsp;</td></tr>\n";
+                    $html .= "<tr><td valign=\"top\"><img src=\"".API_URL."/assets/images/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"".$filez['root']."/$folder/\">$folder/</a></td><td align=\"right\">".date("Y-m-d H:i:s")."</td><td align=\"right\">  - </td><td>&nbsp;</td></tr>\n";
             }
             if (isset($filez['files']))
             {
                 foreach($filez['files'] as $md5 => $file)
-                    $html .= "<tr><td valign=\"top\"><img src=\"".API_URL."/images/text.gif\" alt=\"[FILE]\"></td><td><a href=\"".$filez['root']."/".$file['name']."\">".$file['name']."</a></td><td align=\"right\">".date("Y-m-d H:i:s")."</td><td align=\"right\">".$file['bytes']." bytes</td><td>&nbsp;</td></tr>\n";
+                    $html .= "<tr><td valign=\"top\"><img src=\"".API_URL."/assets/images/text.gif\" alt=\"[FILE]\"></td><td><a href=\"".$filez['root']."/".$file['name']."\">".$file['name']."</a></td><td align=\"right\">".date("Y-m-d H:i:s")."</td><td align=\"right\">".$file['bytes']." bytes</td><td>&nbsp;</td></tr>\n";
             }
             $html .= "<tr><th colspan=\"5\"><hr></th></tr></tbody></table>\n";
             $html .= "<address>Fonts API/".API_VERSION." (".PHP_VERSION.") Server at ".parse_url("http://".$_SERVER["HTTP_HOST"], PHP_URL_HOST). " Port ".$_SERVER["SERVER_PORT"]."</address>\n";
