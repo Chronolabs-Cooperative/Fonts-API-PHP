@@ -206,6 +206,25 @@ if (!function_exists("getCompleteDirListAsArray")) {
 
 }
 
+if (!function_exists("removeEmptyPathFolderList")) {
+    function removeEmptyPathFolderList($dirname, $result = array())
+    {
+        $folders = array_keys(getCompleteDirListAsArray($dirname));
+        $result = array();
+        sort($folders, SORT_DESC);
+        foreach($folders as $path)
+        {
+            while($path != $dirname) {
+                if (rmdir($path))
+                    $result[$path] = $path;
+                $path = dirname($path);
+            }
+        }
+        return $result;
+    }
+    
+}
+
 if (!function_exists("getCompleteHistoryListAsArray")) {
 	function getCompleteHistoryListAsArray($dirname, $result = array())
 	{
